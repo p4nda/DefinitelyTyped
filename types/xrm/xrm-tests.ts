@@ -180,6 +180,11 @@ enum TestOptionSet {
 const optionSetAttributeEnum = formContext.getAttribute<Xrm.Attributes.OptionSetAttribute<TestOptionSet>>("statuscode");
 if (optionSetAttributeEnum !== null) {
     const optionEnumValue: TestOptionSet | null = optionSetAttributeEnum.getValue();
+    optionSetAttributeEnum.getOption(TestOptionSet.Option1);
+    optionSetAttributeEnum.setValue(TestOptionSet.Option1);
+    optionSetAttributeEnum.setValue(null);
+    // @ts-expect-error — plain number is not assignable to TestOptionSet
+    optionSetAttributeEnum.setValue(123);
 }
 
 /// Demonstrate MultiSelectOptionSet Value as int
@@ -203,7 +208,15 @@ const multiSelectOptionSetAttributeEnum = formContext.getAttribute<
 >("statuscode");
 if (multiSelectOptionSetAttributeEnum !== null) {
     const multiSelectOptionEnumValue: TestMultiSelectOptionSet[] | null = multiSelectOptionSetAttributeEnum.getValue();
+    multiSelectOptionSetAttributeEnum.getOption(TestMultiSelectOptionSet.Option1);
+    multiSelectOptionSetAttributeEnum.setValue([TestMultiSelectOptionSet.Option1]);
+    multiSelectOptionSetAttributeEnum.setValue(null);
+    // @ts-expect-error — plain number is not assignable to TestMultiSelectOptionSet
+    multiSelectOptionSetAttributeEnum.setValue([123]);
 }
+
+// Demonstrate that controls on a MultiSelectOptionSetAttribute are typed as MultiSelectOptionSetControl
+multiSelectOptionSetAttribute?.controls; // $ExpectType ItemCollection<MultiSelectOptionSetControl> | undefined
 
 /// Demonstrate setFormNotification
 
@@ -431,6 +444,25 @@ function testOnLoadTypes(formContext: Xrm.FormContext) {
     }
 }
 
+function testLoadedTypes(formContext: Xrm.FormContext) {
+    formContext.ui.addLoaded(onLoaded);
+    formContext.ui.removeLoaded(onLoaded);
+
+    function onLoaded(eventContext: Xrm.Events.LoadEventContext) {
+        eventContext.getEventArgs().getDataLoadState() === 2;
+    }
+
+    formContext.ui.addLoaded(asyncOnLoaded);
+    formContext.ui.removeLoaded(asyncOnLoaded);
+
+    async function asyncOnLoaded(eventContext: Xrm.Events.LoadEventContextAsync) {
+        const eventArgs = eventContext.getEventArgs();
+        eventArgs.disableAsyncTimeout();
+
+        eventArgs.getDataLoadState() === XrmEnum.FormDataLoadState.Refresh;
+    }
+}
+
 // Demonstrate Xrm.Utility.lookupObjects parameters
 Xrm.Utility.lookupObjects({
     entityTypes: ["contact"],
@@ -603,6 +635,24 @@ function onChangeFormField(executionContext: Xrm.Events.EventContext): void {
     footerSection.setVisible(true);
 }
 
+// Demonstrate Navigating to a generative page
+Xrm.Navigation.navigateTo({
+    pageType: "generative",
+    pageId: "84fd907e-8bfe-11ec-a8a3-0242ac120002",
+    recordId: "84fd907e-8bfe-11ec-a8a3-0242ac120002",
+    entityName: "contact",
+    data: {
+        "custom": "value",
+    },
+}).then(
+    (success) => {
+        console.log("Generative page opened");
+    },
+    (error) => {
+        console.log(error.message);
+    },
+);
+
 // Demonstrate formContext.ui.headerSection methods
 function onChangeHeaderField(executionContext: Xrm.Events.EventContext): void {
     const formContext = executionContext.getFormContext();
@@ -627,13 +677,13 @@ function booleanAttributeControls(formContext: Xrm.FormContext) {
     // @ts-expect-error
     const notString: string = booleanAttribute.getValue();
 
-    booleanAttribute = booleanAttribute.controls.get(0).getAttribute();
+    booleanAttribute = booleanAttribute.controls.get<Xrm.Controls.BooleanControl>(0).getAttribute();
 
     booleanAttribute.controls.forEach((c: Xrm.Controls.BooleanControl) => c.setDisabled(true));
 
-    booleanAttribute.controls.get(0).getAttribute().getAttributeType() === "boolean";
+    booleanAttribute.controls.get<Xrm.Controls.BooleanControl>(0).getAttribute().getAttributeType() === "boolean";
     // @ts-expect-error
-    booleanAttribute.controls.get(0).getAttribute().getAttributeType() === "optionset";
+    booleanAttribute.controls.get<Xrm.Controls.OptionSetControl>(0).getAttribute().getAttributeType() === "optionset";
 }
 
 // Demonstrate add and remove methods for formContext.data.process
@@ -785,3 +835,114 @@ function getStepsFromActiveStage(formContext: Xrm.FormContext) {
     // $ExpectType ItemCollection<Step>
     const steps = process.getActiveStage().getSteps();
 }
+
+// Demonstrate set visibility for framed control (webresource)
+const framedControlSetVisible = (formContext: Xrm.FormContext) => {
+    const framedControl = formContext.getControl<Xrm.Controls.FramedControl>("myWebResource");
+    if (framedControl === null) {
+        return;
+    }
+
+    // setVisible
+    framedControl.setVisible(true);
+};
+
+// Demonstrate ItemCollection.get() overloads
+function testItemCollectionGet(formContext: Xrm.FormContext) {
+    // Without explicit type parameter: returns T | null
+    // $ExpectType Tab | null
+    formContext.ui.tabs.get(0);
+
+    // $ExpectType Tab | null
+    formContext.ui.tabs.get("tabName");
+
+    // With explicit type parameter: returns TSubType (caller asserts item exists)
+    // $ExpectType Tab
+    formContext.ui.tabs.get<Xrm.Controls.Tab>(0);
+
+    // $ExpectType Tab
+    formContext.ui.tabs.get<Xrm.Controls.Tab>("tabName");
+}
+// Demonstrate Xrm.WebApi.offline.isAvailableOffline
+
+// Test with a typical entity logical name
+// $ExpectType boolean
+const isAccountAvailableOffline = Xrm.WebApi.offline.isAvailableOffline("account");
+
+// Test with a custom entity logical name
+// $ExpectType boolean
+const isCustomEntityAvailableOffline = Xrm.WebApi.offline.isAvailableOffline("new_customentity");
+
+// Should error with missing parameter
+// @ts-expect-error
+Xrm.WebApi.offline.isAvailableOffline();
+
+// Should error with a non-string parameter
+// @ts-expect-error
+Xrm.WebApi.offline.isAvailableOffline(12345);
+
+// Should error with extra parameters
+// @ts-expect-error
+Xrm.WebApi.offline.isAvailableOffline("account", "extra");
+
+// Demonstrate userSettings.getSecurityRolePrivilegesInfo().then(successCallback, errorCallback)
+
+const context = Xrm.Utility.getGlobalContext();
+
+// $ExpectType Promise<{ [privilegeId: string]: { id: string; businessUnitId: string; privilegeName: string; depth: number } }>
+const privilegePromise = context.userSettings.getSecurityRolePrivilegesInfo();
+
+privilegePromise.then(result => {
+    // $ExpectType { [privilegeId: string]: { id: string; businessUnitId: string; privilegeName: string; depth: number } }
+    result;
+
+    Object.keys(result).forEach(privilegeId => {
+        const privilege = result[privilegeId];
+
+        // $ExpectType string
+        privilege.id;
+
+        // $ExpectType string
+        privilege.businessUnitId;
+
+        // $ExpectType string
+        privilege.privilegeName;
+
+        // $ExpectType number
+        privilege.depth;
+    });
+});
+
+// Test the successCallback and errorCallback parameter types.
+context.userSettings.getSecurityRolePrivilegesInfo(
+    result => {
+        // $ExpectType { [privilegeId: string]: { id: string; businessUnitId: string; privilegeName: string; depth: number } }
+        result;
+
+        Object.keys(result).forEach(privilegeId => {
+            const privilege = result[privilegeId];
+
+            // $ExpectType string
+            privilege.id;
+
+            // $ExpectType string
+            privilege.businessUnitId;
+
+            // $ExpectType string
+            privilege.privilegeName;
+
+            // $ExpectType number
+            privilege.depth;
+        });
+    },
+    error => {
+        // $ExpectType { errorCode: number; message: string }
+        error;
+
+        // $ExpectType number
+        error.errorCode;
+
+        // $ExpectType string
+        error.message;
+    },
+);

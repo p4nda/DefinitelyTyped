@@ -2,6 +2,7 @@
 /* eslint @typescript-eslint/no-misused-promises: "error" */
 import supertest = require("supertest");
 import express = require("express");
+import "./supertest-cookie-tests";
 
 import { Server as HttpServer } from "http";
 import type { Http2SecureServer, Http2Server, Http2ServerRequest, Http2ServerResponse } from "http2";
@@ -99,3 +100,14 @@ request.get("/")
     .end((err: any, res: supertest.Response) => {
         if (err) throw err;
     });
+
+// generic expect
+interface ResponseBody {
+    a: boolean;
+    b: number;
+}
+request.get("/")
+    .expect({ a: true, b: 42 })
+    .expect<ResponseBody>({ a: true, b: 42 })
+    .expect(200, { a: true, b: 42 })
+    .expect<ResponseBody>(200, { a: true, b: 42 });

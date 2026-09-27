@@ -11,20 +11,19 @@ on:
 
 jobs:
   dprint-fmt:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
+    permissions:
+      contents: write
     if: github.repository == 'DefinitelyTyped/DefinitelyTyped'
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          # Use a deploy key so that CI triggers on pushes; we want to know if formatting broke something.
-          ssh-key: ${{ secrets.DEPLOY_KEY }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup-for-scripts
 
       - name: Get date
         id: date
         run: echo "date=$(/bin/date -u "+%Y-%m-%d")" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           # dprint caches info about the files in the repo to skip formatting them.
           # However, since package.json and .dprint.jsonc don't change very often,
@@ -40,9 +39,9 @@ jobs:
 
       - run: pnpm dprint fmt
 
-      - uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
+      - uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
         with:
-          commit_author: 'TypeScript Bot <typescriptbot@microsoft.com>'
+          commit_author: 'typescript-automation[bot] <290192711+typescript-automation[bot]@users.noreply.github.com>'
           commit_message: '🤖 dprint fmt'
-          commit_user_email: 'typescriptbot@microsoft.com'
-          commit_user_name: 'TypeScript Bot'
+          commit_user_email: '290192711+typescript-automation[bot]@users.noreply.github.com'
+          commit_user_name: 'typescript-automation[bot]'

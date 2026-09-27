@@ -1,5 +1,5 @@
-import DataSet from "@nginstack/engine/lib/dataset/DataSet";
-import Database from "@nginstack/engine/lib/database/Database";
+import DataSet from '@nginstack/engine/lib/dataset/DataSet';
+import Database from '@nginstack/engine/lib/database/Database';
 
 const values = ['test1', 'test_memo1', 1, true, new Date()];
 
@@ -71,7 +71,6 @@ database.uniqueId; // $ExpectType string
 database.date; // $ExpectType Date
 database.userKey; // $ExpectType number
 database.userName; // $ExpectType string
-database.userLanguage; // $ExpectType number
 database.workloadType; // $ExpectType string
 database.trackingId; // $ExpectType string
 database.referrer; // $ExpectType string
@@ -89,6 +88,6 @@ database.userHasScope(456, 'scope'); // $ExpectType boolean
 database.logout(); // $ExpectType void
 
 function getVersion(): string {
-    return '72.0.12';
+    return '87.0.1';
 }
 getVersion(); // $ExpectType string

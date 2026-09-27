@@ -19,6 +19,7 @@ let context: CanvasRenderingContext2D | null = document.querySelector("canvas")!
 let num: number;
 let padAngleMaybe: number | undefined;
 let pathStringMaybe: string | null;
+let digitsMaybe: number | null;
 
 // -----------------------------------------------------------------------------------
 // Test Arc Generator
@@ -90,6 +91,13 @@ if (context !== null) {
 context = canvasArc.context();
 
 svgArc = svgArc.context(null); // use as path string generator for SVG
+
+// digits(...) ----------------------------------------------------------------------
+
+svgArc = svgArc.digits(3);
+svgArc = svgArc.digits(null); // full precision
+
+digitsMaybe = svgArc.digits();
 
 // innerRadius(...) -------------------------------------------------------------------
 
@@ -416,6 +424,13 @@ context = defaultLine.context();
 
 line = line.context(null); // use as path string generator for SVG
 
+// digits(...) ----------------------------------------------------------------------
+
+line = line.digits(3);
+line = line.digits(null); // full precision
+
+digitsMaybe = line.digits();
+
 // x(...) ----------------------------------------------------------------------------
 
 defaultLine = defaultLine.x(30);
@@ -495,6 +510,13 @@ if (context !== null) {
 context = defaultLineRadial.context();
 
 lineRadial = lineRadial.context(null); // use as path string generator for SVG
+
+// digits(...) ----------------------------------------------------------------------
+
+lineRadial = lineRadial.digits(3);
+lineRadial = lineRadial.digits(null); // full precision
+
+digitsMaybe = lineRadial.digits();
 
 // angle(...) ----------------------------------------------------------------------------
 
@@ -613,6 +635,13 @@ if (context !== null) {
 context = defaultArea.context();
 
 area = area.context(null); // use as path string generator for SVG
+
+// digits(...) ----------------------------------------------------------------------
+
+area = area.digits(3);
+area = area.digits(null); // full precision
+
+digitsMaybe = area.digits();
 
 // x(...) ----------------------------------------------------------------------------
 
@@ -752,6 +781,13 @@ if (context !== null) {
 context = defaultAreaRadial.context();
 
 areaRadial = areaRadial.context(null); // use as path string generator for SVG
+
+// digits(...) ----------------------------------------------------------------------
+
+areaRadial = areaRadial.digits(3);
+areaRadial = areaRadial.digits(null); // full precision
+
+digitsMaybe = areaRadial.digits();
 
 // angle(...) ----------------------------------------------------------------------------
 
@@ -1208,6 +1244,18 @@ context = defaultArea.context();
 
 area = area.context(null); // use as path string generator for SVG
 
+// digits(...) ----------------------------------------------------------------------
+
+link = link.digits(3);
+link = link.digits(null); // full precision
+
+digitsMaybe = link.digits();
+
+radialLink = radialLink.digits(3);
+radialLink = radialLink.digits(null); // full precision
+
+digitsMaybe = radialLink.digits();
+
 // Use link generators ===============================================================
 
 // Render to canvas ------------------------------------------------------------------
@@ -1304,6 +1352,13 @@ if (context !== null) {
 context = canvasSymbol.context();
 
 svgSymbol = svgSymbol.context(null); // use as path string generator for SVG
+
+// digits(...) ----------------------------------------------------------------------
+
+svgSymbol = svgSymbol.digits(3);
+svgSymbol = svgSymbol.digits(null); // full precision
+
+digitsMaybe = svgSymbol.digits();
 
 // size() ----------------------------------------------------------------------------
 
@@ -1525,7 +1580,7 @@ defaultStack = defaultStack.offset(null);
 
 overlyComplicatedStack = overlyComplicatedStack.offset(d3Shape.stackOffsetWiggle);
 
-let offsetStackDatumSeries: (series: d3Shape.Series<StackDatum, StackKey>, order: number[]) => void;
+let offsetStackDatumSeries: (series: d3Shape.Series<StackDatum, StackKey>[], order: number[]) => void;
 offsetStackDatumSeries = overlyComplicatedStack.offset();
 
 // Use stack generator ============================================================
@@ -1567,8 +1622,8 @@ order = d3Shape.stackOrderReverse(seriesAnyAny);
 
 // Test stack offsets ===============================================================
 
-d3Shape.stackOffsetExpand(seriesAnyAny, order);
-d3Shape.stackOffsetDiverging(seriesAnyAny, order);
-d3Shape.stackOffsetNone(seriesAnyAny, order);
-d3Shape.stackOffsetSilhouette(seriesAnyAny, order);
-d3Shape.stackOffsetWiggle(seriesAnyAny, order);
+d3Shape.stackOffsetExpand(seriesArray, order);
+d3Shape.stackOffsetDiverging(seriesArray, order);
+d3Shape.stackOffsetNone(seriesArray, order);
+d3Shape.stackOffsetSilhouette(seriesArray, order);
+d3Shape.stackOffsetWiggle(seriesArray, order);

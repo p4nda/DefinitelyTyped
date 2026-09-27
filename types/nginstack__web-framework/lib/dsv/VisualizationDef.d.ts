@@ -6,13 +6,13 @@ declare class VisualizationDef {
     extraExportFormats: Array<{
         name: string;
         processKey: number;
-        useRawData: boolean;
+        useRawData: boolean | undefined;
     }>;
     header: VisualizationHeaderDef;
     footer: VisualizationFooterDef;
     canExport: boolean;
     help: string;
-    messageWhenEmpty: string;
+    noResultsMessage: string;
     onCreate: ((arg0: Visualization) => any) | null;
     title: string;
     type: string;

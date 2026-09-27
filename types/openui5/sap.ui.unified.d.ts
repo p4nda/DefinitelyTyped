@@ -1,4 +1,4 @@
-// For Library Version: 1.143.0
+// For Library Version: 1.152.0
 
 declare module "sap/ui/unified/library" {
   /**
@@ -33,7 +33,6 @@ declare module "sap/ui/unified/library" {
    * This enum is part of the 'sap/ui/unified/library' module export and must be accessed by the property
    * 'CalendarAppointmentRoundWidth'.
    *
-   * @since 1.81.0
    * @experimental As of version 1.81.0.
    */
   export enum CalendarAppointmentRoundWidth {
@@ -232,8 +231,9 @@ declare module "sap/ui/unified/library" {
    * This enum is part of the 'sap/ui/unified/library' module export and must be accessed by the property
    * 'ContentSwitcherAnimation'.
    *
-   * @since 1.16.0
-   * @experimental As of version 1.16.0. API is not yet finished and might change completely
+   * @deprecated As of version 1.147.0. the concept has been discarded. API is not yet finished and might
+   * change completely
+   * @experimental As of version 1.16.0.
    */
   export enum ContentSwitcherAnimation {
     /**
@@ -319,6 +319,15 @@ declare module "sap/ui/unified/library" {
   }
 
   /**
+   * Types of recurrence rule pattern.
+   *
+   * This enum is part of the 'sap/ui/unified/library' module export and must be accessed by the property
+   * 'RecurrenceRuleType'.
+   *
+   * @since 1.149.0
+   */
+  export enum RecurrenceRuleType {}
+  /**
    * Interval types in a `RecurrenceType`.
    *
    * This enum is part of the 'sap/ui/unified/library' module export and must be accessed by the property
@@ -354,6 +363,15 @@ declare module "sap/ui/unified/library" {
      */
     WorkingDay = "WorkingDay",
   }
+  /**
+   * Week order within a month for recurrence rules.
+   *
+   * This enum is part of the 'sap/ui/unified/library' module export and must be accessed by the property
+   * 'WeekOfMonth'.
+   *
+   * @since 1.149.0
+   */
+  export enum WeekOfMonth {}
 }
 
 declare module "sap/ui/unified/Calendar" {
@@ -1096,6 +1114,21 @@ declare module "sap/ui/unified/Calendar" {
      */
     getShowWeekNumbers(): boolean;
     /**
+     * Gets current value of property {@link #getShowWeekNumbersHeader showWeekNumbersHeader}.
+     *
+     * Determines whether the header of the week numbers column is displayed. The column header text is translated
+     * according to the active language.
+     *
+     * **Note:** Takes effect only when `showWeekNumbers` is set to `true`.
+     *
+     * Default value is `false`.
+     *
+     * @since 1.151
+     *
+     * @returns Value of property `showWeekNumbersHeader`
+     */
+    getShowWeekNumbersHeader(): boolean;
+    /**
      * Gets current value of property {@link #getSingleSelection singleSelection}.
      *
      * Determines if a single date or single interval, when `intervalSelection` is set to `true`, can be selected.
@@ -1550,6 +1583,28 @@ declare module "sap/ui/unified/Calendar" {
       bShowWeekNumbers?: boolean
     ): this;
     /**
+     * Sets a new value for property {@link #getShowWeekNumbersHeader showWeekNumbersHeader}.
+     *
+     * Determines whether the header of the week numbers column is displayed. The column header text is translated
+     * according to the active language.
+     *
+     * **Note:** Takes effect only when `showWeekNumbers` is set to `true`.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * Default value is `false`.
+     *
+     * @since 1.151
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setShowWeekNumbersHeader(
+      /**
+       * New value for property `showWeekNumbersHeader`
+       */
+      bShowWeekNumbersHeader?: boolean
+    ): this;
+    /**
      * Setter for the property `singleSelection`. If set to `true` only a single date or single interval, when
      * `intervalSelection` is set to `true`, can be selected.
      *
@@ -1711,6 +1766,16 @@ declare module "sap/ui/unified/Calendar" {
      * @since 1.48
      */
     showWeekNumbers?: boolean | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * Determines whether the header of the week numbers column is displayed. The column header text is translated
+     * according to the active language.
+     *
+     * **Note:** Takes effect only when `showWeekNumbers` is set to `true`.
+     *
+     * @since 1.151
+     */
+    showWeekNumbersHeader?: boolean | PropertyBindingInfo | `{${string}}`;
 
     /**
      * Determines whether there is a shortcut navigation to Today. When used in Month, Year or Year-range picker
@@ -3966,6 +4031,21 @@ declare module "sap/ui/unified/calendar/Month" {
      */
     getShowWeekNumbers(): boolean;
     /**
+     * Gets current value of property {@link #getShowWeekNumbersHeader showWeekNumbersHeader}.
+     *
+     * Determines whether the header of the week numbers column is displayed. The column header text is translated
+     * according to the active language.
+     *
+     * **Note:** Takes effect only when `showWeekNumbers` is set to `true`.
+     *
+     * Default value is `false`.
+     *
+     * @since 1.151
+     *
+     * @returns Value of property `showWeekNumbersHeader`
+     */
+    getShowWeekNumbersHeader(): boolean;
+    /**
      * Gets current value of property {@link #getSingleSelection singleSelection}.
      *
      * If set, only a single date or interval, if intervalSelection is enabled, can be selected
@@ -4385,6 +4465,28 @@ declare module "sap/ui/unified/calendar/Month" {
       bShowWeekNumbers?: boolean
     ): this;
     /**
+     * Sets a new value for property {@link #getShowWeekNumbersHeader showWeekNumbersHeader}.
+     *
+     * Determines whether the header of the week numbers column is displayed. The column header text is translated
+     * according to the active language.
+     *
+     * **Note:** Takes effect only when `showWeekNumbers` is set to `true`.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * Default value is `false`.
+     *
+     * @since 1.151
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setShowWeekNumbersHeader(
+      /**
+       * New value for property `showWeekNumbersHeader`
+       */
+      bShowWeekNumbersHeader?: boolean
+    ): this;
+    /**
      * Sets a new value for property {@link #getSingleSelection singleSelection}.
      *
      * If set, only a single date or interval, if intervalSelection is enabled, can be selected
@@ -4500,6 +4602,16 @@ declare module "sap/ui/unified/calendar/Month" {
      * @since 1.48
      */
     showWeekNumbers?: boolean | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * Determines whether the header of the week numbers column is displayed. The column header text is translated
+     * according to the active language.
+     *
+     * **Note:** Takes effect only when `showWeekNumbers` is set to `true`.
+     *
+     * @since 1.151
+     */
+    showWeekNumbersHeader?: boolean | PropertyBindingInfo | `{${string}}`;
 
     /**
      * If set, the calendar week numbering is used for display. If not set, the calendar week numbering of the
@@ -5770,6 +5882,18 @@ declare module "sap/ui/unified/calendar/MonthsRow" {
      */
     getShowHeader(): boolean;
     /**
+     * Gets current value of property {@link #getShowWeekNumbers showWeekNumbers}.
+     *
+     * Determines if the week numbers are displayed.
+     *
+     * Default value is `false`.
+     *
+     * @since 1.145.0
+     *
+     * @returns Value of property `showWeekNumbers`
+     */
+    getShowWeekNumbers(): boolean;
+    /**
      * Gets current value of property {@link #getSingleSelection singleSelection}.
      *
      * If set, only a single month or interval, if intervalSelection is enabled, can be selected
@@ -6006,6 +6130,25 @@ declare module "sap/ui/unified/calendar/MonthsRow" {
       bShowHeader?: boolean
     ): this;
     /**
+     * Sets a new value for property {@link #getShowWeekNumbers showWeekNumbers}.
+     *
+     * Determines if the week numbers are displayed.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * Default value is `false`.
+     *
+     * @since 1.145.0
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setShowWeekNumbers(
+      /**
+       * New value for property `showWeekNumbers`
+       */
+      bShowWeekNumbers?: boolean
+    ): this;
+    /**
      * Sets a new value for property {@link #getSingleSelection singleSelection}.
      *
      * If set, only a single month or interval, if intervalSelection is enabled, can be selected
@@ -6077,6 +6220,13 @@ declare module "sap/ui/unified/calendar/MonthsRow" {
      * If set, a header with the years is shown to visualize what month belongs to what year.
      */
     showHeader?: boolean | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * Determines if the week numbers are displayed.
+     *
+     * @since 1.145.0
+     */
+    showWeekNumbers?: boolean | PropertyBindingInfo | `{${string}}`;
 
     /**
      * Date ranges for selected dates. If `singleSelection` is set, only the first entry is used.
@@ -7657,7 +7807,7 @@ declare module "sap/ui/unified/CalendarAppointment" {
     $DateTypeRangeSettings,
   } from "sap/ui/unified/DateTypeRange";
 
-  import { ID, CSSColor, URI } from "sap/ui/core/library";
+  import { ID, aria, CSSColor, URI } from "sap/ui/core/library";
 
   import Control from "sap/ui/core/Control";
 
@@ -7772,6 +7922,27 @@ declare module "sap/ui/unified/CalendarAppointment" {
      * @returns Reference to `this` in order to allow method chaining
      */
     destroyCustomContent(): this;
+    /**
+     * Gets current value of property {@link #getAriaHasPopup ariaHasPopup}.
+     *
+     * Specifies the value of the `aria-haspopup` attribute
+     *
+     * If the value is `None`, the attribute will not be rendered. Otherwise it will be rendered with the selected
+     * value.
+     *
+     * NOTE: Use this property only when an `sap.ui.unified.CalendarAppointment` instance is active and related
+     * to a popover/popup. The value needs to be equal to the main/root role of the popup - e.g. dialog, menu
+     * or list (examples: if you have dialog -> dialog, if you have menu -> menu; if you have list -> list;
+     * if you have dialog containing a list -> dialog). Do not use it, if you open a standard sap.m.Dialog,
+     * MessageBox or other type of modal dialogs.
+     *
+     * Default value is `None`.
+     *
+     * @since 1.150.0
+     *
+     * @returns Value of property `ariaHasPopup`
+     */
+    getAriaHasPopup(): aria.HasPopup;
     /**
      * Returns array of IDs of the elements which are the current targets of the association {@link #getAriaLabelledBy ariaLabelledBy}.
      */
@@ -7955,6 +8126,34 @@ declare module "sap/ui/unified/CalendarAppointment" {
        */
       vCustomContent: int | string | Control
     ): Control | null;
+    /**
+     * Sets a new value for property {@link #getAriaHasPopup ariaHasPopup}.
+     *
+     * Specifies the value of the `aria-haspopup` attribute
+     *
+     * If the value is `None`, the attribute will not be rendered. Otherwise it will be rendered with the selected
+     * value.
+     *
+     * NOTE: Use this property only when an `sap.ui.unified.CalendarAppointment` instance is active and related
+     * to a popover/popup. The value needs to be equal to the main/root role of the popup - e.g. dialog, menu
+     * or list (examples: if you have dialog -> dialog, if you have menu -> menu; if you have list -> list;
+     * if you have dialog containing a list -> dialog). Do not use it, if you open a standard sap.m.Dialog,
+     * MessageBox or other type of modal dialogs.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * Default value is `None`.
+     *
+     * @since 1.150.0
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setAriaHasPopup(
+      /**
+       * New value for property `ariaHasPopup`
+       */
+      sAriaHasPopup?: aria.HasPopup | keyof typeof aria.HasPopup
+    ): this;
     /**
      * Sets a new value for property {@link #getColor color}.
      *
@@ -8143,6 +8342,25 @@ declare module "sap/ui/unified/CalendarAppointment" {
      * @since 1.46.0
      */
     color?: CSSColor | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * Specifies the value of the `aria-haspopup` attribute
+     *
+     * If the value is `None`, the attribute will not be rendered. Otherwise it will be rendered with the selected
+     * value.
+     *
+     * NOTE: Use this property only when an `sap.ui.unified.CalendarAppointment` instance is active and related
+     * to a popover/popup. The value needs to be equal to the main/root role of the popup - e.g. dialog, menu
+     * or list (examples: if you have dialog -> dialog, if you have menu -> menu; if you have list -> list;
+     * if you have dialog containing a list -> dialog). Do not use it, if you open a standard sap.m.Dialog,
+     * MessageBox or other type of modal dialogs.
+     *
+     * @since 1.150.0
+     */
+    ariaHasPopup?:
+      | (aria.HasPopup | keyof typeof aria.HasPopup)
+      | PropertyBindingInfo
+      | `{${string}}`;
 
     /**
      * Holds the content of the appointment.
@@ -14538,7 +14756,7 @@ declare module "sap/ui/unified/DateTypeRange" {
     $DateRangeSettings,
   } from "sap/ui/unified/DateRange";
 
-  import { CSSColor } from "sap/ui/core/library";
+  import { aria, CSSColor } from "sap/ui/core/library";
 
   import ElementMetadata from "sap/ui/core/ElementMetadata";
 
@@ -14615,6 +14833,24 @@ declare module "sap/ui/unified/DateTypeRange" {
      */
     static getMetadata(): ElementMetadata;
     /**
+     * Gets current value of property {@link #getAriaHasPopup ariaHasPopup}.
+     *
+     * Defines the value of the `aria-haspopup` attribute of the day cell.
+     *
+     * **Note:** Use this property only when the cell is related to a popover/popup. The value should be equal
+     * to the main/root role of the popup.
+     *
+     * **Note:** Setting `type` to `sap.ui.unified.CalendarDayType.None` together with this property allows
+     * adding the attribute without any visual marking.
+     *
+     * Default value is `None`.
+     *
+     * @since 1.152.0
+     *
+     * @returns Value of property `ariaHasPopup`
+     */
+    getAriaHasPopup(): aria.HasPopup;
+    /**
      * Gets current value of property {@link #getColor color}.
      *
      * Background color of the `Calendar` `specialDates` aggregation. If set, this color will override the default
@@ -14649,6 +14885,31 @@ declare module "sap/ui/unified/DateTypeRange" {
      * @returns Value of property `type`
      */
     getType(): CalendarDayType;
+    /**
+     * Sets a new value for property {@link #getAriaHasPopup ariaHasPopup}.
+     *
+     * Defines the value of the `aria-haspopup` attribute of the day cell.
+     *
+     * **Note:** Use this property only when the cell is related to a popover/popup. The value should be equal
+     * to the main/root role of the popup.
+     *
+     * **Note:** Setting `type` to `sap.ui.unified.CalendarDayType.None` together with this property allows
+     * adding the attribute without any visual marking.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * Default value is `None`.
+     *
+     * @since 1.152.0
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setAriaHasPopup(
+      /**
+       * New value for property `ariaHasPopup`
+       */
+      sAriaHasPopup?: aria.HasPopup | keyof typeof aria.HasPopup
+    ): this;
     /**
      * Sets a new value for property {@link #getColor color}.
      *
@@ -14736,6 +14997,22 @@ declare module "sap/ui/unified/DateTypeRange" {
      * @since 1.76.0
      */
     color?: CSSColor | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * Defines the value of the `aria-haspopup` attribute of the day cell.
+     *
+     * **Note:** Use this property only when the cell is related to a popover/popup. The value should be equal
+     * to the main/root role of the popup.
+     *
+     * **Note:** Setting `type` to `sap.ui.unified.CalendarDayType.None` together with this property allows
+     * adding the attribute without any visual marking.
+     *
+     * @since 1.152.0
+     */
+    ariaHasPopup?:
+      | (aria.HasPopup | keyof typeof aria.HasPopup)
+      | PropertyBindingInfo
+      | `{${string}}`;
   }
 }
 
@@ -15548,7 +15825,7 @@ declare module "sap/ui/unified/FileUploader" {
      *
      * @since 1.25.0
      *
-     * @returns Reference to `this` for method chaining
+     * @returns Reference to `this` for method chaining.
      */
     clear(): this;
     /**
@@ -16011,6 +16288,9 @@ declare module "sap/ui/unified/FileUploader" {
      *
      * Allows users to upload all files from a given directory and its corresponding subdirectories.
      *
+     * **Note:** This feature is supported on all WebKit-based browsers as well as Microsoft Edge and Firefox
+     * after version 50. **Note:** Multiple directory selection is not supported.
+     *
      * Default value is `false`.
      *
      * @since 1.105.0
@@ -16053,7 +16333,7 @@ declare module "sap/ui/unified/FileUploader" {
      *
      * Chosen HTTP request method for file upload.
      *
-     * Default value is `Post`.
+     * Default value is `POST`.
      *
      * @since 1.81.0
      *
@@ -16097,6 +16377,7 @@ declare module "sap/ui/unified/FileUploader" {
      * Default value is `empty string`.
      *
      * @since 1.26.0
+     * @deprecated As of version 1.144. because it was relevant for `sap.ui.commons.FileUploader`.
      *
      * @returns Value of property `iconHovered`
      */
@@ -16124,10 +16405,18 @@ declare module "sap/ui/unified/FileUploader" {
      * Default value is `empty string`.
      *
      * @since 1.26.0
+     * @deprecated As of version 1.144. because it was relevant for `sap.ui.commons.FileUploader`.
      *
      * @returns Value of property `iconSelected`
      */
     getIconSelected(): URI;
+    /**
+     * Returns the id that should be used by external labels pointing to the native input.
+     *
+     *
+     * @returns ID of the native input element.
+     */
+    getIdForLabel(): string;
     /**
      * Gets current value of property {@link #getMaximumFilenameLength maximumFilenameLength}.
      *
@@ -16228,6 +16517,22 @@ declare module "sap/ui/unified/FileUploader" {
        */
       aBlobs: Blob[]
     ): Promise<Blob[]>;
+    /**
+     * Gets current value of property {@link #getRequired required}.
+     *
+     * Indicates whether the file uploader is required.
+     *
+     * **Note:** The control can be marked as required either by setting this property to `true` or by using
+     * the legacy approach of setting the `required` property to `true` on a `sap.m.Label` that has its `labelFor`
+     * property pointing to this control.
+     *
+     * Default value is `false`.
+     *
+     * @since 1.144
+     *
+     * @returns Value of property `required`
+     */
+    getRequired(): boolean;
     /**
      * Gets current value of property {@link #getSameFilenameAllowed sameFilenameAllowed}.
      *
@@ -16563,6 +16868,9 @@ declare module "sap/ui/unified/FileUploader" {
      *
      * Allows users to upload all files from a given directory and its corresponding subdirectories.
      *
+     * **Note:** This feature is supported on all WebKit-based browsers as well as Microsoft Edge and Firefox
+     * after version 50. **Note:** Multiple directory selection is not supported.
+     *
      * When called with a value of `null` or `undefined`, the default value of the property will be restored.
      *
      * Default value is `false`.
@@ -16622,7 +16930,7 @@ declare module "sap/ui/unified/FileUploader" {
      *
      * When called with a value of `null` or `undefined`, the default value of the property will be restored.
      *
-     * Default value is `Post`.
+     * Default value is `POST`.
      *
      * @since 1.81.0
      *
@@ -16687,6 +16995,7 @@ declare module "sap/ui/unified/FileUploader" {
      * Default value is `empty string`.
      *
      * @since 1.26.0
+     * @deprecated As of version 1.144. because it was relevant for `sap.ui.commons.FileUploader`.
      *
      * @returns Reference to `this` in order to allow method chaining
      */
@@ -16728,6 +17037,7 @@ declare module "sap/ui/unified/FileUploader" {
      * Default value is `empty string`.
      *
      * @since 1.26.0
+     * @deprecated As of version 1.144. because it was relevant for `sap.ui.commons.FileUploader`.
      *
      * @returns Reference to `this` in order to allow method chaining
      */
@@ -16849,6 +17159,29 @@ declare module "sap/ui/unified/FileUploader" {
        * New value for property `placeholder`
        */
       sPlaceholder?: string
+    ): this;
+    /**
+     * Sets a new value for property {@link #getRequired required}.
+     *
+     * Indicates whether the file uploader is required.
+     *
+     * **Note:** The control can be marked as required either by setting this property to `true` or by using
+     * the legacy approach of setting the `required` property to `true` on a `sap.m.Label` that has its `labelFor`
+     * property pointing to this control.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * Default value is `false`.
+     *
+     * @since 1.144
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setRequired(
+      /**
+       * New value for property `required`
+       */
+      bRequired?: boolean
     ): this;
     /**
      * Sets a new value for property {@link #getSameFilenameAllowed sameFilenameAllowed}.
@@ -17246,6 +17579,7 @@ declare module "sap/ui/unified/FileUploader" {
      * If not specified, the base icon is used. If an icon font icon is used, this property is ignored.
      *
      * @since 1.26.0
+     * @deprecated As of version 1.144. because it was relevant for `sap.ui.commons.FileUploader`.
      */
     iconHovered?: URI | PropertyBindingInfo | `{${string}}`;
 
@@ -17256,6 +17590,7 @@ declare module "sap/ui/unified/FileUploader" {
      * If not specified, the base or hovered icon is used. If an icon font icon is used, this property is ignored.
      *
      * @since 1.26.0
+     * @deprecated As of version 1.144. because it was relevant for `sap.ui.commons.FileUploader`.
      */
     iconSelected?: URI | PropertyBindingInfo | `{${string}}`;
 
@@ -17276,9 +17611,23 @@ declare module "sap/ui/unified/FileUploader" {
     /**
      * Allows users to upload all files from a given directory and its corresponding subdirectories.
      *
+     * **Note:** This feature is supported on all WebKit-based browsers as well as Microsoft Edge and Firefox
+     * after version 50. **Note:** Multiple directory selection is not supported.
+     *
      * @since 1.105.0
      */
     directory?: boolean | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * Indicates whether the file uploader is required.
+     *
+     * **Note:** The control can be marked as required either by setting this property to `true` or by using
+     * the legacy approach of setting the `required` property to `true` on a `sap.m.Label` that has its `labelFor`
+     * property pointing to this control.
+     *
+     * @since 1.144
+     */
+    required?: boolean | PropertyBindingInfo | `{${string}}`;
 
     /**
      * The parameters for the `FileUploader` which are rendered as a hidden input field.
@@ -17723,9 +18072,21 @@ declare module "sap/ui/unified/FileUploaderHttpRequestMethod" {
     /**
      * HTTP request POST method.
      */
+    POST = "POST",
+    /**
+     * HTTP request POST method.
+     *
+     * @deprecated As of version 1.145.0. use {@link sap.ui.unified.FileUploaderHttpRequestMethod.POST} instead
+     */
     Post = "POST",
     /**
      * HTTP request PUT method.
+     */
+    PUT = "PUT",
+    /**
+     * HTTP request PUT method.
+     *
+     * @deprecated As of version 1.145.0. use {@link sap.ui.unified.FileUploaderHttpRequestMethod.PUT} instead
      */
     Put = "PUT",
   }
@@ -17878,6 +18239,75 @@ declare module "sap/ui/unified/FileUploaderParameter" {
      */
     value?: string | PropertyBindingInfo;
   }
+}
+
+declare module "sap/ui/unified/FileUploaderRenderer" {
+  import RenderManager from "sap/ui/core/RenderManager";
+
+  import FileUploader from "sap/ui/unified/FileUploader";
+
+  /**
+   * FileUploader renderer.
+   *
+   * @ui5-protected DO NOT USE IN APPLICATIONS (only for related classes in the framework)
+   */
+  interface FileUploaderRenderer {
+    /**
+     * Adds the CSS value state classes to the control's root element using the provided {@link sap.ui.core.RenderManager}.
+     *
+     * @ui5-protected Do not call from applications (only from related classes in the framework)
+     */
+    addValueStateClasses(
+      /**
+       * The RenderManager used for writing to the render output buffer.
+       */
+      oRm: RenderManager,
+      /**
+       * An object representation of the control that should be rendered.
+       */
+      oFileUploader: FileUploader
+    ): void;
+    /**
+     * Returns the accessibility state of the control. Hook for the subclasses.
+     *
+     * @ui5-protected Do not call from applications (only from related classes in the framework)
+     *
+     * @returns The accessibility state object.
+     */
+    getAccessibilityState(): /* was: sap.m.InputBaseAccessibilityState */ any;
+    /**
+     * Renders the hidden aria-describedby and error message nodes for accessibility.
+     *
+     * @ui5-protected Do not call from applications (only from related classes in the framework)
+     */
+    renderValueStateAccDom(
+      /**
+       * The RenderManager used for writing to the render output buffer.
+       */
+      oRm: RenderManager,
+      /**
+       * An object representation of the control that should be rendered.
+       */
+      oFileUploader: FileUploader
+    ): void;
+    /**
+     * Writes the accessibility state of the control. Hook for the subclasses.
+     *
+     * @ui5-protected Do not call from applications (only from related classes in the framework)
+     */
+    writeAccessibilityState(
+      /**
+       * The RenderManager used for writing to the render output buffer.
+       */
+      oRm: RenderManager,
+      /**
+       * An object representation of the control that should be rendered.
+       */
+      oFileUploader: /* was: sap.m.InputBase */ any
+    ): void;
+  }
+  const FileUploaderRenderer: FileUploaderRenderer;
+  export default FileUploaderRenderer;
 }
 
 declare module "sap/ui/unified/FileUploaderXHRSettings" {
@@ -18444,7 +18874,7 @@ declare module "sap/ui/unified/Menu" {
     /**
      * Returns all items that have `selected` properties set to `true`. **Note:** Only items with `selected`
      * property set that are members of `MenuItemGroup` with `ItemSelectionMode` property set to {@link sap.ui.core.ItemSelectionMode.SingleSelect }
-     * or {@link sap.ui.unified.ItemSelectionMode.MultiSelect}> are taken into account.
+     * or {@link sap.ui.core.ItemSelectionMode.MultiSelect}> are taken into account.
      *
      * @since 1.127.0
      *
@@ -19130,7 +19560,7 @@ declare module "sap/ui/unified/MenuItem" {
      * Determines whether the `MenuItem` is selected (default is set to `false`). A selected `MenuItem` has
      * a check mark rendered at its end. **Note: ** selection functionality works only if the menu item is a
      * member of `MenuItemGroup` with `itemSelectionMode` set to {@link sap.ui.core.ItemSelectionMode.SingleSelect }
-     * or {@link sap.ui.unified.ItemSelectionMode.MultiSelect}.
+     * or {@link sap.ui.core.ItemSelectionMode.MultiSelect}.
      *
      * @since 1.127.0
      */
@@ -20054,7 +20484,6 @@ declare module "sap/ui/unified/NonWorkingPeriod" {
   /**
    * NonWorkingPeriod
    *
-   * @since 1.27.0
    * @experimental As of version 1.127.0.
    */
   export default class NonWorkingPeriod extends UI5Element {
@@ -20196,13 +20625,613 @@ declare module "sap/ui/unified/NonWorkingPeriod" {
   }
 }
 
+declare module "sap/ui/unified/RecurrenceRule" {
+  import { default as UI5Element, $ElementSettings } from "sap/ui/core/Element";
+
+  import ElementMetadata from "sap/ui/core/ElementMetadata";
+
+  import {
+    RecurrenceType,
+    RecurrenceRuleType,
+    WeekOfMonth,
+  } from "sap/ui/unified/library";
+
+  import { PropertyBindingInfo } from "sap/ui/base/ManagedObject";
+
+  /**
+   * Binding DTO for recurrence rule configuration. Carries all possible recurrence properties along with
+   * the `recurrenceType` that determines which properties are relevant.
+   *
+   * When set on a parent aggregation, the parent internally creates the correct concrete subclass ({@link sap.ui.unified.WeeklyRecurrenceRule},
+   * {@link sap.ui.unified.MonthlyRecurrenceRule}, or {@link sap.ui.unified.YearlyRecurrenceRule}) via {@link sap.ui.unified.RecurrenceRule._factory}.
+   *
+   * Usage in XML binding:
+   * ```javascript
+   *
+   * <unified:recurrenceRule>
+   *   <unified:RecurrenceRule
+   *     recurrenceType="{/RecurrenceType}"
+   *     days="{/Days}"
+   *     weekOfMonth="{/WeekOfMonth}"
+   *     dayOfMonth="{/DayOfMonth}"
+   *     month="{/Month}" />
+   * </unified:recurrenceRule>
+   * ```
+   *
+   *
+   * @experimental As of version 1.149.
+   */
+  export default class RecurrenceRule extends UI5Element {
+    /**
+     * Constructor for a new `RecurrenceRule`.
+     *
+     * Accepts an object literal `mSettings` that defines initial property values, aggregated and associated
+     * objects as well as event handlers. See {@link sap.ui.base.ManagedObject#constructor} for a general description
+     * of the syntax of the settings object.
+     */
+    constructor(
+      /**
+       * Initial settings for the new element
+       */
+      mSettings?: $RecurrenceRuleSettings
+    );
+    /**
+     * Constructor for a new `RecurrenceRule`.
+     *
+     * Accepts an object literal `mSettings` that defines initial property values, aggregated and associated
+     * objects as well as event handlers. See {@link sap.ui.base.ManagedObject#constructor} for a general description
+     * of the syntax of the settings object.
+     */
+    constructor(
+      /**
+       * ID for the new element, generated automatically if no ID is given
+       */
+      sId?: string,
+      /**
+       * Initial settings for the new element
+       */
+      mSettings?: $RecurrenceRuleSettings
+    );
+
+    /**
+     * Creates a new subclass of class sap.ui.unified.RecurrenceRule with name `sClassName` and enriches it
+     * with the information contained in `oClassInfo`.
+     *
+     * `oClassInfo` might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+     *
+     *
+     * @returns Created class / constructor function
+     */
+    static extend<T extends Record<string, unknown>>(
+      /**
+       * Name of the class being created
+       */
+      sClassName: string,
+      /**
+       * Object literal with information about the class
+       */
+      oClassInfo?: sap.ClassInfo<T, RecurrenceRule>,
+      /**
+       * Constructor function for the metadata object; if not given, it defaults to the metadata implementation
+       * used by this class
+       */
+      FNMetaImpl?: Function
+    ): Function;
+    /**
+     * Returns a metadata object for class sap.ui.unified.RecurrenceRule.
+     *
+     *
+     * @returns Metadata object describing this class
+     */
+    static getMetadata(): ElementMetadata;
+    /**
+     * Gets current value of property {@link #getDayOfMonth dayOfMonth}.
+     *
+     * Day of month (1–31). A value of `0` means "inherit from parent start date". Relevant when `type` is `DayOfMonth`.
+     *
+     * Default value is `0`.
+     *
+     *
+     * @returns Value of property `dayOfMonth`
+     */
+    getDayOfMonth(): int;
+    /**
+     * Gets current value of property {@link #getDayOfWeek dayOfWeek}.
+     *
+     * Day of week (0–6, 0 = Sunday). Relevant when `type` is `DayOfWeek`.
+     *
+     * Default value is `0`.
+     *
+     *
+     * @returns Value of property `dayOfWeek`
+     */
+    getDayOfWeek(): int;
+    /**
+     * Gets current value of property {@link #getDays days}.
+     *
+     * Days of week for weekly recurrence (0–6, 0 = Sunday). Relevant when `recurrenceType` is `Weekly`.
+     *
+     * Default value is `[]`.
+     *
+     *
+     * @returns Value of property `days`
+     */
+    getDays(): int[];
+    /**
+     * Gets current value of property {@link #getMonth month}.
+     *
+     * Month of year (0–11, 0 = January). Relevant when `recurrenceType` is `Yearly`.
+     *
+     * Default value is `-1`.
+     *
+     *
+     * @returns Value of property `month`
+     */
+    getMonth(): int;
+    /**
+     * Gets current value of property {@link #getRecurrenceType recurrenceType}.
+     *
+     * The recurrence type. Determines which properties are relevant and which concrete subclass is created
+     * internally by the parent.
+     *
+     *
+     * @returns Value of property `recurrenceType`
+     */
+    getRecurrenceType(): RecurrenceType;
+    /**
+     * Gets current value of property {@link #getType type}.
+     *
+     * Type of the advanced recurrence pattern. Relevant when `recurrenceType` is `Monthly` or `Yearly`.
+     *
+     * Default value is `DayOfMonth`.
+     *
+     *
+     * @returns Value of property `type`
+     */
+    getType(): RecurrenceRuleType;
+    /**
+     * Gets current value of property {@link #getWeekOfMonth weekOfMonth}.
+     *
+     * Week of month (First, Second, Third, Fourth, Last). Relevant when `type` is `DayOfWeek`.
+     *
+     * Default value is `First`.
+     *
+     *
+     * @returns Value of property `weekOfMonth`
+     */
+    getWeekOfMonth(): WeekOfMonth;
+    /**
+     * Sets a new value for property {@link #getDayOfMonth dayOfMonth}.
+     *
+     * Day of month (1–31). A value of `0` means "inherit from parent start date". Relevant when `type` is `DayOfMonth`.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * Default value is `0`.
+     *
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setDayOfMonth(
+      /**
+       * New value for property `dayOfMonth`
+       */
+      iDayOfMonth?: int
+    ): this;
+    /**
+     * Sets a new value for property {@link #getDayOfWeek dayOfWeek}.
+     *
+     * Day of week (0–6, 0 = Sunday). Relevant when `type` is `DayOfWeek`.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * Default value is `0`.
+     *
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setDayOfWeek(
+      /**
+       * New value for property `dayOfWeek`
+       */
+      iDayOfWeek?: int
+    ): this;
+    /**
+     * Sets the days of week (0–6, 0 = Sunday).
+     */
+    setDays(vDays: number | number[]): this;
+    /**
+     * Sets a new value for property {@link #getMonth month}.
+     *
+     * Month of year (0–11, 0 = January). Relevant when `recurrenceType` is `Yearly`.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * Default value is `-1`.
+     *
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setMonth(
+      /**
+       * New value for property `month`
+       */
+      iMonth?: int
+    ): this;
+    /**
+     * Sets a new value for property {@link #getRecurrenceType recurrenceType}.
+     *
+     * The recurrence type. Determines which properties are relevant and which concrete subclass is created
+     * internally by the parent.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setRecurrenceType(
+      /**
+       * New value for property `recurrenceType`
+       */
+      sRecurrenceType: RecurrenceType | keyof typeof RecurrenceType
+    ): this;
+    /**
+     * Sets a new value for property {@link #getType type}.
+     *
+     * Type of the advanced recurrence pattern. Relevant when `recurrenceType` is `Monthly` or `Yearly`.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * Default value is `DayOfMonth`.
+     *
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setType(
+      /**
+       * New value for property `type`
+       */
+      sType?: RecurrenceRuleType | keyof typeof RecurrenceRuleType
+    ): this;
+    /**
+     * Sets a new value for property {@link #getWeekOfMonth weekOfMonth}.
+     *
+     * Week of month (First, Second, Third, Fourth, Last). Relevant when `type` is `DayOfWeek`.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * Default value is `First`.
+     *
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setWeekOfMonth(
+      /**
+       * New value for property `weekOfMonth`
+       */
+      sWeekOfMonth?: WeekOfMonth | keyof typeof WeekOfMonth
+    ): this;
+  }
+  /**
+   * Describes the settings that can be provided to the RecurrenceRule constructor.
+   *
+   * @experimental As of version 1.149.
+   */
+  export interface $RecurrenceRuleSettings extends $ElementSettings {
+    /**
+     * The recurrence type. Determines which properties are relevant and which concrete subclass is created
+     * internally by the parent.
+     */
+    recurrenceType?:
+      | (RecurrenceType | keyof typeof RecurrenceType)
+      | PropertyBindingInfo
+      | `{${string}}`;
+
+    /**
+     * Days of week for weekly recurrence (0–6, 0 = Sunday). Relevant when `recurrenceType` is `Weekly`.
+     */
+    days?: int[] | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * Type of the advanced recurrence pattern. Relevant when `recurrenceType` is `Monthly` or `Yearly`.
+     */
+    type?:
+      | (RecurrenceRuleType | keyof typeof RecurrenceRuleType)
+      | PropertyBindingInfo
+      | `{${string}}`;
+
+    /**
+     * Day of month (1–31). A value of `0` means "inherit from parent start date". Relevant when `type` is `DayOfMonth`.
+     */
+    dayOfMonth?: int | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * Week of month (First, Second, Third, Fourth, Last). Relevant when `type` is `DayOfWeek`.
+     */
+    weekOfMonth?:
+      | (WeekOfMonth | keyof typeof WeekOfMonth)
+      | PropertyBindingInfo
+      | `{${string}}`;
+
+    /**
+     * Day of week (0–6, 0 = Sunday). Relevant when `type` is `DayOfWeek`.
+     */
+    dayOfWeek?: int | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * Month of year (0–11, 0 = January). Relevant when `recurrenceType` is `Yearly`.
+     */
+    month?: int | PropertyBindingInfo | `{${string}}`;
+  }
+}
+
+declare module "sap/ui/unified/RecurringCalendarAppointment" {
+  import {
+    default as CalendarAppointment,
+    $CalendarAppointmentSettings,
+  } from "sap/ui/unified/CalendarAppointment";
+
+  import UI5Date from "sap/ui/core/date/UI5Date";
+
+  import ElementMetadata from "sap/ui/core/ElementMetadata";
+
+  import RecurrenceRule from "sap/ui/unified/RecurrenceRule";
+
+  import { RecurrenceType } from "sap/ui/unified/library";
+
+  import { PropertyBindingInfo } from "sap/ui/base/ManagedObject";
+
+  /**
+   * An appointment for use in a `PlanningCalendar` or similar. The rendering must be done in the Row collecting
+   * the appointments. (Because there are different visualizations possible.)
+   *
+   * Applications could inherit from this element to add own fields.
+   *
+   * @experimental As of version 1.149.
+   */
+  export default class RecurringCalendarAppointment extends CalendarAppointment {
+    /**
+     * Constructor for a new `RecurringCalendarAppointment`.
+     *
+     * Accepts an object literal `mSettings` that defines initial property values, aggregated and associated
+     * objects as well as event handlers. See {@link sap.ui.base.ManagedObject#constructor} for a general description
+     * of the syntax of the settings object.
+     */
+    constructor(
+      /**
+       * Initial settings for the new control
+       */
+      mSettings?: $RecurringCalendarAppointmentSettings
+    );
+    /**
+     * Constructor for a new `RecurringCalendarAppointment`.
+     *
+     * Accepts an object literal `mSettings` that defines initial property values, aggregated and associated
+     * objects as well as event handlers. See {@link sap.ui.base.ManagedObject#constructor} for a general description
+     * of the syntax of the settings object.
+     */
+    constructor(
+      /**
+       * ID for the new control, generated automatically if no ID is given
+       */
+      sId?: string,
+      /**
+       * Initial settings for the new control
+       */
+      mSettings?: $RecurringCalendarAppointmentSettings
+    );
+
+    /**
+     * Creates a new subclass of class sap.ui.unified.RecurringCalendarAppointment with name `sClassName` and
+     * enriches it with the information contained in `oClassInfo`.
+     *
+     * `oClassInfo` might contain the same kind of information as described in {@link sap.ui.unified.CalendarAppointment.extend}.
+     *
+     *
+     * @returns Created class / constructor function
+     */
+    static extend<T extends Record<string, unknown>>(
+      /**
+       * Name of the class being created
+       */
+      sClassName: string,
+      /**
+       * Object literal with information about the class
+       */
+      oClassInfo?: sap.ClassInfo<T, RecurringCalendarAppointment>,
+      /**
+       * Constructor function for the metadata object; if not given, it defaults to the metadata implementation
+       * used by this class
+       */
+      FNMetaImpl?: Function
+    ): Function;
+    /**
+     * Returns a metadata object for class sap.ui.unified.RecurringCalendarAppointment.
+     *
+     *
+     * @returns Metadata object describing this class
+     */
+    static getMetadata(): ElementMetadata;
+    /**
+     * Creates `CalendarAppointment` clones for each occurrence of this recurring appointment within the given
+     * date range.
+     *
+     *
+     * @returns Array of cloned appointments, one per occurrence
+     */
+    createOccurrenceClones(
+      /**
+       * Start of the visible range (inclusive)
+       */
+      oRangeStart: Date | UI5Date,
+      /**
+       * End of the visible range (inclusive)
+       */
+      oRangeEnd: Date | UI5Date
+    ): CalendarAppointment[];
+    /**
+     * Destroys the recurrenceRule in the aggregation {@link #getRecurrenceRule recurrenceRule}.
+     *
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    destroyRecurrenceRule(): this;
+    /**
+     * Returns all occurrence dates within the given date range.
+     *
+     *
+     * @returns Array of occurrence dates (UI5Date instances)
+     */
+    getOccurrencesInRange(
+      /**
+       * Start date of range (inclusive)
+       */
+      oStartDate: Date | UI5Date,
+      /**
+       * End date of range (inclusive)
+       */
+      oEndDate: Date | UI5Date
+    ): Date[];
+    /**
+     * Gets current value of property {@link #getRecurrenceEndDate recurrenceEndDate}.
+     *
+     * End date of the recurrence. Must be a UI5Date or JavaScript Date object.
+     *
+     *
+     * @returns Value of property `recurrenceEndDate`
+     */
+    getRecurrenceEndDate(): object;
+    /**
+     * Gets current value of property {@link #getRecurrencePattern recurrencePattern}.
+     *
+     * Recurrence interval. E.g. 1 = every day/week/month/year, 2 = every second, etc.
+     *
+     * Default value is `1`.
+     *
+     *
+     * @returns Value of property `recurrencePattern`
+     */
+    getRecurrencePattern(): int;
+    /**
+     * Gets content of aggregation {@link #getRecurrenceRule recurrenceRule}.
+     *
+     * Advanced recurrence rule configuration.
+     */
+    getRecurrenceRule(): RecurrenceRule;
+    /**
+     * Gets current value of property {@link #getRecurrenceType recurrenceType}.
+     *
+     * The recurrence type (Daily, Weekly, Monthly, Yearly).
+     *
+     *
+     * @returns Value of property `recurrenceType`
+     */
+    getRecurrenceType(): RecurrenceType;
+    /**
+     * Sets a new value for property {@link #getRecurrenceEndDate recurrenceEndDate}.
+     *
+     * End date of the recurrence. Must be a UI5Date or JavaScript Date object.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setRecurrenceEndDate(
+      /**
+       * New value for property `recurrenceEndDate`
+       */
+      oRecurrenceEndDate: object
+    ): this;
+    /**
+     * Sets a new value for property {@link #getRecurrencePattern recurrencePattern}.
+     *
+     * Recurrence interval. E.g. 1 = every day/week/month/year, 2 = every second, etc.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * Default value is `1`.
+     *
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setRecurrencePattern(
+      /**
+       * New value for property `recurrencePattern`
+       */
+      iRecurrencePattern?: int
+    ): this;
+    /**
+     * Sets the aggregated {@link #getRecurrenceRule recurrenceRule}.
+     *
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setRecurrenceRule(
+      /**
+       * The recurrenceRule to set
+       */
+      oRecurrenceRule: RecurrenceRule
+    ): this;
+    /**
+     * Sets a new value for property {@link #getRecurrenceType recurrenceType}.
+     *
+     * The recurrence type (Daily, Weekly, Monthly, Yearly).
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setRecurrenceType(
+      /**
+       * New value for property `recurrenceType`
+       */
+      sRecurrenceType: RecurrenceType | keyof typeof RecurrenceType
+    ): this;
+  }
+  /**
+   * Describes the settings that can be provided to the RecurringCalendarAppointment constructor.
+   *
+   * @experimental As of version 1.149.
+   */
+  export interface $RecurringCalendarAppointmentSettings extends $CalendarAppointmentSettings {
+    /**
+     * The recurrence type (Daily, Weekly, Monthly, Yearly).
+     */
+    recurrenceType?:
+      | (RecurrenceType | keyof typeof RecurrenceType)
+      | PropertyBindingInfo
+      | `{${string}}`;
+
+    /**
+     * End date of the recurrence. Must be a UI5Date or JavaScript Date object.
+     */
+    recurrenceEndDate?: object | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * Recurrence interval. E.g. 1 = every day/week/month/year, 2 = every second, etc.
+     */
+    recurrencePattern?: int | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * Advanced recurrence rule configuration.
+     */
+    recurrenceRule?: RecurrenceRule;
+  }
+}
+
 declare module "sap/ui/unified/RecurringNonWorkingPeriod" {
   import {
     default as NonWorkingPeriod,
     $NonWorkingPeriodSettings,
   } from "sap/ui/unified/NonWorkingPeriod";
 
+  import UI5Date from "sap/ui/core/date/UI5Date";
+
   import ElementMetadata from "sap/ui/core/ElementMetadata";
+
+  import RecurrenceRule from "sap/ui/unified/RecurrenceRule";
 
   import { RecurrenceType } from "sap/ui/unified/library";
 
@@ -20213,7 +21242,6 @@ declare module "sap/ui/unified/RecurringNonWorkingPeriod" {
    *
    * Applications can inherit from this element to add own fields.
    *
-   * @since 1.127.0
    * @experimental As of version 1.127.0.
    */
   export default class RecurringNonWorkingPeriod extends NonWorkingPeriod {
@@ -20280,6 +21308,30 @@ declare module "sap/ui/unified/RecurringNonWorkingPeriod" {
      */
     static getMetadata(): ElementMetadata;
     /**
+     * Destroys the recurrenceRule in the aggregation {@link #getRecurrenceRule recurrenceRule}.
+     *
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    destroyRecurrenceRule(): this;
+    /**
+     * Gets cached non-working periods for a date range. Returns cached result if available, or null if not
+     * cached.
+     *
+     *
+     * @returns Cached non-working periods or null
+     */
+    getCachedOccurrences(
+      /**
+       * Start date of range
+       */
+      oStartDate: Date | UI5Date,
+      /**
+       * End date of range
+       */
+      oEndDate: Date | UI5Date
+    ): NonWorkingPeriod[] | null;
+    /**
      * Gets current value of property {@link #getRecurrenceEndDate recurrenceEndDate}.
      *
      * Determines the end date of the calendar item, as a UI5Date or JavaScript Date object. It is considered
@@ -20304,6 +21356,12 @@ declare module "sap/ui/unified/RecurringNonWorkingPeriod" {
      */
     getRecurrencePattern(): int;
     /**
+     * Gets content of aggregation {@link #getRecurrenceRule recurrenceRule}.
+     *
+     * Advanced recurrence rule configuration.
+     */
+    getRecurrenceRule(): RecurrenceRule;
+    /**
      * Gets current value of property {@link #getRecurrenceType recurrenceType}.
      *
      * The recurrenceType determines the pattern of recurrence for a given calendar item.
@@ -20312,6 +21370,35 @@ declare module "sap/ui/unified/RecurringNonWorkingPeriod" {
      * @returns Value of property `recurrenceType`
      */
     getRecurrenceType(): RecurrenceType;
+    /**
+     * Checks if a given date (without time) is a non-working day.
+     *
+     *
+     * @returns True if the date is non-working
+     */
+    hasNonWorkingAtDate(
+      /**
+       * Date to check
+       */
+      oDate: Date | UI5Date
+    ): boolean;
+    /**
+     * Sets cached non-working periods for a date range.
+     */
+    setCachedOccurrences(
+      /**
+       * Start date of range
+       */
+      oStartDate: Date | UI5Date,
+      /**
+       * End date of range
+       */
+      oEndDate: Date | UI5Date,
+      /**
+       * Array of non-working periods to cache
+       */
+      aPeriods: NonWorkingPeriod[]
+    ): void;
     /**
      * Sets a new value for property {@link #getRecurrenceEndDate recurrenceEndDate}.
      *
@@ -20351,6 +21438,18 @@ declare module "sap/ui/unified/RecurringNonWorkingPeriod" {
       iRecurrencePattern?: int
     ): this;
     /**
+     * Sets the aggregated {@link #getRecurrenceRule recurrenceRule}.
+     *
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setRecurrenceRule(
+      /**
+       * The recurrenceRule to set
+       */
+      oRecurrenceRule: RecurrenceRule
+    ): this;
+    /**
      * Sets a new value for property {@link #getRecurrenceType recurrenceType}.
      *
      * The recurrenceType determines the pattern of recurrence for a given calendar item.
@@ -20372,8 +21471,7 @@ declare module "sap/ui/unified/RecurringNonWorkingPeriod" {
    *
    * @experimental As of version 1.127.0.
    */
-  export interface $RecurringNonWorkingPeriodSettings
-    extends $NonWorkingPeriodSettings {
+  export interface $RecurringNonWorkingPeriodSettings extends $NonWorkingPeriodSettings {
     /**
      * The recurrenceType determines the pattern of recurrence for a given calendar item.
      */
@@ -20395,6 +21493,11 @@ declare module "sap/ui/unified/RecurringNonWorkingPeriod" {
      * this would imply the calendar item is recurring once for every three days.
      */
     recurrencePattern?: int | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * Advanced recurrence rule configuration.
+     */
+    recurrenceRule?: RecurrenceRule;
   }
 }
 
@@ -23075,8 +24178,7 @@ declare module "sap/ui/unified/TimeRange" {
   /**
    * Time range for use in `NonWorkingPeriod`
    *
-   * @since 1.127.0
-   * @experimental As of version 1.127.0.
+   * @experimental As of version 1.127.
    */
   export default class TimeRange extends UI5Element {
     /**
@@ -23242,7 +24344,7 @@ declare module "sap/ui/unified/TimeRange" {
   /**
    * Describes the settings that can be provided to the TimeRange constructor.
    *
-   * @experimental As of version 1.127.0.
+   * @experimental As of version 1.127.
    */
   export interface $TimeRangeSettings extends $ElementSettings {
     /**
@@ -23316,6 +24418,8 @@ declare namespace sap {
 
     "sap/ui/unified/FileUploaderParameter": undefined;
 
+    "sap/ui/unified/FileUploaderRenderer": undefined;
+
     "sap/ui/unified/FileUploaderXHRSettings": undefined;
 
     "sap/ui/unified/library": undefined;
@@ -23331,6 +24435,10 @@ declare namespace sap {
     "sap/ui/unified/MenuTextFieldItem": undefined;
 
     "sap/ui/unified/NonWorkingPeriod": undefined;
+
+    "sap/ui/unified/RecurrenceRule": undefined;
+
+    "sap/ui/unified/RecurringCalendarAppointment": undefined;
 
     "sap/ui/unified/RecurringNonWorkingPeriod": undefined;
 

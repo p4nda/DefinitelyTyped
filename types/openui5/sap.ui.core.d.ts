@@ -279,7 +279,7 @@ declare namespace sap {
     "sap/ui/thirdparty/qunit-2": undefined;
   }
 }
-// For Library Version: 1.143.0
+// For Library Version: 1.152.0
 
 declare module "sap/base/assert" {
   /**
@@ -1471,8 +1471,8 @@ declare module "sap/base/i18n/ResourceBundle" {
         bundleName?: string;
         /**
          * Optional locale (aka 'language tag') to load the texts for. Can either be a BCP47 language tag or a JDK
-         * compatible locale string (e.g. "en-GB", "en_GB" or "en"). Defaults to the current session locale if `sap.ui.getCore`
-         * is available, otherwise to the provided `fallbackLocale`
+         * compatible locale string (e.g. "en-GB", "en_GB" or "en"). Defaults to the current session locale ({@link module:sap/base/i18n/Localization.getLanguage Localization.getLanguage})
+         * if available, otherwise to the provided `fallbackLocale`
          */
         locale?: string;
         /**
@@ -2841,6 +2841,30 @@ declare module "sap/base/util/array/uniqueSort" {
   ): any[];
 }
 
+declare module "sap/base/util/clamp" {
+  /**
+   * Returns a value clamped between an upper bound 'max' and lower bound 'min'.
+   *
+   * @since 1.130
+   *
+   * @returns clamped value
+   */
+  export default function clamp(
+    /**
+     * value
+     */
+    val: number,
+    /**
+     * lower bound
+     */
+    min: number,
+    /**
+     * upper bound
+     */
+    max: number
+  ): number;
+}
+
 declare module "sap/base/util/deepClone" {
   /**
    * Creates a deep clone of the source value.
@@ -3434,7 +3458,7 @@ declare module "sap/base/util/UriParameters" {
       sName: string,
       /**
        * Whether all values for the parameter should be returned; the use of this parameter is deprecated and
-       * highly discouraged; use the {@link #getAll} method instead
+       * highly discouraged; use the {@link #getAll} method instead {@deprecated}
        */
       bAll?: boolean
     ): string | null;
@@ -3966,6 +3990,44 @@ declare module "sap/ui/core/ControlBehavior" {
    */
   interface ControlBehavior {
     /**
+     * Attaches a handler to the {@link #event:extendedKeyboardNavigationChanged} event.
+     *
+     * The handler is invoked whenever the Extended Keyboard Navigation state is toggled via {@link #setExtendedKeyboardNavigationEnabled }
+     * — both for transitions from `false` to `true` and from `true` to `false`. No event is fired for the initial
+     * value provided via configuration; call {@link #isExtendedKeyboardNavigationEnabled} once after attaching
+     * to learn the current state.
+     *
+     * API might change before stable release.
+     *
+     * @experimental As of version 1.151.
+     */
+    attachExtendedKeyboardNavigationChanged(
+      /**
+       * The function to be called when the event occurs
+       */
+      fnFunction: (
+        p1: ControlBehavior$ExtendedKeyboardNavigationChangedEvent
+      ) => void
+    ): void;
+    /**
+     * Detaches a handler from the {@link #event:extendedKeyboardNavigationChanged} event.
+     *
+     * The passed function must be the same one used for the corresponding `attachExtendedKeyboardNavigationChanged`
+     * call.
+     *
+     * API might change before stable release.
+     *
+     * @experimental As of version 1.151.
+     */
+    detachExtendedKeyboardNavigationChanged(
+      /**
+       * The function to be detached
+       */
+      fnFunction: (
+        p1: ControlBehavior$ExtendedKeyboardNavigationChangedEvent
+      ) => void
+    ): void;
+    /**
      * Returns the current animation mode.
      *
      * @since 1.120
@@ -3981,6 +4043,20 @@ declare module "sap/ui/core/ControlBehavior" {
      * @returns whether the accessibility mode is enabled or not
      */
     isAccessibilityEnabled(): boolean;
+    /**
+     * Returns whether Extended Keyboard Navigation is currently enabled.
+     *
+     * Extended Keyboard Navigation extends the keyboard tab order to include non-interactive, text-bearing
+     * elements so their tooltips become reachable by keyboard. The feature is not recommended for screen-reader
+     * users.
+     *
+     * API might change before stable release.
+     *
+     * @experimental As of version 1.151.
+     *
+     * @returns whether Extended Keyboard Navigation is enabled
+     */
+    isExtendedKeyboardNavigationEnabled(): boolean;
     /**
      * Sets the current animation mode.
      *
@@ -4000,6 +4076,20 @@ declare module "sap/ui/core/ControlBehavior" {
   }
   const ControlBehavior: ControlBehavior;
   export default ControlBehavior;
+
+  /**
+   * The Extended Keyboard Navigation change Event.
+   *
+   * API might change before stable release.
+   *
+   * @experimental As of version 1.151.
+   */
+  export type ControlBehavior$ExtendedKeyboardNavigationChangedEvent = {
+    /**
+     * The new value
+     */
+    extendedKeyboardNavigationEnabled: boolean;
+  };
 }
 
 declare module "sap/ui/core/date/CalendarUtils" {
@@ -4971,7 +5061,7 @@ declare module "sap/ui/core/Messaging" {
   import ManagedObject from "sap/ui/base/ManagedObject";
 
   /**
-   * Messaging provides a central place for managing `sap.ui.core.message.Messages`.
+   * Messaging provides a central place for managing `sap.ui.core.message.Message`s.
    *
    * @since 1.118.0
    */
@@ -4981,7 +5071,7 @@ declare module "sap/ui/core/Messaging" {
      */
     addMessages(
       /**
-       * Array of sap.ui.core.message.Message or single sap.ui.core.message.Message
+       * Array of `Message` or single `Message`
        */
       vMessages: Message | Message[]
     ): void;
@@ -4992,6 +5082,14 @@ declare module "sap/ui/core/Messaging" {
      * @returns oMessageModel The Message Model
      */
     getMessageModel(): MessageModel;
+    /**
+     * Returns all messages currently managed by Messaging.
+     *
+     * @since 1.151
+     *
+     * @returns An array of all current messages
+     */
+    getMessages(): Message[];
     /**
      * Register MessageProcessor
      */
@@ -5531,211 +5629,418 @@ declare module "sap/ui/events/ControlEvents" {
 
 declare module "sap/ui/events/KeyCodes" {
   /**
+   * KeyCodes enumeration.
+   *
    * @since 1.58
    */
   enum KeyCodes {
+    /**
+     * Letter A key
+     */
     A = "65",
-
+    /**
+     * Alt key
+     */
     ALT = "18",
-
+    /**
+     * Down arrow key
+     */
     ARROW_DOWN = "40",
-
+    /**
+     * Left arrow key
+     */
     ARROW_LEFT = "37",
-
+    /**
+     * Right arrow key
+     */
     ARROW_RIGHT = "39",
-
+    /**
+     * Up arrow key
+     */
     ARROW_UP = "38",
-
+    /**
+     * Letter B key
+     */
     B = "66",
-
+    /**
+     * Backslash (\) key
+     */
     BACKSLASH = "226",
-
+    /**
+     * Backspace key
+     */
     BACKSPACE = "8",
-
+    /**
+     * Pause/Break key
+     */
     BREAK = "19",
-
+    /**
+     * Letter C key
+     */
     C = "67",
-
+    /**
+     * Caps Lock key
+     */
     CAPS_LOCK = "20",
-
+    /**
+     * Comma (,) key
+     */
     COMMA = "188",
-
+    /**
+     * Context menu key
+     */
     CONTEXT_MENU = "93",
-
+    /**
+     * Control key
+     */
     CONTROL = "17",
-
+    /**
+     * Letter D key
+     */
     D = "68",
-
+    /**
+     * Delete key
+     */
     DELETE = "46",
-
+    /**
+     * Digit 0 key
+     */
     DIGIT_0 = "48",
-
+    /**
+     * Digit 1 key
+     */
     DIGIT_1 = "49",
-
+    /**
+     * Digit 2 key
+     */
     DIGIT_2 = "50",
-
+    /**
+     * Digit 3 key
+     */
     DIGIT_3 = "51",
-
+    /**
+     * Digit 4 key
+     */
     DIGIT_4 = "52",
-
+    /**
+     * Digit 5 key
+     */
     DIGIT_5 = "53",
-
+    /**
+     * Digit 6 key
+     */
     DIGIT_6 = "54",
-
+    /**
+     * Digit 7 key
+     */
     DIGIT_7 = "55",
-
+    /**
+     * Digit 8 key
+     */
     DIGIT_8 = "56",
-
+    /**
+     * Digit 9 key
+     */
     DIGIT_9 = "57",
-
+    /**
+     * Dot/period (.) key
+     */
     DOT = "190",
-
+    /**
+     * Letter E key
+     */
     E = "69",
-
+    /**
+     * End key
+     */
     END = "35",
-
+    /**
+     * Enter key
+     */
     ENTER = "13",
-
+    /**
+     * Equals (=) key
+     */
     EQUALS = "221",
-
+    /**
+     * Escape key
+     */
     ESCAPE = "27",
-
+    /**
+     * Letter F key
+     */
     F = "70",
-
+    /**
+     * F1 function key
+     */
     F1 = "112",
-
+    /**
+     * F10 function key
+     */
     F10 = "121",
-
+    /**
+     * F11 function key
+     */
     F11 = "122",
-
+    /**
+     * F12 function key
+     */
     F12 = "123",
-
+    /**
+     * F2 function key
+     */
     F2 = "113",
-
+    /**
+     * F3 function key
+     */
     F3 = "114",
-
+    /**
+     * F4 function key
+     */
     F4 = "115",
-
+    /**
+     * F5 function key
+     */
     F5 = "116",
-
+    /**
+     * F6 function key
+     */
     F6 = "117",
-
+    /**
+     * F7 function key
+     */
     F7 = "118",
-
+    /**
+     * F8 function key
+     */
     F8 = "119",
-
+    /**
+     * F9 function key
+     */
     F9 = "120",
-
+    /**
+     * Letter G key
+     */
     G = "71",
-
+    /**
+     * Grave accent (`) key
+     */
     GREAT_ACCENT = "220",
-
+    /**
+     * Letter H key
+     */
     H = "72",
-
+    /**
+     * Home key
+     */
     HOME = "36",
-
+    /**
+     * Letter I key
+     */
     I = "73",
-
+    /**
+     * Insert key
+     */
     INSERT = "45",
-
+    /**
+     * Letter J key
+     */
     J = "74",
-
+    /**
+     * Letter K key
+     */
     K = "75",
-
+    /**
+     * Letter L key
+     */
     L = "76",
-
+    /**
+     * Letter M key
+     */
     M = "77",
-
+    /**
+     * Minus (-) key
+     */
     MINUS = "219",
-
+    /**
+     * Letter N key
+     */
     N = "78",
-
+    /**
+     * Num Lock key
+     */
     NUM_LOCK = "144",
-
+    /**
+     * Numpad 0 key
+     */
     NUMPAD_0 = "96",
-
+    /**
+     * Numpad 1 key
+     */
     NUMPAD_1 = "97",
-
+    /**
+     * Numpad 2 key
+     */
     NUMPAD_2 = "98",
-
+    /**
+     * Numpad 3 key
+     */
     NUMPAD_3 = "99",
-
+    /**
+     * Numpad 4 key
+     */
     NUMPAD_4 = "100",
-
+    /**
+     * Numpad 5 key
+     */
     NUMPAD_5 = "101",
-
+    /**
+     * Numpad 6 key
+     */
     NUMPAD_6 = "102",
-
+    /**
+     * Numpad 7 key
+     */
     NUMPAD_7 = "103",
-
+    /**
+     * Numpad 8 key
+     */
     NUMPAD_8 = "104",
-
+    /**
+     * Numpad 9 key
+     */
     NUMPAD_9 = "105",
-
+    /**
+     * Numpad asterisk (*) key
+     */
     NUMPAD_ASTERISK = "106",
-
+    /**
+     * Numpad comma/decimal (.) key
+     */
     NUMPAD_COMMA = "110",
-
+    /**
+     * Numpad minus (-) key
+     */
     NUMPAD_MINUS = "109",
-
+    /**
+     * Numpad plus (+) key
+     */
     NUMPAD_PLUS = "107",
-
+    /**
+     * Numpad slash (/) key
+     */
     NUMPAD_SLASH = "111",
-
+    /**
+     * Letter O key
+     */
     O = "79",
-
+    /**
+     * Open bracket ([) key
+     */
     OPEN_BRACKET = "186",
-
+    /**
+     * Letter P key
+     */
     P = "80",
-
+    /**
+     * Page Down key
+     */
     PAGE_DOWN = "34",
-
+    /**
+     * Page Up key
+     */
     PAGE_UP = "33",
-
+    /**
+     * Pipe (|) key
+     */
     PIPE = "191",
-
+    /**
+     * Plus (+) key
+     */
     PLUS = "187",
-
+    /**
+     * Print Screen key
+     */
     PRINT = "44",
-
+    /**
+     * Letter Q key
+     */
     Q = "81",
-
+    /**
+     * Letter R key
+     */
     R = "82",
-
+    /**
+     * Letter S key
+     */
     S = "83",
-
+    /**
+     * Scroll Lock key
+     */
     SCROLL_LOCK = "145",
-
+    /**
+     * Semicolon (;) key
+     */
     SEMICOLON = "192",
-
+    /**
+     * Shift key
+     */
     SHIFT = "16",
-
+    /**
+     * Single quote (') key
+     */
     SINGLE_QUOTE = "222",
-
+    /**
+     * Slash (/) key
+     */
     SLASH = "189",
-
+    /**
+     * Sleep key
+     */
     SLEEP = "95",
-
+    /**
+     * Space bar key
+     */
     SPACE = "32",
-
+    /**
+     * Letter T key
+     */
     T = "84",
-
+    /**
+     * Tab key
+     */
     TAB = "9",
-
+    /**
+     * Turn off key
+     */
     TURN_OFF = "94",
-
+    /**
+     * Letter U key
+     */
     U = "85",
-
+    /**
+     * Letter V key
+     */
     V = "86",
-
+    /**
+     * Letter W key
+     */
     W = "87",
-
+    /**
+     * Windows key (or Meta key on Mac)
+     */
     WINDOWS = "91",
-
+    /**
+     * Letter X key
+     */
     X = "88",
-
+    /**
+     * Letter Y key
+     */
     Y = "89",
-
+    /**
+     * Letter Z key
+     */
     Z = "90",
   }
   export default KeyCodes;
@@ -5796,6 +6101,24 @@ declare module "sap/ui/model/FilterProcessor" {
    */
   interface FilterProcessor {
     /**
+     * Combines control filters and application filters using AND and returns the resulting filter
+     *
+     * @since 1.146.0
+     *
+     * @returns A single filter containing all filters of the arrays combined or `undefined` if no filters are
+     * given
+     */
+    combineFilters(
+      /**
+       * The control filters
+       */
+      aFilters?: Filter[],
+      /**
+       * The application filters
+       */
+      aApplicationFilters?: Filter[]
+    ): Filter | undefined;
+    /**
      * Groups filters according to their path and combines filters on the same path using "OR" and filters on
      * different paths using "AND", all multi-filters contained are ANDed.
      *
@@ -5840,6 +6163,8 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
 
   import UpdateMethod from "sap/ui/model/odata/UpdateMethod";
 
+  import { Source } from "sap/ui/model/odata/v2/ODataAnnotations";
+
   import Context from "sap/ui/model/Context";
 
   import ODataContextBinding from "sap/ui/model/odata/v2/ODataContextBinding";
@@ -5863,8 +6188,6 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
   import ODataMetaModel from "sap/ui/model/odata/ODataMetaModel";
 
   import Event from "sap/ui/base/Event";
-
-  import { Source } from "sap/ui/model/odata/v2/ODataAnnotations";
 
   /**
    * The error object passed to the retry after callback.
@@ -6097,7 +6420,16 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
      *
      * @returns A promise that resolves with an array containing information about the initially loaded annotations
      */
-    annotationsLoaded(): Promise<any>;
+    annotationsLoaded(): Promise<
+      Array<
+        | {
+            source: Source;
+
+            data: any;
+          }
+        | Error
+      >
+    >;
     /**
      * Attaches event handler `fnFunction` to the `annotationsFailed` event of this `sap.ui.model.odata.v2.ODataModel`.
      *
@@ -6529,7 +6861,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
       /**
        * A context object for the new binding
        */
-      oContext?: object,
+      oContext?: Context,
       /**
        * Map of optional parameters for the binding
        */
@@ -6586,6 +6918,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
      * See:
      * 	{@link http://www.sap.com/protocols/SAPData "SAP Annotations for OData Version 2.0" Specification}
      *
+     * @deprecated As of version 1.150.0. will be replaced by OData V4 hierarchy functionality, see {@link topic:7d914317c0b64c23824bf932cc8a4ae1/section_RCH Recursive Hierarchy}
      *
      * @returns The new tree binding
      */
@@ -6778,7 +7111,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
          */
         adjustDeepPath?: Function;
         /**
-         * ID of the `ChangeSet` that this request belongs to
+         * ID of the change set that this request belongs to
          */
         changeSetId?: string;
         /**
@@ -6801,7 +7134,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
          * 	 - the HTTP method used for the function import is "POST",
          * 	 - the function import returns a single entity,
          * 	 - the back-end service must support the "Content-ID" header,
-         * 	 - the back end must allow GET requests relative to this content ID outside the changeset within the
+         * 	 - the back end must allow GET requests relative to this content ID outside the change set within the
          *     `$batch` request.  The success and error callback functions are called only once, even if there
          *     are two requests in the `$batch` related to a single call of {@link #callFunction}.
          * 	 - If both requests succeed, the success callback is called with the merged data of the POST and the
@@ -6847,7 +7180,13 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
          */
         batchGroupId?: string;
       }
-    ): object;
+    ):
+      | {
+          contextCreated: () => Promise<Context>;
+
+          abort: () => void;
+        }
+      | undefined;
     /**
      * Whether the canonical requests calculation is switched on, see the `canonicalRequests` parameter of the
      * model constructor.
@@ -6914,7 +7253,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
          */
         groupId?: string;
         /**
-         * ID of the `ChangeSet` that this request should belong to
+         * ID of the change set that this request should belong to
          */
         changeSetId?: string;
         /**
@@ -6923,7 +7262,9 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
          */
         refreshAfterChange?: boolean;
       }
-    ): object;
+    ): {
+      abort: () => void;
+    };
     /**
      * Creates a binding context for the given path.
      *
@@ -6948,7 +7289,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
       /**
        * Binding context
        */
-      oContext?: object,
+      oContext?: Context,
       /**
        * Map which contains additional parameters for the binding
        */
@@ -6975,7 +7316,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
        * The function to be called when the context has been created. The parameter of the callback function is
        * the newly created binding context, an instance of {@link sap.ui.model.odata.v2.Context}.
        */
-      fnCallBack?: Function,
+      fnCallBack?: (p1: Context) => void,
       /**
        * Whether to reload data
        */
@@ -7004,7 +7345,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
      * The parameter `expand` is supported since 1.78.0. If this parameter is set, the given navigation properties
      * are expanded automatically with the same $batch request in which the POST request for the creation is
      * contained. Ensure that the batch mode is used and the back-end service supports GET requests relative
-     * to a content ID outside the changeset. The success and error callback functions are called only once,
+     * to a content ID outside the change set. The success and error callback functions are called only once,
      * even if there are two requests in the `$batch` related to a single call of {@link #createEntry}:
      *
      * 	 - a POST request for creating an entity,
@@ -7050,7 +7391,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
          */
         batchGroupId?: string;
         /**
-         * The ID of the `ChangeSet` that this request should belong to
+         * The ID of the change set that this request should belong to
          */
         changeSetId?: string;
         /**
@@ -7073,7 +7414,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
          * GET request. **Note:** The following prerequisites must be fulfilled:
          * 	 - batch mode must be enabled; see constructor parameter `useBatch`,
          * 	 - the back-end service must support the "Content-ID" header,
-         * 	 - the back end must allow GET requests relative to this content ID outside the changeset within the
+         * 	 - the back end must allow GET requests relative to this content ID outside the change set within the
          *     `$batch` request.
          */
         expand?: string;
@@ -7127,7 +7468,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
       /**
        * Object containing at least all the key properties of the entity type
        */
-      oKeyProperties: object
+      oKeyProperties: Record<string, string>
     ): string;
     /**
      * Deletes a created entry from the request queue and from the model.
@@ -7409,7 +7750,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
       /**
        * The optional context which is used with the `sPath` to retrieve the requested data.
        */
-      oContext?: object,
+      oContext?: Context,
       /**
        * This parameter should be set when a URI or custom parameter with a `$expand` system query option was
        * used to retrieve associated entries embedded. If set to `true` then the `getProperty` function returns
@@ -7469,7 +7810,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
      *
      * @returns The header map
      */
-    getHeaders(): object;
+    getHeaders(): Record<string, any>;
     /**
      * Returns the key part for the given the canonical entry URI, model context or data object or `undefined`
      * when the `vValue` can't be interpreted.
@@ -7503,9 +7844,9 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
      * has been resolved!
      *
      *
-     * @returns The meta model for this `ODataModel`
+     * @returns The meta model for this `ODataModel`, or `undefined` if the model has been destroyed
      */
-    getMetaModel(): ODataMetaModel;
+    getMetaModel(): ODataMetaModel | undefined;
     /**
      * Returns a JSON object that is a copy of the entity data referenced by the given `sPath` and `oContext`.
      * It does not load any data and may not return all requested data if it is not available.
@@ -7633,7 +7974,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
       /**
        * The context if available to access the property value
        */
-      oContext?: object
+      oContext?: Context
     ): any;
     /**
      * Returns the pending changes in this model.
@@ -7671,7 +8012,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
       /**
        * Context if available to access the property value
        */
-      oContext?: object,
+      oContext?: Context,
       /**
        * **Deprecated as of version 1.41.0**, use {@link #getObject} function with 'select' and 'expand' parameters
        * instead. Whether entities for navigation properties of this property which have been read via `$expand`
@@ -7771,7 +8112,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
        * A function which can be used to restrict invalidation to specific entries, gets the entity key and object
        * as parameters and should return true for entities to invalidate.
        */
-      fnCheckEntry?: Function
+      fnCheckEntry?: (p1: string, p2: object) => boolean
     ): void;
     /**
      * Invalidate all entries of the given entity type in the model data.
@@ -7825,7 +8166,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
      * @returns A promise resolving with `true` if the OData V2 annotation "message-scope-supported" on the
      * `EntityContainer` is set to `true`
      */
-    messageScopeSupported(): Promise<any>;
+    messageScopeSupported(): Promise<boolean>;
     /**
      * Returns a promise for the loaded state of the metadata.
      *
@@ -7863,7 +8204,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
        * loading the annotations fails.
        */
       bRejectOnFailure?: boolean
-    ): Promise<any>;
+    ): Promise<void>;
     /**
      * Trigger a `GET` request to the OData service that was specified in the model constructor.
      *
@@ -7883,13 +8224,22 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
        */
       mParameters?: {
         /**
+         * Whether to calculate a canonical URL to request the data. See {@link sap.ui.model.odata.v2.ODataModel#constructor mParameters.canonicalRequests }
+         * for details.
+         */
+        canonicalRequest?: boolean;
+        /**
          * If specified, `sPath` has to be relative to the path given with the context.
          */
-        context?: object;
+        context?: Context;
         /**
          * A map containing the parameters that will be passed as query strings
          */
         urlParameters?: Record<string, string>;
+        /**
+         * A map of headers for this request
+         */
+        headers?: Record<string, string>;
         /**
          * An array of filters to be included in the request URL
          */
@@ -7925,7 +8275,9 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
          */
         updateAggregatedMessages?: boolean;
       }
-    ): object;
+    ): {
+      abort: () => void;
+    };
     /**
      * Refresh the model.
      *
@@ -7969,17 +8321,19 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
       /**
        * Callback function which is called when the data has been successfully retrieved.
        */
-      fnSuccess?: Function,
+      fnSuccess?: (p1: object, p2: object) => void,
       /**
        * Callback function which is called when the request failed. The handler can have the parameter: oError
        * which contains additional error information.
        */
-      fnError?: Function,
+      fnError?: (p1: object) => void,
       /**
        * Whether the request should be sent asynchronously
        */
       bAsync?: boolean
-    ): object;
+    ): {
+      abort: () => void;
+    };
     /**
      * Trigger a `DELETE` request to the OData service that was specified in the model constructor.
      *
@@ -7999,7 +8353,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
         /**
          * If specified, `sPath` has to be relative to the path given with the context.
          */
-        context?: object;
+        context?: Context;
         /**
          * A callback function which is called when the data has been successfully retrieved. The handler can have
          * the following parameters: `oData` and `response`.
@@ -8032,7 +8386,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
          */
         groupId?: string;
         /**
-         * ID of the `ChangeSet` that this request should belong to
+         * ID of the change set that this request should belong to
          */
         changeSetId?: string;
         /**
@@ -8041,7 +8395,9 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
          */
         refreshAfterChange?: boolean;
       }
-    ): object;
+    ): {
+      abort: () => void;
+    };
     /**
      * Resets pending changes and aborts corresponding requests.
      *
@@ -8077,14 +8433,14 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
        * Whether to delete the entities created via {@link #createEntry} or {@link #callFunction}; since 1.95.0
        */
       bDeleteCreatedEntities?: boolean
-    ): Promise<any>;
+    ): Promise<void>;
     /**
      * Returns a promise, which will resolve with the security token as soon as it is available.
      *
      *
      * @returns A promise on the security token
      */
-    securityTokenAvailable(): Promise<any>;
+    securityTokenAvailable(): Promise<string>;
     /**
      * Definition of batch groups per entity type for two-way binding changes.
      *
@@ -8170,7 +8526,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
       /**
        * The header name/value map.
        */
-      mHeaders: object
+      mHeaders: Record<string, string>
     ): void;
     /**
      * Sets this model's message scope.
@@ -8328,7 +8684,9 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
          */
         merge?: boolean;
       }
-    ): object;
+    ): {
+      abort: () => void;
+    };
     /**
      * Trigger a `PUT/MERGE` request to the OData service that was specified in the model constructor.
      *
@@ -8391,7 +8749,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
          */
         groupId?: string;
         /**
-         * ID of the `ChangeSet` that this request should belong to
+         * ID of the change set that this request should belong to
          */
         changeSetId?: string;
         /**
@@ -8400,7 +8758,9 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
          */
         refreshAfterChange?: boolean;
       }
-    ): object;
+    ): {
+      abort: () => void;
+    };
     /**
      * Update all bindings.
      */
@@ -8674,8 +9034,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
   /**
    * Parameters of the ODataModel#requestCompleted event.
    */
-  export interface ODataModel$RequestCompletedEventParameters
-    extends Model$RequestCompletedEventParameters {
+  export interface ODataModel$RequestCompletedEventParameters extends Model$RequestCompletedEventParameters {
     /**
      * The request ID
      */
@@ -8709,8 +9068,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
   /**
    * Parameters of the ODataModel#requestFailed event.
    */
-  export interface ODataModel$RequestFailedEventParameters
-    extends Model$RequestFailedEventParameters {
+  export interface ODataModel$RequestFailedEventParameters extends Model$RequestFailedEventParameters {
     /**
      * The request ID
      */
@@ -8759,8 +9117,7 @@ declare module "sap/ui/model/odata/v2/ODataModel" {
   /**
    * Parameters of the ODataModel#requestSent event.
    */
-  export interface ODataModel$RequestSentEventParameters
-    extends Model$RequestSentEventParameters {
+  export interface ODataModel$RequestSentEventParameters extends Model$RequestSentEventParameters {
     /**
      * The request ID
      */
@@ -10207,14 +10564,15 @@ declare module "sap/ui/test/starter/config" {
    */
   export type CoverageConfiguration = {
     /**
-     * List of modules or packages that should be instrumented. If not given, all modules are instrumented.
-     * Default is null
+     * A single module or package name, or a list of such names, that should be instrumented. If not given,
+     * all modules are instrumented. Default is null
      */
-    only?: string[];
+    only?: string | string[];
     /**
-     * List of modules or packages that never should be instrumented. Default is null
+     * A single module or package name, or a list of such names, that never should be instrumented. Default
+     * is null
      */
-    never?: string[];
+    never?: string | string[];
 
     branchTracking?: boolean;
     /**
@@ -10590,8 +10948,9 @@ declare module "sap/ui/test/starter/config" {
      */
     searchParams?: Record<string, string | string[]>;
     /**
-     * A map-like object with URL parameters that are appended to the `page` URL. {@deprecated As of version
-     * 1.141.0, use `searchParams` instead.}
+     * A map-like object with URL parameters that are appended to the `page` URL.
+     *
+     * @deprecated As of version 1.141.0. use `searchParams` instead.
      */
     uriParams?: Record<string, string | string[]>;
     /**
@@ -10668,7 +11027,7 @@ declare module "sap/ui/test/starter/config" {
      * When this option is true, the core is not only loaded and started, but loading and execution of the test
      * module(s) is also delayed until a listener registered with sap.ui.getCore().attachInit() has been executed.
      *
-     * {@deprecated As of version 1.120, it should not be used in new tests}
+     * @deprecated As of version 1.120. it should not be used in new tests
      */
     bootCore?: boolean;
     /**
@@ -10776,11 +11135,11 @@ declare module "sap/ui/util/Mobile" {
          */
         useFullScreenHeight?: boolean;
         /**
-         * deprecated since 1.12, use sap/ui/util/Mobile.setIcons instead.
+         * @deprecated As of version 1.12. use sap/ui/util/Mobile.setIcons instead.
          */
         homeIcon?: string;
         /**
-         * deprecated since 1.12, use sap/ui/util/Mobile.setIcons instead.
+         * @deprecated As of version 1.12. use sap/ui/util/Mobile.setIcons instead.
          */
         homeIconPrecomposed?: boolean;
         /**
@@ -11282,7 +11641,7 @@ declare module "sap/ui/app/Application" {
      * Returns the application root component.
      *
      * @since 1.13.1
-     * @deprecated As of version 1.14.
+     * @deprecated As of version 1.14. superseded by {@link sap.ui.core.Component}.
      *
      * @returns The root component
      */
@@ -11437,6 +11796,8 @@ declare module "sap/ui/app/MockServer" {
 }
 
 declare module "sap/ui/base/DataType" {
+  import { MetadataOptions } from "sap/ui/base/ManagedObject";
+
   /**
    * Represents the type of properties in a `ManagedObject` class.
    *
@@ -11565,7 +11926,7 @@ declare module "sap/ui/base/DataType" {
       /**
        * Metadata of the property
        */
-      oProperty?: /* was: sap.ui.base.ManagedObject.MetaOptions.Property */ any
+      oProperty?: MetadataOptions.Property
     ): DataType | undefined;
     /**
      * Registers an enum under the given name. With version 2.0, registering an enum becomes mandatory when
@@ -11739,9 +12100,9 @@ declare module "sap/ui/base/Event" {
    * the event handler is done.
    */
   export default class Event<
-      ParamsType extends Record<string, any> = object,
-      SourceType extends EventProvider = EventProvider,
-    >
+    ParamsType extends Record<string, any> = object,
+    SourceType extends EventProvider = EventProvider,
+  >
     extends BaseObject
     implements Poolable
   {
@@ -12362,8 +12723,8 @@ declare module "sap/ui/base/ManagedObject" {
      * ```
      *
      *
-     * Note that when setting string values, any curly braces in those values need to be escaped, so they are
-     * not interpreted as binding expressions. Use {@link #escapeSettingsValue} to do so.
+     * Note that when setting string values, any curly braces and backslashes in those values need to be escaped,
+     * so they are not interpreted as binding expressions. Use {@link #escapeSettingsValue} to do so.
      *
      * **Note:** As of version 1.120, providing aggregation content via an object literal is deprecated, in
      * case the object's type is given via the property 'Type' as a string, or is derived via the defined type
@@ -12484,8 +12845,8 @@ declare module "sap/ui/base/ManagedObject" {
      * ```
      *
      *
-     * Note that when setting string values, any curly braces in those values need to be escaped, so they are
-     * not interpreted as binding expressions. Use {@link #escapeSettingsValue} to do so.
+     * Note that when setting string values, any curly braces and backslashes in those values need to be escaped,
+     * so they are not interpreted as binding expressions. Use {@link #escapeSettingsValue} to do so.
      *
      * **Note:** As of version 1.120, providing aggregation content via an object literal is deprecated, in
      * case the object's type is given via the property 'Type' as a string, or is derived via the defined type
@@ -12549,17 +12910,46 @@ declare module "sap/ui/base/ManagedObject" {
     );
 
     /**
-     * Escapes the given value so it can be used in the constructor's settings object. Should be used when property
-     * values are initialized with static string values which could contain binding characters (curly braces).
+     * Escapes the given value so it can be used in the constructor's settings object.
+     *
+     * Use this method when passing static string values that might contain binding syntax characters. Without
+     * escaping, curly braces in strings would be misinterpreted as data binding expressions.
+     *
+     * **Characters that are escaped:**
+     * 	 - `{` (opening curly brace) - binding expression start
+     * 	 - `}` (closing curly brace) - binding expression end
+     * 	 - `\` (backslash) - escape character itself
+     *
+     * Each of the above characters is prefixed with a backslash, e.g. `{foo}` becomes `\{foo\}`.
+     *
+     * **When to use:**
+     * 	 - Static string values containing curly braces that should be displayed literally
+     * 	 - Rendering escaped backslashes (e.g. expecting `\\\\` to result in `\\`)
+     * 	 - User input or external data used as property values in constructors
+     * 	 - JSON content that should not be parsed as bindings
+     *
+     * Example usage:
+     * ```javascript
+     *
+     * new MyControl({
+     *    // Without escaping: "{info}" would be interpreted as a binding to the path "info"
+     *    // With escaping: displays the literal text "{info}"
+     *    text: ManagedObject.escapeSettingsValue("{info}")
+     * });
+     * ```
+     *
+     *
+     * **Note:** This is only needed when setting values via the constructor or {@link #applySettings}. Setter
+     * method calls, e.g. `setText("{info}")` do not interpret binding syntax and thus do not require escaping.
      *
      * @since 1.52
      *
-     * @returns The given value, escaped for usage as static property value in the constructor's settings object
-     * (or unchanged, if not of type string)
+     * @returns The escaped string value, or the original value if not a string
      */
     static escapeSettingsValue(
       /**
-       * Value to escape; only needs to be done for string values, but the call will work for all types
+       * Value to escape; only strings are escaped, other types (e.g. objects) are returned through unchanged.
+       * Strings nested in objects must be escaped individually.
        */
       vValue: any
     ): any;
@@ -13234,9 +13624,18 @@ declare module "sap/ui/base/ManagedObject" {
      * Destroys (all) the managed object(s) in the aggregation named `sAggregationName` and empties the aggregation.
      * If the aggregation did contain any object, this ManagedObject is marked as changed.
      *
+     * **Note:** Destroying an aggregation by calling this method (or indirectly via `destroyXYZ`) does
+     * not call the named aggregation mutators (`setXYZ` for a 0..1 aggregation, `removeXYZ` for
+     * a 0..n aggregation) for the aggregated children. Controls that implement side effects in those methods
+     * therefore must also implement similar side effects in their `destroyXYZ` method.
+     *
+     * While this is understood as inconvenient, it was decided (February 2026, after a thorough investigation),
+     * not to change it. Too many existing controls depend on the current behavior, and, even worse, would have
+     * severe problems with a changed behavior.
+     *
      * **Note:** This method is a low-level API as described in the class documentation.
      * Applications or frameworks must not use this method to generically destroy all objects in an aggregation.
-     * Use the concrete method destroyXYZ for aggregation 'XYZ' instead.
+     * Use the concrete method `destroyXYZ` for aggregation 'XYZ' instead.
      *
      * @ui5-protected Do not call from applications (only from related classes in the framework)
      *
@@ -14477,13 +14876,20 @@ declare module "sap/ui/base/ManagedObject" {
      */
     length?: int;
     /**
-     * The initial sort order (optional)
+     * The initial sort order
      */
     sorter?: Sorter | Sorter[];
     /**
-     * The predefined filters for this aggregation (optional)
+     * The predefined {@link sap.ui.model.FilterType.Application application filters} for this aggregation where
+     * filter values are constants.
      */
     filters?: Filter | Filter[];
+    /**
+     * The predefined {@link sap.ui.model.FilterType.ApplicationBound bound application filters} for this aggregation.
+     * Filter values support binding expressions. The aggregation updates its filters whenever a filter value
+     * changes through data binding. Supported since 1.146.0.
+     */
+    boundFilters?: Filter | Filter[];
     /**
      * Name of the key property or a function getting the context as only parameter to calculate a key for entries.
      * This can be used to improve update behaviour in models, where a key is not already available.
@@ -17144,7 +17550,6 @@ declare module "sap/ui/core/library" {
   /**
    * Implementing this interface allows a control to be accessible via access keys.
    *
-   * @since 1.104
    * @experimental As of version 1.104.
    */
   export interface IAccessKeySupport {
@@ -17154,21 +17559,18 @@ declare module "sap/ui/core/library" {
      * Returns a refence to DOM element to be focused during Access key navigation. If not implemented getFocusDomRef()
      * method is used.
      *
-     * @since 1.104
      * @experimental As of version 1.104.
      */
     getAccessKeysFocusTarget?(): void;
     /**
      * If implemented called when access keys feature is enabled and highlighting is over
      *
-     * @since 1.104
      * @experimental As of version 1.104.
      */
     onAccKeysHighlightEnd?(): void;
     /**
      * If implemented called when access keys feature is enabled and highlighting is ongoing
      *
-     * @since 1.104
      * @experimental As of version 1.104.
      */
     onAccKeysHighlightStart?(): void;
@@ -17692,6 +18094,18 @@ declare module "sap/ui/core/library" {
      */
     SingleSelect = "undefined",
   }
+  /**
+   * Interface for controls that represent a title.
+   *
+   * This marker interface can be implemented by controls that are semantically suitable to act as a title
+   * or heading inside a toolbar.
+   *
+   * @since 1.144
+   */
+  export interface ITitle {
+    __implements__sap_ui_core_ITitle: boolean;
+  }
+
   /**
    * Marker interface for controls that can be used in `content` aggregation of the `sap.m.Title` control.
    *
@@ -18465,55 +18879,55 @@ declare module "sap/ui/core/CommandExecution" {
   import { PropertyBindingInfo } from "sap/ui/base/ManagedObject";
 
   /**
+   * The CommandExecution registers a shortcut when it is added to the dependent aggregation of a control.
+   * The shortcut information is retrieved from the owner components manifest (`/sap.ui5/commands/<command>`).
+   *
+   * You can use a CommandExecution instead of an event handler in XMLViews by using `cmd:` plus the command
+   * name.
+   *
+   * Example for `sap.m.Button`:
+   *
+   *
+   * ```javascript
+   *
+   * <Button press="cmd:MyCommand" />
+   * ```
+   *
+   *
+   * When the press event is fired, the CommandExecution will be triggered and the `execute` event is fired.
+   *
+   * When using commands, the component will create a model named `$cmd`. The model data provides the enabled
+   * and visible state of all CommandExecutions. With that, action-triggering controls (e.g. a button) can
+   * be bound to the enable/visible property of the CommandExecution to centrally control their state.
+   *
+   * **Note: The usage of the `$cmd` model is restricted to `sap.suite.ui.generic`**
+   *
+   * When binding a button's enabled state to this model, it follows the enabled state of the CommandExecution.
+   * The binding path must be relative like `myCommand/enabled`:
+   *
+   *
+   * ```javascript
+   *
+   * <Button press="cmd:MyCommand" enabled="$cmd>MyCommand/enabled" />
+   * ```
+   *
+   *
+   * A CommandExecution can have three states:
+   * 	 - the CommandExecution is visible and enabled. If the configured shortcut is executed, the configured
+   *     event handler of this CommandExecution is called
+   * 	 - the CommandExecution is visible but not enabled. If the configured shortcut is executed, neither
+   *     the configured event handler of this CommandExecution nor any event handler configured on CommandExecutions
+   *     in the ancestor chain is called
+   * 	 - the CommandExecution is not visible. If the configured shortcut is executed, the configured event
+   *     handler of this CommandExecution is not called, but the event is propagated to its parent, which can
+   *     then handle the event by a configured CommandExecution or propagate the event to its parent, until no
+   *     parent exits anymore and the browser can handle the executed shortcut
+   *
    * @since 1.70
    */
   export default class CommandExecution extends UI5Element {
     /**
      * Creates and initializes a new CommandExecution.
-     *
-     * The CommandExecution registers a shortcut when it is added to the dependent aggregation of a control.
-     * The shortcut information is retrieved from the owner components manifest (`/sap.ui5/commands/<command>`).
-     *
-     * You can use a CommandExecution instead of an event handler in XMLViews by using `cmd:` plus the command
-     * name.
-     *
-     * Example for `sap.m.Button`:
-     *
-     *
-     * ```javascript
-     *
-     * <Button press="cmd:MyCommand" />
-     * ```
-     *
-     *
-     * When the press event is fired, the CommandExecution will be triggered and the `execute` event is fired.
-     *
-     * When using commands, the component will create a model named `$cmd`. The model data provides the enabled
-     * and visible state of all CommandExecutions. With that, action-triggering controls (e.g. a button) can
-     * be bound to the enable/visible property of the CommandExecution to centrally control their state.
-     *
-     * **Note: The usage of the `$cmd` model is restricted to `sap.suite.ui.generic`**
-     *
-     * When binding a button's enabled state to this model, it follows the enabled state of the CommandExecution.
-     * The binding path must be relative like `myCommand/enabled`:
-     *
-     *
-     * ```javascript
-     *
-     * <Button press="cmd:MyCommand" enabled="$cmd>MyCommand/enabled" />
-     * ```
-     *
-     *
-     * A CommandExecution can have three states:
-     * 	 - the CommandExecution is visible and enabled. If the configured shortcut is executed, the configured
-     *     event handler of this CommandExecution is called
-     * 	 - the CommandExecution is visible but not enabled. If the configured shortcut is executed, neither
-     *     the configured event handler of this CommandExecution nor any event handler configured on CommandExecutions
-     *     in the ancestor chain is called
-     * 	 - the CommandExecution is not visible. If the configured shortcut is executed, the configured event
-     *     handler of this CommandExecution is not called, but the event is propagated to its parent, which can
-     *     then handle the event by a configured CommandExecution or propagate the event to its parent, until no
-     *     parent exits anymore and the browser can handle the executed shortcut
      *
      * Accepts an object literal `mSettings` that defines initial property values, aggregated and associated
      * objects as well as event handlers. See {@link sap.ui.base.ManagedObject#constructor} for a general description
@@ -18846,7 +19260,8 @@ declare module "sap/ui/core/Component" {
      *
      * @since 1.56.0
      *
-     * @returns A Promise that resolves with the newly created component instance
+     * @returns A Promise that resolves with the newly created component instance, or rejects with an error
+     * if the component could not be created
      */
     static create(
       /**
@@ -18896,8 +19311,10 @@ declare module "sap/ui/core/Component" {
          */
         manifest?: boolean | string | object;
         /**
-         * @since 1.61.0 Alternative URL for the manifest.json. If `mOptions.manifest` is set to an object value,
-         * this URL specifies the location to which the manifest object should resolve the relative URLs to.
+         * Alternative URL for the manifest.json. If `mOptions.manifest` is set to an object value, this URL specifies
+         * the location to which the manifest object should resolve the relative URLs to.
+         *
+         * @since 1.61.0
          */
         altManifestUrl?: string;
         /**
@@ -19105,8 +19522,10 @@ declare module "sap/ui/core/Component" {
          */
         manifest?: boolean | string | object;
         /**
-         * @since 1.61.0 Alternative URL for the manifest.json. If `mOptions.manifest` is set to an object value,
-         * this URL specifies the location to which the manifest object should resolve the relative URLs to.
+         * Alternative URL for the manifest.json. If `mOptions.manifest` is set to an object value, this URL specifies
+         * the location to which the manifest object should resolve the relative URLs to.
+         *
+         * @since 1.61.0
          */
         altManifestUrl?: string;
         /**
@@ -20150,6 +20569,13 @@ declare module "sap/ui/core/ComponentContainer" {
      * and the models will be propagated if defined. If the `usage` property is set the ComponentLifecycle is
      * processed like a "Container" lifecycle.
      *
+     * **Note:** The `component` association is stored by ID, not by object reference (see {@link sap.ui.base.ManagedObject#setAssociation}).
+     * Setting an ID that equals the currently stored one is treated as a no-op. When a previously associated
+     * UIComponent is destroyed via {@link sap.ui.core.UIComponent#destroy}, the association is **not** cleared
+     * automatically. If, however, the application destroys the component differently or replaces it with a
+     * new instance that happens to share the same ID, the stale ID must be cleared explicitly by calling `setComponent(null)`
+     * before assigning the new instance.
+     *
      *
      * @returns the reference to `this` in order to allow method chaining
      */
@@ -20158,7 +20584,7 @@ declare module "sap/ui/core/ComponentContainer" {
        * ID of an element which becomes the new target of this component association. Alternatively, an element
        * instance may be given.
        */
-      vComponent: ID | UIComponent
+      vComponent: ID | UIComponent | null
     ): this;
     /**
      * Sets a new value for property {@link #getHandleValidation handleValidation}.
@@ -20575,7 +21001,7 @@ declare module "sap/ui/core/ComponentMetadata" {
      *
      * The configuration above can be accessed via `sample.Component.getMetadata().getCustomEntry("my.custom.config")`.
      *
-     * @deprecated As of version 1.27.1. Please use the sap.ui.core.ComponentMetadata#getManifestEntry
+     * @deprecated As of version 1.27.1. without replacement.
      *
      * @returns custom Component configuration with the specified key.
      */
@@ -23870,7 +24296,7 @@ declare module "sap/ui/core/Core" {
     /**
      * Returns the registered element for the given ID, if any.
      *
-     * @deprecated As of version 1.1. use `sap.ui.core.Core.byId` instead!
+     * @deprecated As of version 1.1. use `sap.ui.core.Core.prototype.byId` instead!
      *
      * @returns Element for the given ID or `undefined`
      */
@@ -24489,24 +24915,24 @@ declare module "sap/ui/core/Core" {
      * ```
      *
      *
-     * If parts of the theme are at different locations (e.g. because you provide a standard theme like "sap_belize"
+     * If parts of the theme are at different locations (e.g. because you provide a standard theme like "sap_horizon"
      * for a custom control library and this self-made part of the standard theme is at a different location
      * than the UI5 resources), you can also specify for which control libraries the setting should be used,
      * by giving an array with the names of the respective control libraries as second parameter:
      * ```javascript
      *
-     *   sap.ui.getCore().setThemeRoot("sap_belize", ["my.own.library"], "https://mythemeserver.com/allThemes");
+     *   sap.ui.getCore().setThemeRoot("sap_horizon", ["my.own.library"], "https://mythemeserver.com/allThemes");
      * ```
      *
      *
-     * This will cause the Belize theme to be loaded from the UI5 location for all standard libraries. Resources
+     * This will cause the Horizon theme to be loaded from the UI5 location for all standard libraries. Resources
      * for styling the `my.own.library` controls will be loaded from the configured location:
      * ```javascript
      *
-     *   https://sdk.openui5.org/resources/sap/ui/core/themes/sap_belize/library.css
-     *   https://sdk.openui5.org/resources/sap/ui/layout/themes/sap_belize/library.css
-     *   https://sdk.openui5.org/resources/sap/m/themes/sap_belize/library.css
-     *   https://mythemeserver.com/allThemes/my/own/library/themes/sap_belize/library.css
+     *   https://sdk.openui5.org/resources/sap/ui/core/themes/sap_horizon/library.css
+     *   https://sdk.openui5.org/resources/sap/ui/layout/themes/sap_horizon/library.css
+     *   https://sdk.openui5.org/resources/sap/m/themes/sap_horizon/library.css
+     *   https://mythemeserver.com/allThemes/my/own/library/themes/sap_horizon/library.css
      * ```
      *
      *
@@ -24560,24 +24986,24 @@ declare module "sap/ui/core/Core" {
      * ```
      *
      *
-     * If parts of the theme are at different locations (e.g. because you provide a standard theme like "sap_belize"
+     * If parts of the theme are at different locations (e.g. because you provide a standard theme like "sap_horizon"
      * for a custom control library and this self-made part of the standard theme is at a different location
      * than the UI5 resources), you can also specify for which control libraries the setting should be used,
      * by giving an array with the names of the respective control libraries as second parameter:
      * ```javascript
      *
-     *   sap.ui.getCore().setThemeRoot("sap_belize", ["my.own.library"], "https://mythemeserver.com/allThemes");
+     *   sap.ui.getCore().setThemeRoot("sap_horizon", ["my.own.library"], "https://mythemeserver.com/allThemes");
      * ```
      *
      *
-     * This will cause the Belize theme to be loaded from the UI5 location for all standard libraries. Resources
+     * This will cause the Horizon theme to be loaded from the UI5 location for all standard libraries. Resources
      * for styling the `my.own.library` controls will be loaded from the configured location:
      * ```javascript
      *
-     *   https://sdk.openui5.org/resources/sap/ui/core/themes/sap_belize/library.css
-     *   https://sdk.openui5.org/resources/sap/ui/layout/themes/sap_belize/library.css
-     *   https://sdk.openui5.org/resources/sap/m/themes/sap_belize/library.css
-     *   https://mythemeserver.com/allThemes/my/own/library/themes/sap_belize/library.css
+     *   https://sdk.openui5.org/resources/sap/ui/core/themes/sap_horizon/library.css
+     *   https://sdk.openui5.org/resources/sap/ui/layout/themes/sap_horizon/library.css
+     *   https://sdk.openui5.org/resources/sap/m/themes/sap_horizon/library.css
+     *   https://mythemeserver.com/allThemes/my/own/library/themes/sap_horizon/library.css
      * ```
      *
      *
@@ -24696,6 +25122,10 @@ declare module "sap/ui/core/CustomData" {
   export default class CustomData extends UI5Element {
     /**
      * Constructor for a new `CustomData` element.
+     *
+     * Accepts an object literal `mSettings` that defines initial property values, aggregated and associated
+     * objects as well as event handlers. See {@link sap.ui.base.ManagedObject#constructor} for a general description
+     * of the syntax of the settings object.
      */
     constructor(
       /**
@@ -24705,6 +25135,10 @@ declare module "sap/ui/core/CustomData" {
     );
     /**
      * Constructor for a new `CustomData` element.
+     *
+     * Accepts an object literal `mSettings` that defines initial property values, aggregated and associated
+     * objects as well as event handlers. See {@link sap.ui.base.ManagedObject#constructor} for a general description
+     * of the syntax of the settings object.
      */
     constructor(
       /**
@@ -24718,10 +25152,10 @@ declare module "sap/ui/core/CustomData" {
     );
 
     /**
-     * Creates a new subclass of `CustomData` with name `sClassName` and enriches it with the information contained
-     * in `oClassInfo`.
+     * Creates a new subclass of class sap.ui.core.CustomData with name `sClassName` and enriches it with the
+     * information contained in `oClassInfo`.
      *
-     * `oClassInfo` might contain the same kind of information as described in {@link sap.ui.core.Element.extend Element.extend}.
+     * `oClassInfo` might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
      *
      *
      * @returns Created class / constructor function
@@ -24736,12 +25170,13 @@ declare module "sap/ui/core/CustomData" {
        */
       oClassInfo?: sap.ClassInfo<T, CustomData>,
       /**
-       * Constructor function for the metadata object; if not given, it defaults to `sap.ui.core.ElementMetadata`
+       * Constructor function for the metadata object; if not given, it defaults to the metadata implementation
+       * used by this class
        */
       FNMetaImpl?: Function
     ): Function;
     /**
-     * Returns a metadata object for class `sap.ui.core.CustomData`.
+     * Returns a metadata object for class sap.ui.core.CustomData.
      *
      *
      * @returns Metadata object describing this class
@@ -25360,15 +25795,15 @@ declare module "sap/ui/core/delegate/ScrollEnablement" {
          */
         vertical?: boolean;
         /**
-         * Deprecated since 1.42, the parameter has no effect
+         * @deprecated As of version 1.42. the parameter has no effect
          */
         zynga?: boolean;
         /**
-         * Deprecated since 1.42, the parameter has no effect
+         * @deprecated As of version 1.42. the parameter has no effect
          */
         iscroll?: boolean;
         /**
-         * Deprecated since 1.42, the parameter has no effect
+         * @deprecated As of version 1.42. the parameter has no effect
          */
         preventDefault?: boolean;
         /**
@@ -27731,7 +28166,7 @@ declare module "sap/ui/core/Element" {
       /**
        * The dependent to add; if empty, nothing is inserted
        */
-      oDependent: UI5Element
+      oDependent: ManagedObject
     ): this;
     /**
      * Adds some dragDropConfig to the aggregation {@link #getDragDropConfig dragDropConfig}.
@@ -27809,8 +28244,10 @@ declare module "sap/ui/core/Element" {
        */
       oFocusInfo: {
         /**
-         * @since 1.60 if it's set to true, the focused element won't be shifted into the viewport if it's not completely
-         * visible before the focus is set
+         * if it's set to true, the focused element won't be shifted into the viewport if it's not completely visible
+         * before the focus is set
+         *
+         * @since 1.60
          */
         preventScroll?: boolean;
       }
@@ -28095,12 +28532,16 @@ declare module "sap/ui/core/Element" {
        */
       oFocusInfo?: {
         /**
-         * @since 1.60 if it's set to true, the focused element won't be shifted into the viewport if it's not completely
-         * visible before the focus is set
+         * if it's set to true, the focused element won't be shifted into the viewport if it's not completely visible
+         * before the focus is set
+         *
+         * @since 1.60
          */
         preventScroll?: boolean;
         /**
-         * Further control-specific setting of the focus target within the control @since 1.98
+         * Further control-specific setting of the focus target within the control
+         *
+         * @since 1.98
          */
         targetInfo?: any;
       }
@@ -28115,11 +28556,11 @@ declare module "sap/ui/core/Element" {
      * Gets content of aggregation {@link #getDependents dependents}.
      *
      * Dependents are not rendered, but their databinding context and lifecycle are bound to the aggregating
-     * Element.
+     * ManagedObject.
      *
      * @since 1.19
      */
-    getDependents(): UI5Element[];
+    getDependents(): ManagedObject[];
     /**
      * Returns the best suitable DOM Element that represents this UI5 Element. By default the DOM Element with
      * the same ID as this Element is returned. Subclasses should override this method if the lookup via id
@@ -28292,8 +28733,8 @@ declare module "sap/ui/core/Element" {
       oCustomData: CustomData
     ): int;
     /**
-     * Checks for the provided `sap.ui.core.Element` in the aggregation {@link #getDependents dependents}. and
-     * returns its index if found or -1 otherwise.
+     * Checks for the provided `sap.ui.base.ManagedObject` in the aggregation {@link #getDependents dependents}.
+     * and returns its index if found or -1 otherwise.
      *
      * @since 1.19
      *
@@ -28303,7 +28744,7 @@ declare module "sap/ui/core/Element" {
       /**
        * The dependent whose index is looked for
        */
-      oDependent: UI5Element
+      oDependent: ManagedObject
     ): int;
     /**
      * Checks for the provided `sap.ui.core.dnd.DragDropBase` in the aggregation {@link #getDragDropConfig dragDropConfig}.
@@ -28367,7 +28808,7 @@ declare module "sap/ui/core/Element" {
       /**
        * The dependent to insert; if empty, nothing is inserted
        */
-      oDependent: UI5Element,
+      oDependent: ManagedObject,
       /**
        * The `0`-based index the dependent should be inserted at; for a negative value of `iIndex`, the dependent
        * is inserted at position 0; for a value greater than the current size of the aggregation, the dependent
@@ -28506,7 +28947,7 @@ declare module "sap/ui/core/Element" {
      *
      * @returns An array of the removed elements (might be empty)
      */
-    removeAllDependents(): UI5Element[];
+    removeAllDependents(): ManagedObject[];
     /**
      * Removes all the controls from the aggregation {@link #getDragDropConfig dragDropConfig}.
      *
@@ -28540,8 +28981,8 @@ declare module "sap/ui/core/Element" {
       /**
        * The dependent to remove or its index or id
        */
-      vDependent: int | string | UI5Element
-    ): UI5Element | null;
+      vDependent: int | string | ManagedObject
+    ): ManagedObject | null;
     /**
      * Removes a dragDropConfig from the aggregation {@link #getDragDropConfig dragDropConfig}.
      *
@@ -28668,7 +29109,12 @@ declare module "sap/ui/core/Element" {
      *
      * @returns reference to the instance itself
      */
-    unbindElement(sModelName: string): ManagedObject;
+    unbindElement(
+      /**
+       * Name of the model to remove the context for.
+       */
+      sModelName?: string
+    ): ManagedObject;
   }
   /**
    * The structure of the "metadata" object which is passed when inheriting from sap.ui.core.Element using
@@ -28844,13 +29290,13 @@ declare module "sap/ui/core/Element" {
 
     /**
      * Dependents are not rendered, but their databinding context and lifecycle are bound to the aggregating
-     * Element.
+     * ManagedObject.
      *
      * @since 1.19
      */
     dependents?:
-      | UI5Element[]
-      | UI5Element
+      | ManagedObject[]
+      | ManagedObject
       | AggregationBindingInfo
       | `{${string}}`;
 
@@ -29311,7 +29757,7 @@ declare module "sap/ui/core/format/DateFormat" {
          * since 1.34.0 contains pattern symbols (e.g. "yMMMd" or "Hms") which will be converted into the pattern
          * in the used locale, which matches the wanted symbols best. The symbols must be in canonical order, that
          * is: Era (G), Year (y/Y), Quarter (q/Q), Month (M/L), Week (w), Day-Of-Week (E/e/c), Day (d), Hour (h/H/k/K/j/J),
-         * Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x) See {@link http://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems}
+         * Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x) See {@link https://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems Unicode Locale Data Markup Language (LDML): Elements availableFormats, appendItems}.
          */
         format?: string;
         /**
@@ -29426,7 +29872,7 @@ declare module "sap/ui/core/format/DateFormat" {
          * since 1.34.0 contains pattern symbols (e.g. "yMMMd" or "Hms") which will be converted into the pattern
          * in the used locale, which matches the wanted symbols best. The symbols must be in canonical order, that
          * is: Era (G), Year (y/Y), Quarter (q/Q), Month (M/L), Week (w), Day-Of-Week (E/e/c), Day (d), Hour (h/H/k/K/j/J),
-         * Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x) See http://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems
+         * Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x) See {@link https://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems Unicode Locale Data Markup Language (LDML): Elements availableFormats, appendItems}.
          */
         format?: string;
         /**
@@ -29545,7 +29991,7 @@ declare module "sap/ui/core/format/DateFormat" {
          * A string containing pattern symbols (e.g. "yMMMd" or "Hms") which will be converted into a pattern for
          * the used locale that matches the wanted symbols best. The symbols must be in canonical order, that is:
          * Era (G), Year (y/Y), Quarter (q/Q), Month (M/L), Week (w), Day-Of-Week (E/e/c), Day (d), Hour (h/H/k/K/j/J),
-         * Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x) See http://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems
+         * Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x) See {@link https://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems Unicode Locale Data Markup Language (LDML): Elements availableFormats, appendItems}.
          */
         format?: string;
         /**
@@ -29655,7 +30101,7 @@ declare module "sap/ui/core/format/DateFormat" {
          * since 1.34.0 contains pattern symbols (e.g. "yMMMd" or "Hms") which will be converted into the pattern
          * in the used locale, which matches the wanted symbols best. The symbols must be in canonical order, that
          * is: Era (G), Year (y/Y), Quarter (q/Q), Month (M/L), Week (w), Day-Of-Week (E/e/c), Day (d), Hour (h/H/k/K/j/J),
-         * Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x) See http://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems
+         * Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x) See {@link https://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems Unicode Locale Data Markup Language (LDML): Elements availableFormats, appendItems}.
          */
         format?: string;
         /**
@@ -30182,172 +30628,7 @@ declare module "sap/ui/core/format/NumberFormat" {
        * The option object, which supports the following parameters. If no options are given, default values according
        * to the type and locale settings are used.
        */
-      oFormatOptions?: {
-        /**
-         * defines whether the currency is shown as a code in currency format. The currency symbol is displayed
-         * when this option is set to `false` and a symbol has been defined for the given currency code.
-         */
-        currencyCode?: boolean;
-        /**
-         * can be set either to 'standard' (the default value) or to 'accounting' for an accounting-specific currency
-         * display
-         */
-        currencyContext?: string;
-        /**
-         * defines a set of custom currencies exclusive to this NumberFormat instance. Custom currencies must not
-         * only consist of digits. If custom currencies are defined on the instance, no other currencies can be
-         * formatted and parsed by this instance. Globally available custom currencies can be added via the global
-         * configuration. See the above examples. See also {@link module:sap/base/i18n/Formatting.setCustomCurrencies Formatting.setCustomCurrencies }
-         * and {@link module:sap/base/i18n/Formatting.addCustomCurrencies Formatting.addCustomCurrencies}.
-         */
-        customCurrencies?: Record<string, object>;
-        /**
-         * The target length of places after the decimal separator; if the number has fewer decimal places than
-         * given in this option, it is padded with whitespaces at the end up to the target length. An additional
-         * whitespace character for the decimal separator is added for a number without any decimals. **Note:**
-         * This format option is only allowed if the following conditions apply:
-         * 	 - It has a value greater than 0.
-         * 	 - The `FormatOptions.showMeasure` format option is set to `false`.
-         * 	 - The `oFormatOptions.style` format option is **not** set to `"short"` or `"long"`.
-         */
-        decimalPadding?: int;
-        /**
-         * defines the number of decimal digits
-         */
-        decimals?: int;
-        /**
-         * defines the character used as decimal separator. Note: `decimalSeparator` must always be different from
-         * `groupingSeparator`.
-         */
-        decimalSeparator?: string;
-        /**
-         * since 1.30.0 defines what an empty string is parsed as, and what is formatted as an empty string. The
-         * allowed values are "" (empty string), NaN, `null`, or 0. The 'format' and 'parse' functions are done
-         * in a symmetric way. For example, when this parameter is set to NaN, an empty string is parsed as [NaN,
-         * undefined], and NaN is formatted as an empty string.
-         */
-        emptyString?: null | number | string;
-        /**
-         * defines the grouping base size in digits if it is different from the grouping size (e.g. Indian grouping)
-         */
-        groupingBaseSize?: int;
-        /**
-         * defines whether grouping is enabled (grouping separators are shown). **Note:** Grouping is disabled if
-         * the `groupingSize` format option is set to a non-positive value.
-         */
-        groupingEnabled?: boolean;
-        /**
-         * defines the character used as grouping separator. Note: `groupingSeparator` must always be different
-         * from `decimalSeparator`.
-         */
-        groupingSeparator?: string;
-        /**
-         * defines the grouping size in digits; the default is `3`. **Note:** If this format option is set to a
-         * non-positive value, grouping will be disabled entirely.
-         */
-        groupingSize?: int;
-        /**
-         * defines the maximum number of decimal digits
-         */
-        maxFractionDigits?: int;
-        /**
-         * defines the maximum number of non-decimal digits. If the number exceeds this maximum, e.g. 1e+120, "?"
-         * characters are shown instead of digits.
-         */
-        maxIntegerDigits?: int;
-        /**
-         * Deprecated as of 1.130; this format option does not have an effect on currency formats since decimals
-         * can always be determined, either through the given format options, custom currencies or the CLDR
-         */
-        minFractionDigits?: int;
-        /**
-         * defines the minimal number of non-decimal digits
-         */
-        minIntegerDigits?: int;
-        /**
-         * defines the used minus symbol
-         */
-        minusSign?: string;
-        /**
-         * since 1.28.2 defines whether to output the string from the parse function in order to keep the precision
-         * for big numbers. Numbers in scientific notation are parsed back to standard notation. For example, "5e-3"
-         * is parsed to "0.005".
-         */
-        parseAsString?: boolean;
-        /**
-         * CLDR number pattern which is used to format the number
-         */
-        pattern?: string;
-        /**
-         * defines the used plus symbol
-         */
-        plusSign?: string;
-        /**
-         * Whether {@link #format} preserves decimal digits except trailing zeros in case there are more decimals
-         * than the `maxFractionDigits` format option allows. If decimals are not preserved, the formatted number
-         * is rounded to `maxFractionDigits`.
-         */
-        preserveDecimals?: boolean;
-        /**
-         * Specifies the rounding behavior for discarding the digits after the maximum fraction digits defined by
-         * `maxFractionDigits`. This can be assigned
-         * 	 - by value in {@link sap.ui.core.format.NumberFormat.RoundingMode RoundingMode},
-         * 	 - via a function that is used for rounding the number and takes two parameters: the number itself,
-         *     and the number of decimal digits that should be reserved. **Using a function is deprecated since 1.121.0**;
-         *     string based numbers are not rounded via this custom function.
-         */
-        roundingMode?: RoundingMode | keyof typeof RoundingMode;
-        /**
-         * defines the number of decimal in the shortened format string. If this isn't specified, the 'decimals'
-         * options is used
-         */
-        shortDecimals?: int;
-        /**
-         * only use short number formatting for values above this limit
-         */
-        shortLimit?: int;
-        /**
-         * since 1.40 specifies a number from which the scale factor for 'short' or 'long' style format is generated.
-         * The generated scale factor is used for all numbers which are formatted with this format instance. This
-         * option has effect only when the option 'style' is set to 'short' or 'long'. This option is by default
-         * set with `undefined` which means the scale factor is selected automatically for each number being formatted.
-         */
-        shortRefNumber?: int;
-        /**
-         * defines whether the currency code/symbol is shown in the formatted string, e.g. true: "1.00 EUR", false:
-         * "1.00" for locale "en" If both `showMeasure` and `showNumber` are false, an empty string is returned
-         */
-        showMeasure?: boolean;
-        /**
-         * defines whether the number is shown as part of the result string, e.g. 1 EUR for locale "en" `NumberFormat.getCurrencyInstance({showNumber:true}).format(1,
-         * "EUR"); // "1.00 EUR"` `NumberFormat.getCurrencyInstance({showNumber:false}).format(1, "EUR"); // "EUR"`
-         * If both `showMeasure` and `showNumber` are false, an empty string is returned
-         */
-        showNumber?: boolean;
-        /**
-         * since 1.40 specifies whether the scale factor is shown in the formatted number. This option takes effect
-         * only when the 'style' options is set to either 'short' or 'long'.
-         */
-        showScale?: boolean;
-        /**
-         * whether the positions of grouping separators are validated. Space characters used as grouping separators
-         * are not validated.
-         */
-        strictGroupingValidation?: boolean;
-        /**
-         * defines the style of format. Valid values are 'short, 'long' or 'standard' (based on the CLDR decimalFormat).
-         * When set to 'short' or 'long', numbers are formatted into the 'short' form only. When this option is
-         * set, the default value of the 'precision' option is set to 2. This can be changed by setting either min/maxFractionDigits,
-         * decimals, shortDecimals, or the 'precision' option itself.
-         */
-        style?: string;
-        /**
-         * overrides the global configuration value {@link module:sap/base/i18n/Formatting.getTrailingCurrencyCode Formatting.getTrailingCurrencyCode},
-         * which has a default value of `true</>. This is ignored if oFormatOptions.currencyCode` is set to
-         * `false`, or if `oFormatOptions.pattern` is supplied.
-         */
-        trailingCurrencyCode?: boolean;
-      },
+      oFormatOptions?: CurrencyFormatOptions,
       /**
        * The locale to get the formatter for; if no locale is given, a locale for the currently configured language
        * is used; see {@link module:sap/base/i18n/Formatting.getLanguageTag Formatting.getLanguageTag}
@@ -30382,143 +30663,7 @@ declare module "sap/ui/core/format/NumberFormat" {
        * The option object, which supports the following parameters. If no options are given, default values according
        * to the type and locale settings are used.
        */
-      oFormatOptions?: {
-        /**
-         * The target length of places after the decimal separator; if the number has fewer decimal places than
-         * given in this option, it is padded with whitespaces at the end up to the target length. An additional
-         * whitespace character for the decimal separator is added for a number without any decimals. **Note:**
-         * This format option is only allowed if the following conditions apply:
-         * 	 - It has a value greater than 0.
-         * 	 - The `oFormatOptions.style` format option is **not** set to `"short"` or `"long"`.
-         */
-        decimalPadding?: int;
-        /**
-         * defines the number of decimal digits
-         */
-        decimals?: int;
-        /**
-         * defines the character used as decimal separator. Note: `decimalSeparator` must always be different from
-         * `groupingSeparator`.
-         */
-        decimalSeparator?: string;
-        /**
-         * since 1.30.0 defines what an empty string is parsed as, and what is formatted as an empty string. The
-         * allowed values are "" (empty string), NaN, `null`, or 0. The 'format' and 'parse' functions are done
-         * in a symmetric way. For example, when this parameter is set to NaN, an empty string is parsed as NaN,
-         * and NaN is formatted as an empty string.
-         */
-        emptyString?: null | number | string;
-        /**
-         * defines the grouping base size in digits if it is different from the grouping size (e.g. Indian grouping)
-         */
-        groupingBaseSize?: int;
-        /**
-         * defines whether grouping is enabled (grouping separators are shown). **Note:** Grouping is disabled if
-         * the `groupingSize` format option is set to a non-positive value.
-         */
-        groupingEnabled?: boolean;
-        /**
-         * defines the character used as grouping separator. Note: `groupingSeparator` must always be different
-         * from `decimalSeparator`.
-         */
-        groupingSeparator?: string;
-        /**
-         * defines the grouping size in digits; the default is `3`. **Note:** If this format option is set to a
-         * non-positive value, grouping will be disabled entirely.
-         */
-        groupingSize?: int;
-        /**
-         * defines the maximum number of decimal digits
-         */
-        maxFractionDigits?: int;
-        /**
-         * defines the maximum number of non-decimal digits. If the number exceeds this maximum, e.g. 1e+120, "?"
-         * characters are shown instead of digits.
-         */
-        maxIntegerDigits?: int;
-        /**
-         * defines the minimal number of decimal digits
-         */
-        minFractionDigits?: int;
-        /**
-         * defines the minimal number of non-decimal digits
-         */
-        minIntegerDigits?: int;
-        /**
-         * defines the used minus symbol
-         */
-        minusSign?: string;
-        /**
-         * since 1.28.2 defines whether to output the string from the parse function in order to keep the precision
-         * for big numbers. Numbers in scientific notation are parsed back to standard notation. For example, "5e-3"
-         * is parsed to "0.005".
-         */
-        parseAsString?: boolean;
-        /**
-         * CLDR number pattern which is used to format the number
-         */
-        pattern?: string;
-        /**
-         * defines the used plus symbol
-         */
-        plusSign?: string;
-        /**
-         * The maximum number of digits in the formatted representation of a number; if the `precision` is less
-         * than the overall length of the number, its fractional part is truncated through rounding. As the `precision`
-         * only affects the rounding of a number, its integer part can retain more digits than defined by this parameter.
-         * **Example:** With a `precision` of 2, `234.567` is formatted to `235`. **Note:** The formatted output
-         * may differ depending on locale.
-         */
-        precision?: int;
-        /**
-         * Whether {@link #format} preserves decimal digits except trailing zeros in case there are more decimals
-         * than the `maxFractionDigits` format option allows. If decimals are not preserved, the formatted number
-         * is rounded to `maxFractionDigits`.
-         */
-        preserveDecimals?: boolean;
-        /**
-         * Specifies the rounding behavior for discarding the digits after the maximum fraction digits defined by
-         * `maxFractionDigits`. This can be assigned
-         * 	 - by value in {@link sap.ui.core.format.NumberFormat.RoundingMode RoundingMode},
-         * 	 - via a function that is used for rounding the number and takes two parameters: the number itself,
-         *     and the number of decimal digits that should be reserved. **Using a function is deprecated since 1.121.0**;
-         *     string based numbers are not rounded via this custom function.
-         */
-        roundingMode?: RoundingMode | keyof typeof RoundingMode;
-        /**
-         * defines the number of decimal in the shortened format string. If this isn't specified, the 'decimals'
-         * options is used
-         */
-        shortDecimals?: int;
-        /**
-         * only use short number formatting for values above this limit
-         */
-        shortLimit?: int;
-        /**
-         * since 1.40 specifies a number from which the scale factor for 'short' or 'long' style format is generated.
-         * The generated scale factor is used for all numbers which are formatted with this format instance. This
-         * option has effect only when the option 'style' is set to 'short' or 'long'. This option is by default
-         * set with `undefined` which means the scale factor is selected automatically for each number being formatted.
-         */
-        shortRefNumber?: int;
-        /**
-         * since 1.40 specifies whether the scale factor is shown in the formatted number. This option takes effect
-         * only when the 'style' options is set to either 'short' or 'long'.
-         */
-        showScale?: boolean;
-        /**
-         * whether the positions of grouping separators are validated. Space characters used as grouping separators
-         * are not validated.
-         */
-        strictGroupingValidation?: boolean;
-        /**
-         * defines the style of format. Valid values are 'short, 'long' or 'standard' (based on the CLDR decimalFormat).
-         * When set to 'short' or 'long', numbers are formatted into compact forms. When this option is set, the
-         * default value of the 'precision' option is set to 2. This can be changed by setting either min/maxFractionDigits,
-         * decimals, shortDecimals, or the 'precision' option itself.
-         */
-        style?: string;
-      },
+      oFormatOptions?: FloatFormatOptions,
       /**
        * The locale to get the formatter for; if no locale is given, a locale for the currently configured language
        * is used; see {@link module:sap/base/i18n/Formatting.getLanguageTag Formatting.getLanguageTag}
@@ -30552,139 +30697,7 @@ declare module "sap/ui/core/format/NumberFormat" {
        * The option object, which supports the following parameters. If no options are given, default values according
        * to the type and locale settings are used.
        */
-      oFormatOptions?: {
-        /**
-         * Not supported.
-         */
-        decimalPadding?: int;
-        /**
-         * defines the number of decimal digits
-         */
-        decimals?: int;
-        /**
-         * defines the character used as decimal separator. Note: `decimalSeparator` must always be different from
-         * `groupingSeparator`.
-         */
-        decimalSeparator?: string;
-        /**
-         * since 1.30.0 defines what an empty string is parsed as, and what is formatted as an empty string. The
-         * allowed values are "" (empty string) NaN, `null`, or 0. The 'format' and 'parse' functions are done in
-         * a symmetric way. For example, when this parameter is set to NaN, an empty string is parsed as NaN, and
-         * NaN is formatted as an empty string.
-         */
-        emptyString?: null | number | string;
-        /**
-         * defines the grouping base size in digits if it is different from the grouping size (e.g. Indian grouping)
-         */
-        groupingBaseSize?: int;
-        /**
-         * defines whether grouping is enabled (grouping separators are shown). **Note:** Grouping is disabled if
-         * the `groupingSize` format option is set to a non-positive value.
-         */
-        groupingEnabled?: boolean;
-        /**
-         * defines the character used as grouping separator. Note: `groupingSeparator` must always be different
-         * from `decimalSeparator`.
-         */
-        groupingSeparator?: string;
-        /**
-         * defines the grouping size in digits; the default is `3`. **Note:** If this format option is set to a
-         * non-positive value, grouping will be disabled entirely.
-         */
-        groupingSize?: int;
-        /**
-         * defines the maximum number of decimal digits
-         */
-        maxFractionDigits?: int;
-        /**
-         * defines the maximum number of non-decimal digits. If the number exceeds this maximum, e.g. 1e+120, "?"
-         * characters are shown instead of digits.
-         */
-        maxIntegerDigits?: int;
-        /**
-         * defines the minimal number of decimal digits
-         */
-        minFractionDigits?: int;
-        /**
-         * defines the minimal number of non-decimal digits
-         */
-        minIntegerDigits?: int;
-        /**
-         * defines the used minus symbol
-         */
-        minusSign?: string;
-        /**
-         * since 1.28.2 defines whether to output the string from the parse function in order to keep the precision
-         * for big numbers. Numbers in scientific notation are parsed back to standard notation. For example, "5e+3"
-         * is parsed to "5000".
-         */
-        parseAsString?: boolean;
-        /**
-         * CLDR number pattern which is used to format the number
-         */
-        pattern?: string;
-        /**
-         * defines the used plus symbol
-         */
-        plusSign?: string;
-        /**
-         * **Note:** Only considered if the number format leads to a representation with decimal places, e.g. if
-         * the option `style: "short"` is set. The maximum number of digits in the formatted representation of a
-         * number; if the `precision` is less than the overall length of the number, its fractional part is truncated
-         * through rounding. As the `precision` only affects the rounding of a number, its integer part can retain
-         * more digits than defined by this parameter. **Example:** With a `precision` of 2 and `style: "short"`,
-         * `234567` is formatted to `"235K"`. **Note:** The formatted output may differ depending on locale.
-         */
-        precision?: int;
-        /**
-         * Whether {@link #format} preserves decimal digits except trailing zeros in case there are more decimals
-         * than the `maxFractionDigits` format option allows. If decimals are not preserved, the formatted number
-         * is rounded to `maxFractionDigits`.
-         */
-        preserveDecimals?: boolean;
-        /**
-         * Specifies the rounding behavior for discarding the digits after the maximum fraction digits defined by
-         * `maxFractionDigits`. This can be assigned
-         * 	 - by value in {@link sap.ui.core.format.NumberFormat.RoundingMode RoundingMode},
-         * 	 - via a function that is used for rounding the number and takes two parameters: the number itself,
-         *     and the number of decimal digits that should be reserved. **Using a function is deprecated since 1.121.0**;
-         *     string based numbers are not rounded via this custom function.
-         */
-        roundingMode?: RoundingMode | keyof typeof RoundingMode;
-        /**
-         * defines the number of decimal in the shortened format string. If this isn't specified, the 'decimals'
-         * options is used
-         */
-        shortDecimals?: int;
-        /**
-         * only use short number formatting for values above this limit
-         */
-        shortLimit?: int;
-        /**
-         * since 1.40 specifies a number from which the scale factor for 'short' or 'long' style format is generated.
-         * The generated scale factor is used for all numbers which are formatted with this format instance. This
-         * option has effect only when the option 'style' is set to 'short' or 'long'. This option is by default
-         * set with `undefined` which means the scale factor is selected automatically for each number being formatted.
-         */
-        shortRefNumber?: int;
-        /**
-         * since 1.40 specifies whether the scale factor is shown in the formatted number. This option takes effect
-         * only when the 'style' options is set to either 'short' or 'long'.
-         */
-        showScale?: boolean;
-        /**
-         * whether the positions of grouping separators are validated. Space characters used as grouping separators
-         * are not validated.
-         */
-        strictGroupingValidation?: boolean;
-        /**
-         * defines the style of format. Valid values are 'short, 'long' or 'standard' (based on the CLDR decimalFormat).
-         * When set to 'short' or 'long', numbers are formatted into compact forms. When this option is set, the
-         * default value of the 'precision' option is set to 2. This can be changed by setting either min/maxFractionDigits,
-         * decimals, shortDecimals, or the 'precision' option itself.
-         */
-        style?: string;
-      },
+      oFormatOptions?: IntegerFormatOptions,
       /**
        * The locale to get the formatter for; if no locale is given, a locale for the currently configured language
        * is used; see {@link module:sap/base/i18n/Formatting.getLanguageTag Formatting.getLanguageTag}
@@ -30868,167 +30881,7 @@ declare module "sap/ui/core/format/NumberFormat" {
        * The option object, which supports the following parameters. If no options are given, default values according
        * to the type and locale settings are used.
        */
-      oFormatOptions?: {
-        /**
-         * defines the allowed units for formatting and parsing, e.g. ["size-meter", "volume-liter", ...]
-         */
-        allowedUnits?: any[];
-        /**
-         * defines a set of custom units, e.g. {"electric-inductance": { "displayName": "henry", "unitPattern-count-one":
-         * "{0} H", "unitPattern-count-other": "{0} H", "perUnitPattern": "{0}/H", "decimals": 2, "precision": 4
-         * }}
-         */
-        customUnits?: Record<string, object>;
-        /**
-         * The target length of places after the decimal separator; if the number has fewer decimal places than
-         * given in this option, it is padded with whitespaces at the end up to the target length. An additional
-         * whitespace character for the decimal separator is added for a number without any decimals. **Note:**
-         * This format option is only allowed if the following conditions apply:
-         * 	 - It has a value greater than 0.
-         * 	 - The `FormatOptions.showMeasure` format option is set to `false`.
-         * 	 - The `oFormatOptions.style` format option is **not** set to `"short"` or `"long"`.
-         */
-        decimalPadding?: int;
-        /**
-         * defines the number of decimal digits
-         */
-        decimals?: int;
-        /**
-         * defines the character used as decimal separator. Note: `decimalSeparator` must always be different from
-         * `groupingSeparator`.
-         */
-        decimalSeparator?: string;
-        /**
-         * since 1.30.0 defines what an empty string is parsed as, and what is formatted as an empty string. The
-         * allowed values are "" (empty string), NaN, `null`, or 0. The 'format' and 'parse' functions are done
-         * in a symmetric way. For example, when this parameter is set to NaN, an empty string is parsed as [NaN,
-         * undefined], and NaN is formatted as an empty string.
-         */
-        emptyString?: null | number | string;
-        /**
-         * defines the grouping base size in digits if it is different from the grouping size (e.g. Indian grouping)
-         */
-        groupingBaseSize?: int;
-        /**
-         * defines whether grouping is enabled (grouping separators are shown). **Note:** Grouping is disabled if
-         * the `groupingSize` format option is set to a non-positive value.
-         */
-        groupingEnabled?: boolean;
-        /**
-         * defines the character used as grouping separator. Note: `groupingSeparator` must always be different
-         * from `decimalSeparator`.
-         */
-        groupingSeparator?: string;
-        /**
-         * defines the grouping size in digits; the default is `3`. **Note:** If this format option is set to a
-         * non-positive value, grouping will be disabled entirely.
-         */
-        groupingSize?: int;
-        /**
-         * defines the maximum number of decimal digits
-         */
-        maxFractionDigits?: int;
-        /**
-         * defines the maximum number of non-decimal digits. If the number exceeds this maximum, e.g. 1e+120, "?"
-         * characters are shown instead of digits.
-         */
-        maxIntegerDigits?: int;
-        /**
-         * defines the minimal number of decimal digits
-         */
-        minFractionDigits?: int;
-        /**
-         * defines the minimal number of non-decimal digits
-         */
-        minIntegerDigits?: int;
-        /**
-         * defines the used minus symbol
-         */
-        minusSign?: string;
-        /**
-         * since 1.28.2 defines whether to output the string from the parse function in order to keep the precision
-         * for big numbers. Numbers in scientific notation are parsed back to standard notation. For example, "5e-3"
-         * is parsed to "0.005".
-         */
-        parseAsString?: boolean;
-        /**
-         * CLDR number pattern which is used to format the number
-         */
-        pattern?: string;
-        /**
-         * defines the used plus symbol
-         */
-        plusSign?: string;
-        /**
-         * The maximum number of digits in the formatted representation of a number; if the `precision` is less
-         * than the overall length of the number, its fractional part is truncated through rounding. As the `precision`
-         * only affects the rounding of a number, its integer part can retain more digits than defined by this parameter.
-         * **Example:** With a `precision` of 2, the parameters `"234.567", "mass-kilogram"` are formatted to `"235
-         * kg"`. **Note:** The formatted output may differ depending on locale.
-         */
-        precision?: int;
-        /**
-         * Whether {@link #format} preserves decimal digits except trailing zeros in case there are more decimals
-         * than the `maxFractionDigits` format option allows. If decimals are not preserved, the formatted number
-         * is rounded to `maxFractionDigits`.
-         */
-        preserveDecimals?: boolean;
-        /**
-         * Specifies the rounding behavior for discarding the digits after the maximum fraction digits defined by
-         * `maxFractionDigits`. This can be assigned
-         * 	 - by value in {@link sap.ui.core.format.NumberFormat.RoundingMode RoundingMode},
-         * 	 - via a function that is used for rounding the number and takes two parameters: the number itself,
-         *     and the number of decimal digits that should be reserved. **Using a function is deprecated since 1.121.0**;
-         *     string based numbers are not rounded via this custom function.
-         */
-        roundingMode?: RoundingMode | keyof typeof RoundingMode;
-        /**
-         * defines the number of decimals in the shortened format string. If this option isn't specified, the 'decimals'
-         * option is used instead.
-         */
-        shortDecimals?: int;
-        /**
-         * defines a limit above which only short number formatting is used
-         */
-        shortLimit?: int;
-        /**
-         * since 1.40 specifies a number from which the scale factor for the 'short' or 'long' style format is generated.
-         * The generated scale factor is used for all numbers which are formatted with this format instance. This
-         * option only takes effect when the 'style' option is set to 'short' or 'long'. This option is set to `undefined`
-         * by default, which means that the scale factor is selected automatically for each number being formatted.
-         */
-        shortRefNumber?: int;
-        /**
-         * defines whether the unit of measure is shown in the formatted string, e.g. for input 1 and "duration-day"
-         * true: "1 day", false: "1". If both `showMeasure` and `showNumber` are false, an empty string is returned
-         */
-        showMeasure?: boolean;
-        /**
-         * defines whether the number is shown as part of the result string, e.g. 1 day for locale "en" `NumberFormat.getUnitInstance({showNumber:true}).format(1,
-         * "duration-day"); // "1 day"` `NumberFormat.getUnitInstance({showNumber:false}).format(1, "duration-day");
-         * // "day"` e.g. 2 days for locale "en" `NumberFormat.getUnitInstance({showNumber:true}).format(2, "duration-day");
-         * // "2 days"` `NumberFormat.getUnitInstance({showNumber:false}).format(2, "duration-day"); // "days"`
-         * If both `showMeasure` and `showNumber` are false, an empty string is returned
-         */
-        showNumber?: boolean;
-        /**
-         * since 1.40 specifies whether the scale factor is shown in the formatted number. This option takes effect
-         * only when the 'style' options is set to either 'short' or 'long'.
-         */
-        showScale?: boolean;
-        /**
-         * whether the positions of grouping separators are validated. Space characters used as grouping separators
-         * are not validated.
-         */
-        strictGroupingValidation?: boolean;
-        /**
-         * defines the style of format. Valid values are 'short, 'long' or 'standard' (based on the CLDR decimalFormat).
-         * When set to 'short' or 'long', numbers are formatted into compact forms. When this option is set, the
-         * default value of the 'precision' option is set to 2. This can be changed by setting either min/maxFractionDigits,
-         * decimals, shortDecimals, or the 'precision' option itself.
-         */
-        style?: string;
-      },
+      oFormatOptions?: UnitFormatOptions,
       /**
        * The locale to get the formatter for; if no locale is given, a locale for the currently configured language
        * is used; see {@link module:sap/base/i18n/Formatting.getLanguageTag Formatting.getLanguageTag}
@@ -31088,6 +30941,302 @@ declare module "sap/ui/core/format/NumberFormat" {
     ): number | any[] | string | null;
   }
   /**
+   * The format options for currencies.
+   */
+  export type CurrencyFormatOptions = FormatOptions & {
+    /**
+     * Defines whether the currency is shown as a code in currency format. The currency symbol is displayed
+     * when this option is set to `false` and a symbol has been defined for the given currency code.
+     */
+    currencyCode?: boolean;
+    /**
+     * Can be set either to 'standard' (the default value) or to 'accounting' for an accounting-specific currency
+     * display
+     */
+    currencyContext?:
+      | "standard"
+      | "accounting"
+      | "sap-standard"
+      | "sap-accounting";
+    /**
+     * Defines a set of custom currencies exclusive to this NumberFormat instance. Custom currencies must not
+     * only consist of digits. If custom currencies are defined on the instance, no other currencies can be
+     * formatted and parsed by this instance. Globally available custom currencies can be added via the global
+     * configuration. See the above examples. See also {@link module:sap/base/i18n/Formatting.setCustomCurrencies Formatting.setCustomCurrencies }
+     * and {@link module:sap/base/i18n/Formatting.addCustomCurrencies Formatting.addCustomCurrencies}.
+     */
+    customCurrencies?: Record<string, object>;
+    /**
+     * The number of decimal digits.
+     */
+    decimals?: int;
+    /**
+     * The target length of places after the decimal separator; if the number has fewer decimals than specified
+     * in this option, it is padded with whitespaces at the end up to the target length. An additional whitespace
+     * character for the decimal separator is added for a number without any decimals. **Note:** This format
+     * option is only allowed if the following conditions apply:
+     * 	 - It has a value greater than 0.
+     * 	 - The `oFormatOptions.style` format option is **not** set to `"short"` or `"long"`.
+     */
+    decimalPadding?: int;
+    /**
+     * Since 1.130.0. Defines what value an empty string is parsed into and what value is formatted as an empty
+     * string. The {@link #format} and {@link #parse} functions are done in a symmetric way. For example, when
+     * this parameter is set to `NaN`, an empty string is parsed as `NaN`, and `NaN` is formatted as an empty
+     * string.
+     */
+    emptyString?: null | number | string;
+    /**
+     * Deprecated as of 1.130; this format option does not have an effect on currency formats since decimals
+     * can always be determined, either through the given format options, custom currencies or the CLDR
+     */
+    minFractionDigits?: int;
+    /**
+     * Since 1.28.2, whether to parse the number as a string in order to keep the precision for big numbers.
+     * Numbers in scientific notation are parsed back to standard notation. For example, `5e-3` is parsed to
+     * `0.005`.
+     */
+    parseAsString?: boolean;
+    /**
+     * The maximum number of digits in the formatted representation of a number; if the `precision` is less
+     * than the overall length of the number, its fractional part is truncated through rounding. As the `precision`
+     * only affects the rounding of a number, its integer part can retain more digits than defined by this parameter.
+     * **Example:** With a `precision` of 2, `234.567` is formatted to `235`. **Note:** The formatted output
+     * may differ depending on locale.
+     */
+    precision?: int;
+    /**
+     * Whether {@link #format} preserves decimal digits (except trailing zeros) when there are more decimals
+     * than the `maxFractionDigits` format option allows. When decimals aren't preserved, the formatted number
+     * is rounded to `maxFractionDigits`.
+     */
+    preserveDecimals?: boolean;
+    /**
+     * Defines whether the currency code/symbol is shown in the formatted string, e.g. true: "1.00 EUR", false:
+     * "1.00" for locale "en" If both `showMeasure` and `showNumber` are false, an empty string is returned
+     */
+    showMeasure?: boolean;
+    /**
+     * Defines whether the number is shown as part of the result string, e.g. 1 EUR for locale "en"
+     * ```javascript
+     * `NumberFormat.getCurrencyInstance({showNumber: true}).format(1, "EUR"); // "1.00 EUR"````
+     *
+     * ```javascript
+     * `NumberFormat.getCurrencyInstance({showNumber: false}).format(1, "EUR"); // "EUR"````
+     *  If both `showMeasure` and `showNumber` are false, an empty string is returned
+     */
+    showNumber?: boolean;
+    /**
+     * The style of format. When set to `short` or `long`, numbers are formatted into the `short` form only.
+     * When this option is set, the default value of the `precision` option is set to `2`. This can be changed
+     * by setting either `min/maxFractionDigits`, `decimals`, `shortDecimals`, or the `precision` option itself.
+     */
+    style?: "short" | "long" | "standard";
+    /**
+     * Overrides the global configuration value {@link module:sap/base/i18n/Formatting.getTrailingCurrencyCode Formatting.getTrailingCurrencyCode},
+     * which has a default value of `true`. This is ignored if `oFormatOptions.currencyCode` is set to `false`,
+     * or if `oFormatOptions.pattern` is supplied.
+     */
+    trailingCurrencyCode?: boolean;
+  };
+
+  /**
+   * The format options for floating-point numbers.
+   */
+  export type FloatFormatOptions = FormatOptions & {
+    /**
+     * The number of decimal digits.
+     */
+    decimals?: int;
+    /**
+     * The target length of places after the decimal separator; if the number has fewer decimal places than
+     * given in this option, it is padded with whitespaces at the end up to the target length. An additional
+     * whitespace character for the decimal separator is added for a number without any decimals. **Note:**
+     * This format option is only allowed if the following conditions apply:
+     * 	 - It has a value greater than 0.
+     * 	 - The `oFormatOptions.style` format option is **not** set to `"short"` or `"long"`.
+     */
+    decimalPadding?: int;
+    /**
+     * Since 1.130.0. Defines what value an empty string is parsed into and what value is formatted as an empty
+     * string. The {@link #format} and {@link #parse} functions are done in a symmetric way. For example, when
+     * this parameter is set to `NaN`, an empty string is parsed as `NaN`, and `NaN` is formatted as an empty
+     * string.
+     */
+    emptyString?: null | number | string;
+    /**
+     * The minimal number of decimal digits.
+     */
+    minFractionDigits?: int;
+    /**
+     * Since 1.28.2, whether to parse the number as a string in order to keep the precision for big numbers.
+     * Numbers in scientific notation are parsed back to standard notation. For example, `5e-3` is parsed to
+     * `0.005`.
+     */
+    parseAsString?: boolean;
+    /**
+     * The maximum number of digits in the formatted representation of a number; if the `precision` is less
+     * than the overall length of the number, its fractional part is truncated through rounding. As the `precision`
+     * only affects the rounding of a number, its integer part can retain more digits than defined by this parameter.
+     * **Example:** With a `precision` of 2, `234.567` is formatted to `235`. **Note:** The formatted output
+     * may differ depending on locale.
+     */
+    precision?: int;
+    /**
+     * Whether {@link #format} preserves decimal digits (except trailing zeros) when there are more decimals
+     * than the `maxFractionDigits` format option allows. When decimals aren't preserved, the formatted number
+     * is rounded to `maxFractionDigits`.
+     */
+    preserveDecimals?: boolean;
+    /**
+     * The style of format. When set to `short` or `long`, numbers are formatted into compact forms. When this
+     * option is set, the default value of the `precision` option is set to `2`. This can be changed by setting
+     * either `min/maxFractionDigits`, `decimals`, `shortDecimals`, or the `precision` option itself.
+     */
+    style?: "short" | "long" | "standard";
+  };
+
+  /**
+   * The base type for the numeric format options.
+   */
+  export type FormatOptions = {
+    /**
+     * The character used as decimal separator. If none is given, the locale-specific decimal separator is used.
+     * **Note:** `decimalSeparator` must always be different from `groupingSeparator`.
+     */
+    decimalSeparator?: string;
+    /**
+     * The grouping base size in digits if it is different from the grouping size (e.g. Indian grouping).
+     */
+    groupingBaseSize?: int;
+    /**
+     * Whether grouping is enabled (grouping separators are shown). **Note:** Grouping is disabled if the `groupingSize`
+     * format option is set to a non-positive value.
+     */
+    groupingEnabled?: boolean;
+    /**
+     * The character used as grouping separator. If none is given, the locale-specific grouping separator is
+     * used. **Note:** `groupingSeparator` must always be different from `decimalSeparator`.
+     */
+    groupingSeparator?: string;
+    /**
+     * The grouping size in digits. **Note:** Grouping is disabled if this format option is set to a non-positive
+     * value.
+     */
+    groupingSize?: int;
+    /**
+     * The maximum number of decimal digits.
+     */
+    maxFractionDigits?: int;
+    /**
+     * The maximum number of non-decimal digits.
+     */
+    maxIntegerDigits?: int;
+    /**
+     * The minimal number of non-decimal digits.
+     */
+    minIntegerDigits?: int;
+    /**
+     * The symbol for the minus sign. If none is given, the locale-specific minus sign is used.
+     */
+    minusSign?: string;
+    /**
+     * The CLDR number pattern which is used to format a number. If none is given, the default pattern for the
+     * locale and type is used.
+     */
+    pattern?: string;
+    /**
+     * The symbol for the plus sign. If none is given, the locale-specific plus sign is used.
+     */
+    plusSign?: string;
+    /**
+     * Defines how numbers are rounded when the number of fraction digits exceeds the value of `maxFractionDigits`.
+     * The rounding behavior of the formatter can be defined in the following ways:
+     * 	 - Setting this format option to a value from the {@link sap.ui.core.format.NumberFormat.RoundingMode RoundingMode }
+     *     enum
+     * 	 - Setting this format option to a function used for rounding the number. The function must take two
+     *     parameters: the number itself, and the number of decimal digits that should be preserved. String-based
+     *     numbers are not rounded by this custom function. **Deprecated as of version 1.121.0; apply rounding by
+     *     specifying a rounding mode instead.**
+     */
+    roundingMode?: (RoundingMode | keyof typeof RoundingMode) | Function;
+    /**
+     * The number of decimals in the shortened format string. If this option isn't specified, the `decimals`
+     * option is used instead.
+     */
+    shortDecimals?: int;
+    /**
+     * A limit above which only short number formatting is used.
+     */
+    shortLimit?: int;
+    /**
+     * Since 1.40, specifies a number from which the scale factor for the `short` or `long` style format is
+     * generated. The generated scale factor is used for all numbers which are formatted with this format instance.
+     * This option only takes effect when the `style` option is set to `short` or `long`. It is set to `undefined`
+     * by default, which means that the scale factor is selected automatically for each number being formatted.
+     */
+    shortRefNumber?: int;
+    /**
+     * Since 1.40, specifies whether the scale factor is shown in the formatted number. This option takes effect
+     * only when the `style` option is set to either `short` or `long`.
+     */
+    showScale?: boolean;
+    /**
+     * Whether the positions of grouping separators are validated. Space characters used as grouping separators
+     * are not validated.
+     */
+    strictGroupingValidation?: boolean;
+  };
+
+  /**
+   * The format options for integer numbers.
+   */
+  export type IntegerFormatOptions = FormatOptions & {
+    /**
+     * The number of decimal digits.
+     */
+    decimals?: int;
+    /**
+     * Since 1.130.0. Defines what value an empty string is parsed into and what value is formatted as an empty
+     * string. The {@link #format} and {@link #parse} functions are done in a symmetric way. For example, when
+     * this parameter is set to `NaN`, an empty string is parsed as `NaN`, and `NaN` is formatted as an empty
+     * string.
+     */
+    emptyString?: null | number | string;
+    /**
+     * The minimal number of decimal digits.
+     */
+    minFractionDigits?: int;
+    /**
+     * **Note:** Only considered if the number format leads to a representation with decimal places, e.g. if
+     * the option `style: "short"` is set. The maximum number of digits in the formatted representation of a
+     * number; if the `precision` is less than the overall length of the number, its fractional part is truncated
+     * through rounding. As the `precision` only affects the rounding of a number, its integer part can retain
+     * more digits than defined by this parameter. **Example:** With a `precision` of 2 and `style: "short"`,
+     * `234567` is formatted to `"235K"`.
+     */
+    precision?: int;
+    /**
+     * Since 1.28.2, whether to parse the number as a string in order to keep the precision for big numbers.
+     * Numbers in scientific notation are parsed back to standard notation. For example, `5e-3` is parsed to
+     * `0.005`.
+     */
+    parseAsString?: boolean;
+    /**
+     * Whether {@link #format} preserves decimal digits (except trailing zeros) when there are more decimals
+     * than the `maxFractionDigits` format option allows. When decimals aren't preserved, the formatted number
+     * is rounded to `maxFractionDigits`.
+     */
+    preserveDecimals?: boolean;
+    /**
+     * The style of format. When set to `short` or `long`, numbers are formatted into compact forms. When this
+     * option is set, the default value of the `precision` option is set to `2`. This can be changed by setting
+     * either `min/maxFractionDigits`, `decimals`, `shortDecimals`, or the `precision` option itself.
+     */
+    style?: "short" | "long" | "standard";
+  };
+
+  /**
    * Specifies a rounding behavior for numerical operations capable of discarding precision. Each rounding
    * mode in this object indicates how the least significant returned digits of rounded result are to be calculated.
    *
@@ -31142,6 +31291,106 @@ declare module "sap/ui/core/format/NumberFormat" {
      */
     TOWARDS_ZERO = "TOWARDS_ZERO",
   }
+  /**
+   * The format options for units.
+   */
+  export type UnitFormatOptions = FormatOptions & {
+    /**
+     * Defines the allowed units for formatting and parsing, for example `["size-meter", "volume-liter", ...]`
+     * If this option is not specified, all units are allowed.
+     */
+    allowedUnits?: string[];
+    /**
+     * Defines a set of custom units, for example:
+     * ```javascript
+     * {"electric-inductance": {
+     *      "displayName": "henry",
+     *      "unitPattern-count-one": "{0} H",
+     *      "unitPattern-count-other": "{0} H",
+     *      "perUnitPattern": "{0}/H",
+     *      "decimals": 2,
+     *      "precision": 4
+     *   }
+     * }```
+     */
+    customUnits?: Record<string, object>;
+    /**
+     * The number of decimal digits.
+     */
+    decimals?: int;
+    /**
+     * The target length of places after the decimal separator; if the number has fewer decimals than specified
+     * in this option, it is padded with whitespaces at the end up to the target length. An additional whitespace
+     * character for the decimal separator is added for a number without any decimals. **Note:** This format
+     * option is only allowed if the following conditions apply:
+     * 	 - It has a value greater than 0.
+     * 	 - The `oFormatOptions.style` format option is **not** set to `"short"` or `"long"`.
+     */
+    decimalPadding?: int;
+    /**
+     * Since 1.130.0. Defines what value an empty string is parsed into and what value is formatted as an empty
+     * string. The {@link #format} and {@link #parse} functions are done in a symmetric way. For example, when
+     * this parameter is set to `NaN`, an empty string is parsed as `NaN`, and `NaN` is formatted as an empty
+     * string.
+     */
+    emptyString?: null | number | string;
+    /**
+     * The minimal number of decimal digits.
+     */
+    minFractionDigits?: int;
+    /**
+     * Since 1.28.2, whether to parse the number as a string in order to keep the precision for big numbers.
+     * Numbers in scientific notation are parsed back to standard notation. For example, `5e-3` is parsed to
+     * `0.005`.
+     */
+    parseAsString?: boolean;
+    /**
+     * The maximum number of digits in the formatted representation of a number; if the `precision` is less
+     * than the overall length of the number, its fractional part is truncated through rounding. As the `precision`
+     * only affects the rounding of a number, its integer part can retain more digits than defined by this parameter.
+     * **Example:** With a `precision` of 2, `234.567` is formatted to `235`. **Note:** The formatted output
+     * may differ depending on locale.
+     */
+    precision?: int;
+    /**
+     * Whether {@link #format} preserves decimal digits (except trailing zeros) when there are more decimals
+     * than the `maxFractionDigits` format option allows. When decimals aren't preserved, the formatted number
+     * is rounded to `maxFractionDigits`.
+     */
+    preserveDecimals?: boolean;
+    /**
+     * Defines whether the unit of measure is shown in the formatted string, for example 1 day for locale "en"
+     *
+     * ```javascript
+     * NumberFormat.getUnitInstance({showMeasure: true})
+     *     .format(1, "duration-day"); // "1 day"```
+     *
+     * ```javascript
+     * NumberFormat.getUnitInstance({showMeasure: false})
+     *     .format(1, "duration-day"); // "1"```
+     *  If both `showMeasure` and `showNumber` are set to false, an empty string is returned.
+     */
+    showMeasure?: boolean;
+    /**
+     * Defines whether the number is shown as part of the formatted string, for example 1 day for locale "en"
+     *
+     * ```javascript
+     * NumberFormat.getUnitInstance({showNumber: true})
+     *     .format(1, "duration-day"); // "1 day"```
+     *
+     * ```javascript
+     * NumberFormat.getUnitInstance({showNumber: false})
+     *     .format(1, "duration-day"); // "day"```
+     *  If both `showMeasure` and `showNumber` are false, an empty string is returned
+     */
+    showNumber?: boolean;
+    /**
+     * The style of format. When set to `short` or `long`, numbers are formatted into compact forms. When this
+     * option is set, the default value of the `precision` option is set to `2`. This can be changed by setting
+     * either `min/maxFractionDigits`, `decimals`, `shortDecimals`, or the `precision` option itself.
+     */
+    style?: "short" | "long" | "standard";
+  };
 }
 
 declare module "sap/ui/core/Fragment" {
@@ -31166,9 +31415,9 @@ declare module "sap/ui/core/Fragment" {
    * which returns the UI control tree defined inside the Fragments. When used within declarative Views, the
    * Fragment content is imported and seamlessly integrated into the View.
    *
-   * Fragments are used similar as sap.ui.core.mvc.Views, but Fragments do not have a Controller on their
-   * own (they may know one, though), they are not a Control, they are not part of the UI tree and they have
-   * no representation in HTML. By default, in contrast to declarative Views, they do not do anything to guarantee
+   * Fragments are used similar as sap.ui.core.mvc.View, but Fragments do not have a Controller on their own
+   * (they may know one, though), they are not a Control, they are not part of the UI tree and they have no
+   * representation in HTML. By default, in contrast to declarative Views, they do not do anything to guarantee
    * ID uniqueness.
    *
    * But like Views they can be defined in several Formats (XML and JavaScript; support for other types can
@@ -31390,12 +31639,16 @@ declare module "sap/ui/core/Fragment" {
     /**
      * Gets current value of property {@link #getType type}.
      *
+     * The Fragment type.
+     *
      *
      * @returns Value of property `type`
      */
     getType(): string;
     /**
      * Sets a new value for property {@link #getType type}.
+     *
+     * The Fragment type.
      *
      * When called with a value of `null` or `undefined`, the default value of the property will be restored.
      *
@@ -31413,6 +31666,9 @@ declare module "sap/ui/core/Fragment" {
    * Describes the settings that can be provided to the Fragment constructor.
    */
   export interface $FragmentSettings extends $ManagedObjectSettings {
+    /**
+     * The Fragment type.
+     */
     type?: string | PropertyBindingInfo;
 
     fragmentName?: string;
@@ -33065,6 +33321,30 @@ declare module "sap/ui/core/IconPool" {
       sMimeType: string
     ): string;
     /**
+     * Returns the HTML string for an icon URI.
+     *
+     * This method reuses the rendering logic from {@link sap.ui.core.RenderManager#icon} by calling it with
+     * a lightweight DOM-building interface that mirrors the RenderManager's semantic API.
+     *
+     * @since 1.152
+     *
+     * @returns The HTML string for the icon, or empty string if the URI is not a valid icon URI
+     */
+    getIconHTML(
+      /**
+       * The icon URI (e.g. "sap-icon://accept")
+       */
+      sURI: URI,
+      /**
+       * Additional CSS classes to add to the icon element
+       */
+      aClasses?: string[],
+      /**
+       * Additional HTML attributes as key-value pairs
+       */
+      mAttributes?: object
+    ): string;
+    /**
      * Returns an info object for the icon with the given `iconName` and `collectionName`.
      *
      * Instead of giving name and collection, a complete icon-URI can be provided as `iconName`. The method
@@ -34194,8 +34474,9 @@ declare module "sap/ui/core/Lib" {
      *     is e.g. useful when an application merges the CSS for multiple libraries and already loaded the resulting
      *     stylesheet.
      *
-     * If a list of library `dependencies` is specified in the info object, those libraries will be loaded
-     * synchronously if they haven't been loaded yet.
+     *
+     * 	 - If a list of library `dependencies` is specified in the info object, those libraries will be loaded
+     *     synchronously if they haven't been loaded yet.
      *
      * **Note:** Dependencies between libraries have to be modeled consistently in several places:
      * 	 - Both eager and lazy dependencies have to be modelled in the `.library` file.
@@ -34226,10 +34507,72 @@ declare module "sap/ui/core/Lib" {
      * Library API-Version 2:
      *
      * The Library API Version 2 has been introduced to avoid access to the global namespace when retrieving
-     * enum types. With Library API Version 2 a library must declare its enum types via {@link module:sap/ui/base/DataType.registerEnum DataType.registerEnum}.
+     * enum types. With Library API Version 2 a library must declare its enum types via {@link sap.ui.base.DataType.registerEnum }
+     * as described in the "Defining Enums" section below.
+     *
+     * Library API version 2 is defined as a number (int) in the library's `init()` call:
+     * ```javascript
+     *
+     * var thisLib = Library.init({
+     *     apiVersion: 2,
+     *     name: "my.library",
+     *     ...
+     * });
+     * ```
      *
      *
-     * @returns Returns the library namespace, based on the given library name.
+     * **Important:** The object returned by `Library.init()` should be used as the return value of the `library.js`
+     * module.
+     *
+     * **Defining Enums**
+     *
+     * Enums that are exposed through a library (not as separate modules) should be defined as properties on
+     * the object returned by `Library.init()`. Each enum must be registered via {@link sap.ui.base.DataType.registerEnum }
+     * to make it available to the framework.
+     *
+     * Example for a simple enum definition:
+     * ```javascript
+     *
+     * // The return value "thisLib" will be used to expose enums
+     * var thisLib = Library.init({
+     *     apiVersion: 2,
+     *     name: "my.library",
+     *     ...
+     * });
+     *
+     * // Note that enum keys and values must match
+     * thisLib.MyEnumType = {
+     *     Small: "Small",
+     *     Medium: "Medium",
+     *     Large: "Large"
+     * };
+     *
+     * // make sure to register the enum and make it know to the framework for later type checks
+     * DataType.registerEnum("my.library.MyEnumType", thisLib.MyEnumType);
+     * ```
+     *
+     *
+     * **Special case: enums in nested namespaces**
+     *
+     * Ensure to create the namespace first and then define the enum:
+     *
+     *
+     * ```javascript
+     *
+     * thisLib.cards = thisLib.cards || {};
+     *
+     * thisLib.cards.HeaderPosition = {
+     *     Top: "Top",
+     *     Bottom: "Bottom"
+     * };
+     *
+     * DataType.registerEnum("my.library.cards.HeaderPosition", thisLib.cards.HeaderPosition);
+     * ```
+     *
+     *
+     *
+     * @returns Returns an object with the exports of the library (enums, helpers, ...). This object should
+     * be used as the return value of the `library.js` module from which `Library.init` is called.
      */
     static init(
       /**
@@ -35165,7 +35508,7 @@ declare module "sap/ui/core/LocaleData" {
      * that is: Era (G), Year (y/Y), Quarter (q/Q), Month (M/L), Week (w/W), Day-Of-Week (E/e/c), Day (d/D),
      * Hour (h/H/k/K/), Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x)
      *
-     * See https://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems
+     * See {@link https://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems Unicode - Available Formats}
      *
      * @since 1.46
      *
@@ -35179,11 +35522,12 @@ declare module "sap/ui/core/LocaleData" {
       sSkeleton: string,
       /**
        * is either a string which represents the symbol matching the greatest difference in the two dates to format
-       * or an object which contains key-value pairs. The value is always true. The key is one of the date field
-       * symbol groups whose value are different between the two dates. The key can only be set with 'Year', 'Quarter',
-       * 'Month', 'Week', 'Day', 'DayPeriod', 'Hour', 'Minute', or 'Second'.
+       * or an object which contains key-value pairs. The value is always `true`. The key is one of the date field
+       * symbol groups whose value are different between the two dates. The key can only be set with: `'Era',
+       * 'Year', 'Quarter', 'Month', 'Week', 'Day', 'DayPeriod', 'Hour','Minute', 'Second'`. For more information,
+       * see {@link https://unicode.org/reports/tr35/tr35-dates.html#element-intervalformats Unicode - Element intervalFormats}.
        */
-      vGreatestDiff: object | string,
+      vGreatestDiff: DateFieldGroupsDifference | string,
       /**
        * the type of calendar. If it's not set, it falls back to the calendar type either set in configuration
        * or calculated from locale.
@@ -35961,6 +36305,54 @@ declare module "sap/ui/core/LocaleData" {
     getWeekendStart(): int;
   }
   /**
+   * Type which describes the difference in the date field groups of the two dates of an date time interval.
+   * The keys are the names of the date field symbol groups. If one of them is set, the value should be set
+   * to `true`.
+   */
+  export type DateFieldGroupsDifference = {
+    /**
+     * The era date field symbol group
+     */
+    Era?: boolean;
+    /**
+     * The year date field symbol group
+     */
+    Year?: boolean;
+    /**
+     * The quarter date field symbol group
+     */
+    Quarter?: boolean;
+    /**
+     * The month date field symbol group
+     */
+    Month?: boolean;
+    /**
+     * The week date field symbol group
+     */
+    Week?: boolean;
+    /**
+     * The day date field symbol group
+     */
+    Day?: boolean;
+    /**
+     * The day period date field symbol group
+     */
+    DayPeriod?: boolean;
+    /**
+     * The hour date field symbol group
+     */
+    Hour?: boolean;
+    /**
+     * The minute date field symbol group
+     */
+    Minute?: boolean;
+    /**
+     * The second date field symbol group
+     */
+    Second?: boolean;
+  };
+
+  /**
    * A relative time pattern.
    */
   export type RelativeTimePattern = {
@@ -36602,6 +36994,12 @@ declare module "sap/ui/core/message/Message" {
          * An object containing technical details for a message
          */
         technicalDetails?: object;
+        /**
+         * Whether the message originates from a client-side type validation or parse error. Set to `true` by the
+         * framework when creating messages for `validationError`, `parseError`, or `formatError` binding events.
+         * Read via {@link #isValidation}; cannot be changed after construction.
+         */
+        validation?: boolean;
 
         processor?: MessageProcessor;
         /**
@@ -36784,6 +37182,24 @@ declare module "sap/ui/core/message/Message" {
      */
     getType(): MessageType;
     /**
+     * Returns whether the message originated from a client-side type validation or parse error.
+     *
+     * A message is considered a validation message when it was created by the binding layer in response to
+     * a type validator or parser rejecting a user-entered value (i.e. a `validationError`, `parseError`, or
+     * `formatError` event fired by a managed object binding). Such messages are created with `mParameters.validation:
+     * true` in the {@link sap.ui.core.message.Message} constructor. The flag is set at construction time and
+     * cannot be changed afterwards.
+     *
+     * Use this method to distinguish client-side validation messages from server-side messages (e.g. OData
+     * error responses) or application-created messages, which always have `validation: false`.
+     *
+     * @since 1.151
+     *
+     * @returns `true` if the message originated from a client-side type validation or parse error, `false`
+     * otherwise
+     */
+    isValidation(): boolean;
+    /**
      * Sets the additionaltext for the message or merge different additionaltext strings
      */
     setAdditionalText(
@@ -36935,15 +37351,6 @@ declare module "sap/ui/core/message/MessageManager" {
     constructor();
 
     /**
-     * Add messages to Messaging
-     */
-    static addMessages(
-      /**
-       * Array of sap.ui.core.message.Message or single sap.ui.core.message.Message
-       */
-      vMessages: Message | Message[]
-    ): void;
-    /**
      * Creates a new subclass of class sap.ui.core.message.MessageManager with name `sClassName` and enriches
      * it with the information contained in `oClassInfo`.
      *
@@ -36968,13 +37375,6 @@ declare module "sap/ui/core/message/MessageManager" {
       FNMetaImpl?: Function
     ): Function;
     /**
-     * Get the MessageModel
-     *
-     *
-     * @returns oMessageModel The Message Model
-     */
-    static getMessageModel(): MessageModel;
-    /**
      * Returns a metadata object for class sap.ui.core.message.MessageManager.
      *
      *
@@ -36982,9 +37382,25 @@ declare module "sap/ui/core/message/MessageManager" {
      */
     static getMetadata(): Metadata;
     /**
+     * Add messages to Messaging
+     */
+    addMessages(
+      /**
+       * Array of `Message` or single `Message`
+       */
+      vMessages: Message | Message[]
+    ): void;
+    /**
+     * Get the MessageModel
+     *
+     *
+     * @returns oMessageModel The Message Model
+     */
+    getMessageModel(): MessageModel;
+    /**
      * Register MessageProcessor
      */
-    static registerMessageProcessor(
+    registerMessageProcessor(
       /**
        * The MessageProcessor
        */
@@ -36996,7 +37412,7 @@ declare module "sap/ui/core/message/MessageManager" {
      * ManagedObjects, the Messaging attaches to these events and creates a `sap.ui.core.message.Message` (bHandleValidation=true)
      * for each of these errors and cancels the event bubbling.
      */
-    static registerObject(
+    registerObject(
       /**
        * The sap.ui.base.ManagedObject
        */
@@ -37010,11 +37426,11 @@ declare module "sap/ui/core/message/MessageManager" {
     /**
      * Remove all messages
      */
-    static removeAllMessages(): void;
+    removeAllMessages(): void;
     /**
      * Remove given Messages
      */
-    static removeMessages(
+    removeMessages(
       /**
        * The message(s) to be removed.
        */
@@ -37023,7 +37439,7 @@ declare module "sap/ui/core/message/MessageManager" {
     /**
      * Deregister MessageProcessor
      */
-    static unregisterMessageProcessor(
+    unregisterMessageProcessor(
       /**
        * The MessageProcessor
        */
@@ -37032,7 +37448,7 @@ declare module "sap/ui/core/message/MessageManager" {
     /**
      * Unregister ManagedObject
      */
-    static unregisterObject(
+    unregisterObject(
       /**
        * The sap.ui.base.ManagedObject
        */
@@ -37043,7 +37459,7 @@ declare module "sap/ui/core/message/MessageManager" {
      *
      * The old ones will be removed, the new ones will be added.
      */
-    static updateMessages(
+    updateMessages(
       /**
        * Array of old messages to be removed
        */
@@ -37293,12 +37709,12 @@ declare module "sap/ui/core/message/MessageProcessor" {
     /**
      * Messages already existing before the `messageChange` event was fired.
      */
-    oldMessages?: Message;
+    oldMessages?: Message[];
 
     /**
      * New messages added by the trigger of the `messageChange` event.
      */
-    newMessages?: Message;
+    newMessages?: Message[];
   }
 
   /**
@@ -38611,15 +39027,15 @@ declare module "sap/ui/core/mvc/View" {
        */
       sViewType: string,
       /**
-       * declares if the vPreprocessor ensures safe sync processing. This means the preprocessor will be executed
-       * also for sync views. Please be aware that any kind of async processing (like Promises, XHR, etc) may
-       * break the view initialization and lead to unexpected results.
+       * Deprecated as of version 1.145, because this parameter is only applicable to sync views and is no longer
+       * used. Declares if the vPreprocessor ensures safe sync processing. This means the preprocessor will be
+       * executed also for sync views. Please be aware that any kind of async processing (like Promises, XHR,
+       * etc) may break the view initialization and lead to unexpected results.
        */
       bSyncSupport: boolean,
       /**
        * on-demand preprocessor which enables developers to quickly activate the preprocessor for a view, by setting
-       * `preprocessors : { xml }`, for example. This should be false except for very special cases. There can
-       * only be one on-demand preprocessor per content type.
+       * `preprocessors : { xml }`, for example. There can only be one on-demand preprocessor per content type.
        */
       bOnDemand?: boolean,
       /**
@@ -39619,7 +40035,8 @@ declare module "sap/ui/core/mvc/ViewType" {
     /**
      * JS View
      *
-     * @deprecated As of version 1.90.
+     * @deprecated As of version 1.90. Consider using {@link sap.ui.core.mvx.XMLView XMLViews} or "typed views"
+     * (view classes written in JavaScript) instead.
      */
     JS = "JS",
     /**
@@ -39632,7 +40049,8 @@ declare module "sap/ui/core/mvc/ViewType" {
     /**
      * Template View
      *
-     * @deprecated As of version 1.56.
+     * @deprecated As of version 1.56. Consider using {@link sap.ui.core.mvx.XMLView XMLViews} or "typed views"
+     * (view classes written in JavaScript) instead.
      */
     Template = "Template",
     /**
@@ -39867,14 +40285,17 @@ declare module "sap/ui/core/mvc/XMLView" {
         | string
         | ((p1: Object, p2: Preprocessor.ViewInfo, p3: object) => void),
       /**
-       * Since 1.89, added for signature compatibility with {@link sap.ui.core.mvc.View#registerPreprocessor View#registerPreprocessor}.
+       * added for signature compatibility with {@link sap.ui.core.mvc.View#registerPreprocessor View#registerPreprocessor}.
        * Only supported value is "XML".
+       *
+       * @since 1.89
        */
       sViewType: string,
       /**
-       * declares if the vPreprocessor ensures safe sync processing. This means the preprocessor will be executed
-       * also for sync views. Please be aware that any kind of async processing (like Promises, XHR, etc) may
-       * break the view initialization and lead to unexpected results.
+       * Deprecated as of version 1.145, because this parameter is only applicable to sync views and is no longer
+       * used. Declares if the vPreprocessor ensures safe sync processing. This means the preprocessor will be
+       * executed also for sync views. Please be aware that any kind of async processing (like Promises, XHR,
+       * etc) may break the view initialization and lead to unexpected results.
        */
       bSyncSupport: boolean,
       /**
@@ -39917,9 +40338,10 @@ declare module "sap/ui/core/mvc/XMLView" {
         | string
         | ((p1: Object, p2: Preprocessor.ViewInfo, p3: object) => void),
       /**
-       * declares if the vPreprocessor ensures safe sync processing. This means the preprocessor will be executed
-       * also for sync views. Please be aware that any kind of async processing (like Promises, XHR, etc) may
-       * break the view initialization and lead to unexpected results.
+       * Deprecated as of version 1.145, because this parameter is only applicable to sync views and is no longer
+       * used. Declares if the vPreprocessor ensures safe sync processing. This means the preprocessor will be
+       * executed also for sync views. Please be aware that any kind of async processing (like Promises, XHR,
+       * etc) may break the view initialization and lead to unexpected results.
        */
       bSyncSupport: boolean,
       /**
@@ -40273,6 +40695,9 @@ declare module "sap/ui/core/Popup" {
      * When called, the context of the event handler (its `this`) will be bound to `oListener` if specified,
      * otherwise it will be bound to this `sap.ui.core.Popup` itself.
      *
+     * Fired when the popup has completely closed (after any animation).
+     *
+     * @since 1.2
      *
      * @returns Reference to `this` in order to allow method chaining
      */
@@ -40297,6 +40722,9 @@ declare module "sap/ui/core/Popup" {
      * When called, the context of the event handler (its `this`) will be bound to `oListener` if specified,
      * otherwise it will be bound to this `sap.ui.core.Popup` itself.
      *
+     * Fired when the popup has completely closed (after any animation).
+     *
+     * @since 1.2
      *
      * @returns Reference to `this` in order to allow method chaining
      */
@@ -40316,6 +40744,9 @@ declare module "sap/ui/core/Popup" {
      * When called, the context of the event handler (its `this`) will be bound to `oListener` if specified,
      * otherwise it will be bound to this `sap.ui.core.Popup` itself.
      *
+     * Fired when the popup has completely opened (after any animation).
+     *
+     * @since 1.2
      *
      * @returns Reference to `this` in order to allow method chaining
      */
@@ -40340,6 +40771,9 @@ declare module "sap/ui/core/Popup" {
      * When called, the context of the event handler (its `this`) will be bound to `oListener` if specified,
      * otherwise it will be bound to this `sap.ui.core.Popup` itself.
      *
+     * Fired when the popup has completely opened (after any animation).
+     *
+     * @since 1.2
      *
      * @returns Reference to `this` in order to allow method chaining
      */
@@ -40377,6 +40811,7 @@ declare module "sap/ui/core/Popup" {
      *
      * The passed function and listener object must match the ones used for event registration.
      *
+     * @since 1.2
      *
      * @returns Reference to `this` in order to allow method chaining
      */
@@ -40395,6 +40830,7 @@ declare module "sap/ui/core/Popup" {
      *
      * The passed function and listener object must match the ones used for event registration.
      *
+     * @since 1.2
      *
      * @returns Reference to `this` in order to allow method chaining
      */
@@ -40416,6 +40852,7 @@ declare module "sap/ui/core/Popup" {
     /**
      * Fires event {@link #event:closed closed} to attached listeners.
      *
+     * @since 1.2
      * @ui5-protected Do not call from applications (only from related classes in the framework)
      *
      * @returns Reference to `this` in order to allow method chaining
@@ -40429,6 +40866,7 @@ declare module "sap/ui/core/Popup" {
     /**
      * Fires event {@link #event:opened opened} to attached listeners.
      *
+     * @since 1.2
      * @ui5-protected Do not call from applications (only from related classes in the framework)
      *
      * @returns Reference to `this` in order to allow method chaining
@@ -40784,34 +41222,65 @@ declare module "sap/ui/core/Popup" {
    * This enum is part of the 'sap/ui/core/Popup' module export and must be accessed by the property 'Dock'.
    */
   enum Dock {
+    /**
+     * Docks the popup at the begin of the reference element, at the bottom.
+     */
     BeginBottom = "BeginBottom",
-
+    /**
+     * Docks the popup at the begin of the reference element, vertically centered.
+     */
     BeginCenter = "BeginCenter",
-
+    /**
+     * Docks the popup at the begin of the reference element, at the top.
+     */
     BeginTop = "BeginTop",
-
+    /**
+     * Docks the popup horizontally centered to the reference element, at the bottom.
+     */
     CenterBottom = "CenterBottom",
-
+    /**
+     * Docks the popup horizontally and vertically centered to the reference element.
+     */
     CenterCenter = "CenterCenter",
-
+    /**
+     * Docks the popup horizontally centered to the reference element, at the top.
+     */
     CenterTop = "CenterTop",
-
+    /**
+     * Docks the popup at the end of the reference element, at the bottom.
+     */
     EndBottom = "EndBottom",
-
+    /**
+     * Docks the popup at the end of the reference element, vertically centered.
+     */
     EndCenter = "EndCenter",
-
+    /**
+     * Docks the popup at the end of the reference element, at the top.
+     */
     EndTop = "EndTop",
-
+    /**
+     * Docks the popup at the left side of the reference element, at the bottom.
+     */
     LeftBottom = "LeftBottom",
-
+    /**
+     * Docks the popup at the left side of the reference element, vertically centered.
+     */
     LeftCenter = "LeftCenter",
-
+    /**
+     * Docks the popup at the left side of the reference element, at the top.
+     */
     LeftTop = "LeftTop",
-
+    /**
+     * Docks the popup at the right side of the reference element, at the bottom.
+     */
     RightBottom = "RightBottom",
-
+    /**
+     * Docks the popup at the right side of the reference element, vertically centered.
+     */
     RightCenter = "RightCenter",
-
+    /**
+     * Docks the popup at the right side of the reference element, at the top.
+     */
     RightTop = "RightTop",
   }
 
@@ -40834,8 +41303,18 @@ declare module "sap/ui/core/Popup" {
    * Describes the settings that can be provided to the Popup constructor.
    */
   export interface $PopupSettings extends $ManagedObjectSettings {
+    /**
+     * Fired when the popup has completely opened (after any animation).
+     *
+     * @since 1.2
+     */
     opened?: (oEvent: Event) => void;
 
+    /**
+     * Fired when the popup has completely closed (after any animation).
+     *
+     * @since 1.2
+     */
     closed?: (oEvent: Event) => void;
   }
 
@@ -41067,7 +41546,8 @@ declare module "sap/ui/core/RenderManager" {
   /**
    * A class that handles the rendering of controls.
    *
-   * For the default rendering task of UI5, a shared RenderManager is created and owned by `sap.ui.core.Core`.
+   * For the default rendering task of UI5, a shared RenderManager is created and owned by the framework.
+   *
    * Controls or other code that want to render controls outside the default rendering task can create a private
    * instance of RenderManager by calling the {@link sap.ui.core.Core#createRenderManager sap.ui.getCore().createRenderManager() }
    * method. When such a private instance is no longer needed, it should be {@link #destroy destroyed}.
@@ -41693,10 +42173,15 @@ declare module "sap/ui/core/RenderManager" {
        */
       aClasses?: any[] | string,
       /**
-       * Additional attributes that will be added to the rendered tag. Currently the attributes `class` and `style`
-       * are not allowed
+       * Additional attributes that will be added to the rendered tag. The attributes `class` and `style` are
+       * not allowed. Use the `mStyles` parameter to set inline styles.
        */
-      mAttributes?: object
+      mAttributes?: object,
+      /**
+       * A map of CSS property names and their values to be set as inline styles on the rendered tag. Example:
+       * `{width: "16px", height: "16px"}`. This parameter is available since version 1.152.
+       */
+      mStyles?: object
     ): this;
     /**
      * Ends an open tag started with `openStart`.
@@ -41749,6 +42234,59 @@ declare module "sap/ui/core/RenderManager" {
        */
       oTargetDomNode: Element
     ): void;
+    /**
+     * Executes a rendering callback and flushes the result into the provided DOM node.
+     *
+     * The rendering callback receives a RenderManager instance with the semantic rendering API implementation
+     * (DOM interface methods like `openStart`, `attr`, `openEnd`, `text`, `close`, etc.).
+     *
+     * This method combines rendering and flushing in a single call, automatically handling non-HTML namespaces
+     * (e.g., SVG, MathML) by detecting the namespace of the target DOM node.
+     *
+     * **Difference from calling render() then flush() separately:** When rendering into a non-HTML namespace
+     * context (e.g., SVG or MathML elements), this method automatically detects the target node's namespace
+     * and applies it as a fallback namespace for the rendering operation. This ensures that elements created
+     * without an explicit parent element (such as when rendering into a DocumentFragment initially) inherit
+     * the correct namespace.
+     *
+     * This function must not be called within control renderers.
+     *
+     * Usage:
+     * ```javascript
+     *
+     *   const oRM = new RenderManager().getInterface();
+     *
+     *   // assume that oSvgContainer is already part of the DOM and we want to render a circle into it
+     *   oRM.renderAndFlush(function(oRM) {
+     *     oRM.openStart("circle").attr("cx", "50").attr("cy", "50").attr("r", "40");
+     *     oRM.openEnd();
+     *     oRM.close("circle");
+     *   }, oSvgContainer);
+     *
+     *   oRM.destroy();
+     * ```
+     *
+     *
+     * @since 1.147
+     *
+     * @returns Reference to `this` to allow method chaining
+     */
+    renderAndFlush(
+      /**
+       * Rendering callback that receives a RenderManager instance with the semantic rendering API implementation
+       * (DOM interface methods like `openStart`, `attr`, `openEnd`, `text`, `close`, etc.)
+       */
+      fnRender: (p1: RenderManager) => void,
+      /**
+       * Node in the DOM where the result should be flushed into
+       */
+      oTargetDomNode: Element,
+      /**
+       * Determines whether the buffer of the target DOM node is expanded (`true`) or replaced (`false`), or the
+       * new entry is inserted at a specific position (value of type `int`)
+       */
+      vInsert?: boolean | int
+    ): this;
     /**
      * Turns the given control into its HTML representation and appends it to the rendering buffer.
      *
@@ -42261,8 +42799,8 @@ declare module "sap/ui/core/routing/Route" {
      *     browser is product/settings and no arguments will be passed to the events of the route.
      *
      * 	 -  mandatory parameters: "pattern" : "product/{id}" - {id} is a mandatory parameter, e. g. the following
-     *     hashes would match: product/5, product/3. The pattenMatched event will get 5 or 3 passed as id in its
-     *     arguments.The hash product/ will not match.
+     *     hashes would match: product/5, product/3. The patternMatched event will get 5 or 3 passed as id in its
+     *     arguments. The hash product/ will not match.
      *
      * 	 -  optional parameters: "pattern" : "product/{id}/detail/:detailId:" - :detailId: is an optional parameter,
      *     e. g. the following hashes would match: product/5/detail, product/3/detail/2
@@ -43098,34 +43636,6 @@ declare module "sap/ui/core/routing/Target" {
      */
     static getMetadata(): Metadata;
     /**
-     * This function is called between the target view is loaded and the view is added to the container.
-     *
-     * This function can be used for applying modification on the view or the container to make the rerendering
-     * occur together with the later aggregation change.
-     *
-     * @since 1.46.1
-     * @ui5-protected Do not call from applications (only from related classes in the framework)
-     */
-    _beforePlacingViewIntoContainer(
-      /**
-       * the object containing the arguments
-       */
-      mArguments: {
-        /**
-         * the container where the view will be added
-         */
-        container: Control;
-        /**
-         * the view which will be added to the container
-         */
-        view: Control;
-        /**
-         * the data passed from {@link sap.ui.core.routing.Target#display} method
-         */
-        data?: object;
-      }
-    ): void;
-    /**
      * Attaches event handler `fnFunction` to the {@link #event:display display} event of this `sap.ui.core.routing.Target`.
      *
      * When called, the context of the event handler (its `this`) will be bound to `oListener` if specified,
@@ -43168,6 +43678,37 @@ declare module "sap/ui/core/routing/Target" {
        */
       oListener?: object
     ): this;
+    /**
+     * This function is called between the target view is loaded and the view is added to the container.
+     *
+     * This function can be used for applying modification on the view or the container to make the rerendering
+     * occur together with the later aggregation change.
+     *
+     * **Note:** This function was previously named `_beforePlacingViewIntoContainer` (with a leading underscore)
+     * and has been renamed to be protected instead of private.
+     *
+     * @since 1.46.1
+     * @ui5-protected Do not call from applications (only from related classes in the framework)
+     */
+    beforePlacingViewIntoContainer(
+      /**
+       * the object containing the arguments
+       */
+      mArguments: {
+        /**
+         * the container where the view will be added
+         */
+        container: Control;
+        /**
+         * the view which will be added to the container
+         */
+        view: Control;
+        /**
+         * the data passed from {@link sap.ui.core.routing.Target#display} method
+         */
+        data?: object;
+      }
+    ): void;
     /**
      * Destroys the target, will be called by {@link sap.m.routing.Targets} don't call this directly.
      *
@@ -43466,11 +44007,13 @@ declare module "sap/ui/core/routing/Router" {
        */
       oConfig?: {
         /**
-         * Since 1.28. Settings which are used when no route of the router is matched after a hash change.
+         * Settings which are used when no route of the router is matched after a hash change.
+         *
+         * @since 1.28
          */
         bypassed?: {
           /**
-           * Since 1.28. One or multiple names of targets that will be displayed, if no route of the router is matched.
+           * One or multiple names of targets that will be displayed, if no route of the router is matched.
            *  A typical use case is a not found page.
            *  The current hash will be passed to the display event of the target.
            *  **Example:**
@@ -43500,12 +44043,17 @@ declare module "sap/ui/core/routing/Router" {
            *          }
            *     });
            * ```
+           *
+           *
+           * @since 1.28
            */
           target?: string | string[];
         };
         /**
-         * Since 1.34. Whether views are loaded asynchronously within this router instance. As of 1.90 synchronous
-         * routing is deprecated. Therefore, you should explicitly set `oConfig.async` to `true`.
+         * Whether views are loaded asynchronously within this router instance. As of 1.90 synchronous routing is
+         * deprecated. Therefore, you should explicitly set `oConfig.async` to `true`.
+         *
+         * @since 1.34
          */
         async?: boolean;
       },
@@ -43516,8 +44064,8 @@ declare module "sap/ui/core/routing/Router" {
        */
       oOwner?: UIComponent,
       /**
-       * Since 1.28 the target configuration, see {@link sap.ui.core.routing.Targets#constructor} documentation
-       * (the options object).
+       * the target configuration, see {@link sap.ui.core.routing.Targets#constructor} documentation (the options
+       * object).
        *  You should use Targets to create and display views. Since 1.28 the route should only contain routing
        * relevant properties.
        *  **Example:**
@@ -43556,6 +44104,9 @@ declare module "sap/ui/core/routing/Router" {
        *          }
        *     })
        * ```
+       *
+       *
+       * @since 1.28
        */
       oTargetsConfig?: Record<string, $TargetSettings>
     );
@@ -43615,7 +44166,7 @@ declare module "sap/ui/core/routing/Router" {
        * The parent route - if a parent route is given, the `routeMatched` event of this route will also trigger
        * the `routeMatched` of the parent and it will also create the view of the parent (if provided).
        */
-      oParent: Route
+      oParent?: Route
     ): void;
     /**
      * Attaches event handler `fnFunction` to the {@link #event:beforeRouteMatched beforeRouteMatched} event
@@ -44225,7 +44776,9 @@ declare module "sap/ui/core/routing/Router" {
      */
     initialize(
       /**
-       * Since 1.48.0. Whether the current URL hash shouldn't be parsed after the router is initialized
+       * Whether the current URL hash shouldn't be parsed after the router is initialized
+       *
+       * @since 1.48.0
        */
       bIgnoreInitialHash?: boolean
     ): this;
@@ -44630,6 +45183,8 @@ declare module "sap/ui/core/routing/HashChanger" {
 
   import Metadata from "sap/ui/base/Metadata";
 
+  import Router from "sap/ui/core/routing/Router";
+
   import { routing } from "sap/ui/core/library";
 
   import Event from "sap/ui/base/Event";
@@ -44742,6 +45297,28 @@ declare module "sap/ui/core/routing/HashChanger" {
      * @returns false if it was initialized before, true if it was initialized the first time
      */
     init(): boolean;
+    /**
+     * Parses the given hash and returns the hash segment that belongs to the given router.
+     *
+     * In nested component routing scenarios, the browser hash contains segments for multiple routers combined
+     * with "&/" delimiters and prefix keys. This method parses the given hash and returns only the portion
+     * that is relevant to the given router, based on the prefix key of its {@link sap.ui.core.routing.RouterHashChanger}.
+     *
+     * @since 1.149
+     *
+     * @returns The hash segment belonging to the given router, or `undefined` if the router has no {@link sap.ui.core.routing.RouterHashChanger }
+     * assigned
+     */
+    parseHashForRouter(
+      /**
+       * The full browser hash to parse (e.g. as returned by {@link sap.ui.core.routing.History#getPreviousHash})
+       */
+      sHash: string,
+      /**
+       * The router for which the hash segment should be extracted
+       */
+      oRouter: Router
+    ): string | undefined;
     /**
      * Replaces the hash with a certain value. When using the replace function, no browser history entry is
      * written. If you want to have an entry in the browser history, please use the {@link #setHash} function.
@@ -45393,9 +45970,11 @@ declare module "sap/ui/core/routing/Targets" {
          */
         rootView?: string;
         /**
-         * @since 1.34 Whether the views which are created through this Targets are loaded asynchronously. This
-         * option can be set only when the Targets is used standalone without the involvement of a Router. Otherwise
-         * the async option is inherited from the Router.
+         * Whether the views which are created through this Targets are loaded asynchronously. This option can be
+         * set only when the Targets is used standalone without the involvement of a Router. Otherwise the async
+         * option is inherited from the Router.
+         *
+         * @since 1.34
          */
         async?: boolean;
       };
@@ -45747,9 +46326,11 @@ declare module "sap/ui/core/routing/Views" {
        */
       component?: UIComponent;
       /**
-       * @since 1.34 Whether the views which are created through this Views are loaded asyncly. This option can
-       * be set only when the Views is used standalone without the involvement of a Router. Otherwise the async
-       * option is inherited from the Router.
+       * Whether the views which are created through this Views are loaded asyncly. This option can be set only
+       * when the Views is used standalone without the involvement of a Router. Otherwise the async option is
+       * inherited from the Router.
+       *
+       * @since 1.34
        */
       async?: boolean;
     });
@@ -46833,8 +47414,6 @@ declare module "sap/ui/core/support/RuleEngineOpaExtension" {
 }
 
 declare module "sap/ui/core/theming/Parameters" {
-  import UI5Element from "sap/ui/core/Element";
-
   /**
    * A helper used for (read-only) access to CSS parameters at runtime.
    */
@@ -46858,7 +47437,8 @@ declare module "sap/ui/core/theming/Parameters" {
      *     are loaded and available or within the callback in case not all CSS files are already loaded. This is
      *     the **only asynchronous** API variant. This variant is the preferred way to retrieve theming parameters.
      *     The structure of the return value is the same as listed above depending on the type of the name property
-     *     within the `object`.
+     *     within the `object`. Further information on the usage of theming parameters can be found here: {@link https://ui5.sap.com/#/topic/45df6dff504647c686ab9ba72af827f6 Enhanced Theming Concepts}.
+     *
      *
      * The returned key-value maps are a copy so changing values in the map does not have any effect
      *
@@ -46871,7 +47451,7 @@ declare module "sap/ui/core/theming/Parameters" {
     get(
       /**
        * the (array with) CSS parameter name(s) or an object containing the (array with) CSS parameter name(s),
-       * the scopeElement and a callback for async retrieval of parameters.
+       * and a callback for async retrieval of parameters.
        */
       vName:
         | string
@@ -46882,21 +47462,11 @@ declare module "sap/ui/core/theming/Parameters" {
              */
             name: string | string[];
             /**
-             * Element / control instance to take into account when looking for a parameter value. This can make a difference
-             * when a parameter value is overridden in a theme scope set via a CSS class.
-             */
-            scopeElement?: UI5Element;
-            /**
              * If given, the callback is only executed in case there are still parameters pending and one or more of
              * the requested parameters is missing.
              */
             callback?: (p1: Value) => void;
-          },
-      /**
-       * Element / control instance to take into account when looking for a parameter value. This can make a difference
-       * when a parameter value is overridden in a theme scope set via a CSS class.
-       */
-      oElement?: UI5Element
+          }
     ): Value;
     /**
      * Resets the CSS parameters which finally will reload the parameters the next time they are queried via
@@ -49963,7 +50533,7 @@ declare module "sap/ui/core/UIComponent" {
    *             "controlId": "App",
    *             "controlAggregation": "pages",
    *             "viewNamespace": "myApplication.namespace",
-   *             // If you are using the mobile library, you have to use an sap.m.Router, to get support for
+   *             // If you are using the mobile library, you have to use an sap.m.routing.Router, to get support for
    *             // the controls sap.m.App, sap.m.SplitApp, sap.m.NavContainer and sap.m.SplitContainer.
    *             "routerClass": "sap.m.routing.Router",
    *             // What happens if no route matches the hash?
@@ -51664,16 +52234,29 @@ declare module "sap/ui/core/util/MockServer" {
    * 'HTTPMETHOD'.
    */
   enum HTTPMETHOD {
+    /**
+     * HTTP DELETE method.
+     */
     DELETE = "DELETE",
-
+    /**
+     * HTTP GET method.
+     */
     GET = "GET",
-
+    /**
+     * HTTP MERGE method.
+     */
     MERGE = "MERGE",
-
+    /**
+     * HTTP PATCH method.
+     */
     PATCH = "PATCH",
-
+    /**
+     * HTTP POST method.
+     */
     POST = "POST",
-
+    /**
+     * HTTP PUT method.
+     */
     PUT = "PUT",
   }
 
@@ -52671,7 +53254,7 @@ declare module "sap/ui/core/ws/SapPcpWebSocket" {
       /**
        * array of protocols as strings, a single protocol as a string. Protocol(s) should be selected from {@link sap.ui.core.ws.SapPcpWebSocket.SUPPORTED_PROTOCOLS}.
        */
-      aProtocols?: any[]
+      vProtocols?: string | string[]
     );
     /**
      * Protocol versions.
@@ -52744,7 +53327,7 @@ declare module "sap/ui/core/ws/SapPcpWebSocket" {
       /**
        * additional pcp-fields as key-value map
        */
-      oPcpFields?: object
+      oPcpFields?: Record<string, any>
     ): this;
   }
   /**
@@ -52757,17 +53340,19 @@ declare module "sap/ui/core/ws/SapPcpWebSocket" {
    * 'SUPPORTED_PROTOCOLS'.
    */
   enum SUPPORTED_PROTOCOLS {
+    /**
+     * Protocol v10.pcp.sap.com
+     */
     v10 = "v10.pcp.sap.com",
   }
   /**
    * Parameters of the SapPcpWebSocket#message event.
    */
-  export interface SapPcpWebSocket$MessageEventParameters
-    extends WebSocket$MessageEventParameters {
+  export interface SapPcpWebSocket$MessageEventParameters extends WebSocket$MessageEventParameters {
     /**
      * Received pcpFields as a key-value map.
      */
-    pcpFields?: string;
+    pcpFields?: Record<string, string>;
   }
 
   /**
@@ -52805,7 +53390,7 @@ declare module "sap/ui/core/ws/WebSocket" {
       /**
        * array of protocols as strings, a single protocol as a string
        */
-      aProtocols?: any[]
+      vProtocols?: string | string[]
     );
 
     /**
@@ -53417,7 +54002,144 @@ declare module "sap/ui/core/XMLComposite" {
      * 	sap.ui.core.Fragment
      * 	{@link https://ui5.sap.com/#/topic/b83a4dcb7d0e46969027345b8d32fd44 XML Composite Controls}
      */
-    constructor();
+    constructor(
+      /**
+       * Initial settings for the new control
+       */
+      mSettings?: $XMLCompositeSettings
+    );
+    /**
+     * XMLComposite is the base class for composite controls that use a XML fragment representation for their
+     * visual parts. From a user perspective such controls appear as any other control, but internally the rendering
+     * part is added as a fragment. The fragment that is used should appear in the same folder as the control's
+     * JS implementation with the file extension `.control.xml`. The fragment's content can access the interface
+     * data from the XMLComposite control via bindings. Currently only aggregations and properties can be used
+     * with bindings inside a fragment. The exposed model that is used for internal bindings in the fragment
+     * has the default name `$this`. The name will always start with an `$`. The metadata of the derived control
+     * can define the alias with its metadata. A code example can be found below.
+     *
+     * As XMLComposites compose other controls, they are only invalidated and re-rendered if explicitly defined.
+     * Additional metadata for invalidation can be given for properties and aggregation. The default invalidation
+     * is `"none"`. Setting invalidate to `true` for properties and aggregations sets the complete XMLComposite
+     * to invalidate and rerender.
+     *
+     * Example:
+     * ```javascript
+     *
+     * XMLComposite.extend("sap.mylib.MyXMLComposite", {
+     *   metadata : {
+     *     library: "sap.mylib",
+     *     properties : {
+     *       text: { //changing this property will not re-render the XMLComposite
+     *          type: "string",
+     *          defaultValue: ""
+     *       },
+     *       title: { //changing this property will re-render the XMLComposite as it defines invalidate: true
+     *          type: "string",
+     *          defaultValue: "",
+     *          invalidate: true
+     *       },
+     *       value: { //changing this property will re-render the XMLComposite as it defines invalidate: true
+     *          type: "string",
+     *          defaultValue: "",
+     *          invalidate: true
+     *       }
+     *     },
+     *     defaultProperty : "text",
+     *     aggregations : {
+     *       items : {
+     *          type: "sap.ui.core.Control",
+     *          invalidate: true
+     *       },
+     *       header : {
+     *          type: "sap.mylib.FancyHeader",
+     *          multiple : false
+     *       }
+     *     },
+     *     defaultAggregation : "items"
+     *     events: {
+     *       outerEvent : {
+     *         parameters : {
+     *           opener : "sap.ui.core.Control"
+     *         }
+     *       }
+     *     }
+     *   },
+     *   //alias defaults to "this"
+     *   alias: "mycontrolroot" //inner bindings will use model name $mycontrolroot
+     *   //fragment defaults to {control name}.control.xml in this case sap.mylib.MyXMLComposite.control.xml
+     *   fragment: "sap.mylib.MyXMLCompositeOther.control.xml" //the name of the fragment
+     * });
+     * ```
+     *
+     *
+     * Internally the XMLComposite instantiates and initializes the given fragment and stores the resulting
+     * control in a hidden aggregation named `_content`. The fragment should only include one root element.
+     *
+     * Bindings of inner controls to the interface of the XMLComposite can be done with normal binding syntax.
+     * Here properties are used as property bindings and aggregations are used as list bindings. Currently it
+     * is not possible to bind associations in a fragment.
+     *
+     * Example:
+     * ```javascript
+     *
+     *    <core:FragmentDefinition xmlns:m="sap.m" xmlns:core="sap.ui.core">
+     *       <m:Text text="{$this>text}" visible="{= ${$this>text} !== ""}" />
+     *    </core:FragmentDefinition>
+     * ```
+     *
+     * ```javascript
+     *
+     *    <core:FragmentDefinition xmlns:m="sap.m" xmlns:core="sap.ui.core">
+     *       <m:VBox items="{path:"$this>texts", filters:{path:"text", operator:"Contains", value1:"Text"}, sorter:{path:"text", descending:true}}">
+     *           <m:Text text="{$this>text}" />
+     *       </m:VBox>
+     *    </core:FragmentDefinition>
+     * ```
+     *
+     * ```javascript
+     *
+     *    <core:FragmentDefinition xmlns:m="sap.m" xmlns:core="sap.ui.core">
+     *       <m:Button text="Press Me" press="handlePress"/>
+     *    </core:FragmentDefinition>
+     * ```
+     *
+     *
+     * All events handled within the fragment will be dispatched to the XMLComposite control. It is recommended
+     * to follow this paradigm to allow reuse of a XMLComposite without any dependency to controller code of
+     * the current embedding view.
+     *
+     *
+     * ```javascript
+     *
+     *    MyXMLComposite.prototype.handlePress = function() {
+     *        this.fireOuterEvent(); // passing on the event to the outer view
+     *    }
+     * ```
+     *
+     *
+     * **Note:** {@link https://ui5.sap.com/#/topic/b11d853a8e784db6b2d210ef57b0f7d7 Requiring modules in XML }
+     * will result in side effects that might cause the XMLComposite to not work properly. We suggest you require
+     * the needed modules inside the JavaScript coding of the class extending the XMLComposite.
+     *
+     * Accepts an object literal `mSettings` that defines initial property values, aggregated and associated
+     * objects as well as event handlers. See {@link sap.ui.base.ManagedObject#constructor} for a general description
+     * of the syntax of the settings object.
+     * See:
+     * 	sap.ui.core.Control
+     * 	sap.ui.core.Fragment
+     * 	{@link https://ui5.sap.com/#/topic/b83a4dcb7d0e46969027345b8d32fd44 XML Composite Controls}
+     */
+    constructor(
+      /**
+       * ID for the new control, generated automatically if no ID is given
+       */
+      sId?: string,
+      /**
+       * Initial settings for the new control
+       */
+      mSettings?: $XMLCompositeSettings
+    );
 
     /**
      * Creates a new subclass of class sap.ui.core.XMLComposite with name `sClassName` and enriches it with
@@ -53783,7 +54505,7 @@ declare module "sap/ui/Device" {
      * have the possibility to customize the user agent, and to explicitly add this information.
      *
      * @since 1.31.0
-     * @deprecated As of version 1.98.
+     * @deprecated As of version 1.98. without replacement, refer to the above note.
      */
     export const webview: boolean;
 
@@ -54910,6 +55632,13 @@ declare module "sap/ui/model/analytics/AnalyticalBinding" {
      */
     hasMeasures(): boolean;
     /**
+     * Initialize binding. Fires a change if data is already available ($expand) or a refresh. If metadata is
+     * not yet available, do nothing, method will be called again when metadata is loaded.
+     *
+     * The ODataModel will call this on all bindings as soon as the metadata was loaded
+     */
+    initialize(): void;
+    /**
      * Determines if a given name refers to a measure property
      *
      *
@@ -55066,6 +55795,8 @@ declare module "sap/ui/model/analytics/BatchResponseCollector" {
    *
    * Also handles clean-up after all responses (either success or error) have been collected. Instantiated
    * in AnalyticalBinding.prototype._executeBatchRequest()
+   *
+   * @deprecated As of version 1.144.0. will be replaced by OData V4 data aggregation, see {@link topic:7d914317c0b64c23824bf932cc8a4ae1 Extension for Data Aggregation}
    */
   export default class BatchResponseCollector {
     /**
@@ -57578,7 +58309,7 @@ declare module "sap/ui/model/Binding" {
       /**
        * The model instance to compare against
        */
-      oModel: object
+      oModel: Model
     ): boolean;
   }
   /**
@@ -57946,7 +58677,9 @@ declare module "sap/ui/model/ClientListBinding" {
       aFilters?: Filter[] | Filter,
       /**
        * The type of the filter to replace; if no type is given, all filters previously configured with type {@link sap.ui.model.FilterType.Application }
-       * are cleared, and the given filters are used as filters of type {@link sap.ui.model.FilterType.Control}
+       * are cleared, and the given filters are used as filters of type {@link sap.ui.model.FilterType.Control}.
+       * Since 1.146.0, you may use {@link sap.ui.model.FilterType.ApplicationBound} to set bound application
+       * filters.
        */
       sFilterType?: FilterType | keyof typeof FilterType
     ): this;
@@ -57988,6 +58721,10 @@ declare module "sap/ui/model/ClientListBinding" {
 
 declare module "sap/ui/model/ClientModel" {
   import Model from "sap/ui/model/Model";
+
+  import Context from "sap/ui/model/Context";
+
+  import ClientContextBinding from "sap/ui/model/ClientContextBinding";
 
   import PropertyBinding from "sap/ui/model/PropertyBinding";
 
@@ -58039,6 +58776,26 @@ declare module "sap/ui/model/ClientModel" {
      */
     static getMetadata(): Metadata;
     /**
+     * Creates a `sap.ui.model.ClientContextBinding`.
+     *
+     *
+     * @returns The newly created `ClientContextBinding`
+     */
+    bindContext(
+      /**
+       * The path pointing to the property that should be bound
+       */
+      sPath: string,
+      /**
+       * The context object for this databinding
+       */
+      oContext?: Context,
+      /**
+       * Additional model-specific parameters
+       */
+      mParameters?: object
+    ): ClientContextBinding;
+    /**
      * Creates a new property binding for this model.
      * See:
      * 	sap.ui.model.Model#bindProperty
@@ -58056,20 +58813,20 @@ declare module "sap/ui/model/ClientModel" {
       /**
        * A context object for the new binding
        */
-      oContext?: object,
+      oContext?: Context,
       /**
        * Map of optional parameters for the binding
        */
       mParameters?: {
         /**
-         * Whether this binding does not propagate model messages to the control; supported since 1.119.0. Some
-         * composite types like {@link sap.ui.model.type.Currency} automatically ignore model messages for some
-         * of their parts depending on their format options; setting this parameter to `true` or `false` overrules
-         * the automatism of the type.
+         * Whether this binding ignores model messages instead of propagating them to the control. Supported since
+         * 1.119.0. Some composite types like {@link sap.ui.model.type.Currency} automatically ignore model messages
+         * for some of their parts, depending on their format options. Setting this parameter to `true` or `false`
+         * overrules the automatism of the type.
          *
-         * For example, a binding for a currency code is used in a composite binding for rendering the proper number
-         * of decimals, but the currency code is not displayed in the attached control. In that case, messages for
-         * the currency code shall not be displayed at that control, only messages for the amount.
+         * **Example:** A binding for a currency code is used in a composite binding for rendering the proper number
+         * of decimals, but the currency code itself is not displayed in the attached control. In this case, messages
+         * for the currency code aren't displayed at that control, only messages for the amount.
          */
         ignoreMessages?: boolean;
       }
@@ -58321,7 +59078,9 @@ declare module "sap/ui/model/ClientTreeBinding" {
       aFilters?: Filter[] | Filter,
       /**
        * The type of the filter to replace; if no type is given, all filters previously configured with type {@link sap.ui.model.FilterType.Application }
-       * are cleared, and the given filters are used as filters of type {@link sap.ui.model.FilterType.Control}
+       * are cleared, and the given filters are used as filters of type {@link sap.ui.model.FilterType.Control}.
+       * Since 1.146.0, you may use {@link sap.ui.model.FilterType.ApplicationBound} to set bound application
+       * filters.
        */
       sFilterType?: FilterType | keyof typeof FilterType
     ): this;
@@ -59182,22 +59941,23 @@ declare module "sap/ui/model/Context" {
      */
     getModel(): Model;
     /**
-     * Gets the (model dependent) object the context points to or the object with the given relative binding
-     * path
+     * Gets the (model-dependent) object the context points to, or the object with the given relative binding
+     * path.
      *
      *
      * @returns the context object
      */
     getObject(
       /**
-       * the binding path
+       * the binding path as a string, or if an object is provided, it is treated as additional parameters (same
+       * as `mParameters`)
        */
-      sPath?: string,
+      vPath?: string | object,
       /**
-       * additional model specific parameters (optional)
+       * additional model-specific parameters
        */
       mParameters?: object
-    ): object;
+    ): any;
     /**
      * Getter for path of the context itself or a subpath
      *
@@ -59250,7 +60010,7 @@ declare module "sap/ui/model/ContextBinding" {
 
       mParameters?: object,
       /**
-       * object defining event handlers
+       * **Deprecated as of version 1.144.0** - unused
        */
       oEvents?: object
     );
@@ -59408,9 +60168,18 @@ declare module "sap/ui/model/DataState" {
      * map only contains the changed properties.
      *
      *
-     * @returns The changed properties of the data state
+     * @returns The changed properties and messages of the data state. Changed messages are located in the `messages`
+     * property. They share the same object structure as the changed properties, but the values in this structure
+     * are of type {@link sap.ui.core.message.Message}.
      */
-    getChanges(): object;
+    getChanges(): Record<
+      string,
+      {
+        oldValue: any;
+
+        value: any;
+      }
+    >;
     /**
      * Returns the array of this data state's current control messages.
      *
@@ -59991,9 +60760,20 @@ declare module "sap/ui/model/FilterType" {
    */
   enum FilterType {
     /**
-     * Filters which are provided by the application.
+     * Filters which are provided by the application and have constant values. Filters defined via the property
+     * `filters` in {@link sap.ui.base.ManagedObject.AggregationBindingInfo} have this type. Filters of this
+     * type are called "unbound application filters".
      */
     Application = "Application",
+    /**
+     * Filters provided by the application that may have values which are binding expressions. Filters defined
+     * via the property `boundFilters` in {@link sap.ui.base.ManagedObject.AggregationBindingInfo} have this
+     * type. Filters of this type are called "bound application filters". When a filter value changes through
+     * data binding, the aggregation binding that uses this filter is filtered automatically.
+     *
+     * @since 1.146.0
+     */
+    ApplicationBound = "ApplicationBound",
     /**
      * Filters which are set by a control itself.
      *
@@ -60029,7 +60809,21 @@ declare module "sap/ui/model/FormatException" {
 declare module "sap/ui/model/json/JSONListBinding" {
   import ClientListBinding from "sap/ui/model/ClientListBinding";
 
-  import JSONModel from "sap/ui/model/json/JSONModel";
+  /**
+   * List binding implementation for JSON model.
+   *
+   * @ui5-protected DO NOT USE IN APPLICATIONS (only for related classes in the framework)
+   */
+  export default class JSONListBinding extends ClientListBinding {
+    /**
+     * @ui5-protected Do not call from applications (only from related classes in the framework)
+     */
+    protected constructor();
+  }
+}
+
+declare module "sap/ui/model/json/JSONModel" {
+  import ClientModel from "sap/ui/model/ClientModel";
 
   import Context from "sap/ui/model/Context";
 
@@ -60037,57 +60831,13 @@ declare module "sap/ui/model/json/JSONListBinding" {
 
   import Filter from "sap/ui/model/Filter";
 
-  /**
-   * List binding implementation for JSON format.
-   *
-   * @ui5-protected DO NOT USE IN APPLICATIONS (only for related classes in the framework)
-   */
-  export default class JSONListBinding extends ClientListBinding {
-    /**
-     * Creates a new JSONListBinding.
-     *
-     * This constructor should only be called by subclasses or model implementations, not by application or
-     * control code. Such code should use {@link sap.ui.model.json.JSONModel#bindList JSONModel#bindList} on
-     * the corresponding model instance instead.
-     *
-     * @ui5-protected Do not call from applications (only from related classes in the framework)
-     */
-    protected constructor(
-      /**
-       * Model instance that this binding is created for and that it belongs to
-       */
-      oModel: JSONModel,
-      /**
-       * Binding path to be used for this binding
-       */
-      sPath: string,
-      /**
-       * Binding context relative to which a relative binding path will be resolved
-       */
-      oContext: Context,
-      /**
-       * The sorters used initially; call {@link #sort} to replace them
-       */
-      aSorters?: Sorter[] | Sorter,
-      /**
-       * The filters to be used initially with type {@link sap.ui.model.FilterType.Application}; call {@link #filter }
-       * to replace them
-       */
-      aFilters?: Filter[] | Filter,
-      /**
-       * Map of optional parameters as defined by subclasses; this class does not introduce any own parameters
-       */
-      mParameters?: object
-    );
-  }
-}
+  import JSONListBinding from "sap/ui/model/json/JSONListBinding";
 
-declare module "sap/ui/model/json/JSONModel" {
-  import ClientModel from "sap/ui/model/ClientModel";
+  import JSONPropertyBinding from "sap/ui/model/json/JSONPropertyBinding";
+
+  import JSONTreeBinding from "sap/ui/model/json/JSONTreeBinding";
 
   import Metadata from "sap/ui/base/Metadata";
-
-  import Context from "sap/ui/model/Context";
 
   /**
    * Model implementation for the JSON format.
@@ -60150,16 +60900,155 @@ declare module "sap/ui/model/json/JSONModel" {
      */
     static getMetadata(): Metadata;
     /**
+     * Returns the value of the property for the given `sPath` and `oContext`.
+     *
+     * @deprecated As of version 1.145.0. use {@link #getProperty} instead
+     *
+     * @returns The value for the given `sPath` and `oContext`. If the property path derived from the given
+     * `sPath` and `oContext` is absolute (starts with a "/") but does not lead to a property in the data structure,
+     * `undefined` is returned. If the property `sPath` is not absolute, `null` is returned.
+     */
+    static getObject(
+      /**
+       * The path to the object you want to read
+       */
+      sPath: string,
+      /**
+       * The context that resolves the path
+       */
+      oContext?: Context
+    ): any | null | undefined;
+    /**
+     * Returns the original value for the property with the given `sPath` and `oContext`.
+     *
+     * @deprecated As of version 1.145.0. use {@link #getProperty} instead
+     *
+     * @returns The value of the property for the given `sPath` and `oContext`. If the property path derived
+     * from the given `sPath` and `oContext` is absolute (starts with a "/") but does not lead to a property
+     * in the data structure, `undefined` is returned. If the property `sPath` is not absolute, `null` is returned.
+     */
+    static getOriginalProperty(
+      /**
+       * The path/name of the property
+       */
+      sPath: string,
+      /**
+       * Context for accessing the property value
+       */
+      oContext?: Context
+    ): any | null | undefined;
+    /**
+     * Creates a new {@link sap.ui.model.json.JSONListBinding}.
+     *
+     *
+     * @returns The newly created JSONListBinding
+     */
+    bindList(
+      /**
+       * The path to the list or array to bind
+       */
+      sPath: string,
+      /**
+       * The context for the binding. This is mandatory when a relative binding path is provided.
+       */
+      oContext?: Context,
+      /**
+       * The sorters used initially. To replace them, call {@link sap.ui.model.ListBinding#sort}.
+       */
+      aSorters?: Sorter[] | Sorter,
+      /**
+       * The filters initially used with type {@link sap.ui.model.FilterType.Application}. To replace them, call
+       * {@link sap.ui.model.ListBinding#filter}.
+       */
+      aFilters?: Filter[] | Filter,
+      /**
+       * Map of optional parameters as defined by subclasses. This class does not introduce any own parameters.
+       */
+      mParameters?: Record<string, any>
+    ): JSONListBinding;
+    /**
+     * Creates a new {@link sap.ui.model.json.JSONPropertyBinding}.
+     *
+     *
+     * @returns The newly created JSONPropertyBinding
+     */
+    bindProperty(
+      /**
+       * The path to the property to bind
+       */
+      sPath: string,
+      /**
+       * The context for the binding. This is mandatory when a relative binding path is provided.
+       */
+      oContext?: Context,
+      /**
+       * Additional model-specific parameters
+       */
+      mParameters?: {
+        /**
+         * Whether this binding ignores model messages instead of propagating them to the control. Supported since
+         * 1.119.0. Some composite types like {@link sap.ui.model.type.Currency} automatically ignore model messages
+         * for some of their parts, depending on their format options. Setting this parameter to `true` or `false`
+         * overrules the automatism of the type.
+         *
+         * **Example:** A binding for a currency code is used in a composite binding for rendering the proper number
+         * of decimals, but the currency code itself is not displayed in the attached control. In this case, messages
+         * for the currency code aren't displayed at that control, only messages for the amount.
+         */
+        ignoreMessages?: boolean;
+      }
+    ): JSONPropertyBinding;
+    /**
+     * Creates a new {@link sap.ui.model.json.JSONTreeBinding}. The bound data can contain JSON objects and
+     * arrays. Both are used to build the tree structure.
+     *
+     *
+     * @returns The newly created JSONTreeBinding
+     */
+    bindTree(
+      /**
+       * The path pointing to the tree or array that is bound
+       */
+      sPath: string,
+      /**
+       * The context for the binding. This is mandatory when a relative binding path is provided.
+       */
+      oContext?: Context,
+      /**
+       * The filters initially used with type {@link sap.ui.model.FilterType.Application}. To replace them, call
+       * {@link sap.ui.model.TreeBinding#filter}.
+       */
+      aFilters?: Filter[] | Filter,
+      /**
+       * Additional model-specific parameters
+       */
+      mParameters?: {
+        /**
+         * Keys of arrays to be used for building the tree structure. If not specified, all arrays and objects in
+         * the bound data are used. Note: For arrays nested within other arrays with different names, add both array
+         * names to `arrayNames`. To include a nested array in the hierarchy, you must list the names of all containing
+         * arrays. If an array name is missing from the list, its child arrays are also excluded from the hierarchy,
+         * even if you add them to `arrayNames`. If this parameter is set, all other objects and arrays in the bound
+         * data are ignored.
+         */
+        arrayNames?: string[];
+      },
+      /**
+       * The sorters used initially. To replace them, call {@link sap.ui.model.TreeBinding#sort}.
+       */
+      aSorters?: Sorter[] | Sorter
+    ): JSONTreeBinding;
+    /**
      * Returns a Promise of the current data-loading state. Every currently running {@link sap.ui.model.json.JSONModel#loadData }
      * call is respected by the returned Promise. This also includes a potential loadData call from the JSONModel's
      * constructor in case a URL was given. The data-loaded Promise will resolve once all running requests have
-     * finished. Only request, which have been queued up to the point of calling this function will be respected
+     * finished. Only requests, which have been queued up to the point of calling this function will be respected
      * by the returned Promise.
      *
      *
      * @returns a Promise, which resolves if all pending data-loading requests have finished
      */
-    dataLoaded(): Promise<any>;
+    dataLoaded(): Promise<undefined>;
     /**
      * Serializes the current JSON data of the model into a string.
      *
@@ -60168,7 +61057,7 @@ declare module "sap/ui/model/json/JSONModel" {
      */
     getJSON(): string;
     /**
-     * Returns the value for the property with the given path and context.
+     * Returns the value for the given `sPath` and `oContext`.
      *
      *
      * @returns The value of the property. If the property is not found, `null` or `undefined` is returned.
@@ -60294,9 +61183,16 @@ declare module "sap/ui/model/json/JSONModel" {
 }
 
 declare module "sap/ui/model/json/TypedJSONModel" {
-  import JSONModel from "sap/ui/model/json/JSONModel";
-  import TypedJSONContext from "sap/ui/model/json/TypedJSONContext";
+  import Message from "sap/ui/core/message/Message";
+  import ClientContextBinding from "sap/ui/model/ClientContextBinding";
   import Context from "sap/ui/model/Context";
+  import Filter from "sap/ui/model/Filter";
+  import Sorter from "sap/ui/model/Sorter";
+  import JSONModel from "sap/ui/model/json/JSONModel";
+  import JSONListBinding from "sap/ui/model/json/JSONListBinding";
+  import JSONPropertyBinding from "sap/ui/model/json/JSONPropertyBinding";
+  import JSONTreeBinding from "sap/ui/model/json/JSONTreeBinding";
+  import TypedJSONContext from "sap/ui/model/json/TypedJSONContext";
 
   /**
    * TypedJSONModel is a subclass of JSONModel that provides type-safe access to the model data. It is only available when using UI5 with TypeScript.
@@ -60313,7 +61209,76 @@ declare module "sap/ui/model/json/TypedJSONModel" {
       fnCallBack?: Function,
       bReload?: boolean
     ): TypedJSONContext<Data, Path>;
+
+    bindContext<Path extends AbsoluteObjectBindingPath<Data>>(
+      sPath: Path,
+      oContext?: undefined,
+      mParameters?: object
+    ): ClientContextBinding;
+    bindContext<
+      Path extends RelativeObjectBindingPath<Data, Root>,
+      Root extends AbsoluteObjectBindingPath<Data>,
+    >(
+      sPath: Path,
+      oContext: TypedJSONContext<Data, Root>,
+      mParameters?: object
+    ): ClientContextBinding;
+
+    bindList<Path extends AbsoluteListBindingPath<Data>>(
+      sPath: Path,
+      oContext?: undefined,
+      aSorters?: Sorter | Sorter[],
+      aFilters?: Filter | Filter[],
+      mParameters?: object
+    ): JSONListBinding;
+    bindList<
+      Path extends RelativeListBindingPath<Data, Root>,
+      Root extends AbsoluteBindingPath<Data>,
+    >(
+      sPath: Path,
+      oContext: TypedJSONContext<Data, Root>,
+      aSorters?: Sorter | Sorter[],
+      aFilters?: Filter | Filter[],
+      mParameters?: object
+    ): JSONListBinding;
+
+    bindProperty<Path extends AbsoluteBindingPath<Data>>(
+      sPath: Path,
+      oContext?: undefined,
+      mParameters?: object
+    ): JSONPropertyBinding;
+    bindProperty<
+      Path extends RelativeBindingPath<Data, Root>,
+      Root extends AbsoluteBindingPath<Data>,
+    >(
+      sPath: Path,
+      oContext: TypedJSONContext<Data, Root>,
+      mParameters?: object
+    ): JSONPropertyBinding;
+
+    bindTree<Path extends AbsoluteTreeBindingPath<Data>>(
+      sPath: Path,
+      oContext?: undefined,
+      aFilters?: Filter | Filter[],
+      mParameters?: object,
+      aSorters?: Sorter | Sorter[]
+    ): JSONTreeBinding;
+    bindTree<
+      Path extends RelativeTreeBindingPath<Data, Root>,
+      Root extends AbsoluteBindingPath<Data>,
+    >(
+      sPath: Path,
+      oContext: TypedJSONContext<Data, Root>,
+      aFilters?: Filter | Filter[],
+      mParameters?: object,
+      aSorters?: Sorter | Sorter[]
+    ): JSONTreeBinding;
+
     getData(): Data;
+    getMessagesByPath<Path extends AbsoluteBindingPath<Data>>(
+      sPath: Path,
+      bPrefixMatch?: boolean
+    ): Message[];
     getProperty<Path extends AbsoluteBindingPath<Data>>(
       sPath: Path
     ): PropertyByAbsoluteBindingPath<Data, Path>;
@@ -60359,7 +61324,7 @@ declare module "sap/ui/model/json/TypedJSONModel" {
   export type AbsoluteBindingPath<Type> =
     Type extends Array<unknown>
       ? // if Type is an array:
-        | `/${number}` // /0 -> first element of array
+          | `/${number}` // /0 -> first element of array
           | `/${number}${AbsoluteBindingPath<Type[number]>}` // /0/{NestedPath}
       : // if Type is not an array:
         Type extends object
@@ -60367,7 +61332,7 @@ declare module "sap/ui/model/json/TypedJSONModel" {
             | {
                 [Key in keyof Type]: Type[Key] extends Array<unknown>
                   ? // Type[Key] is an array:
-                    | `/${string & Key}/${number}` // items/0 -> elem of array
+                      | `/${string & Key}/${number}` // items/0 -> elem of array
                       // path can end there or:
                       | `/${string & Key}/${number}${AbsoluteBindingPath<Type[Key][number]>}` // items/0/{NestedPath}
                   : // Type[Key] is NOT an array:
@@ -60376,6 +61341,65 @@ declare module "sap/ui/model/json/TypedJSONModel" {
             | `/${string & PropertiesOf<Type>}` // /items/0/id -> last part of path
         : // if T is not of type object:
           never;
+
+  /**
+   * Valid absolute binding path for underlying `Array` types.
+   *
+   * @example
+   * type SalesOrder = { id: string, items: string[] };
+   * type PathInObject = PathInJSONModel<SalesOrder>; // "/id" | "/items"
+   * let path: PathInObject = "/items"; // ok
+   * path = "/id"; // error
+   * path = "/items/0"; // error, since an element in the array is a string
+   */
+  export type AbsoluteListBindingPath<Type> = {
+    [Path in AbsoluteBindingPath<Type>]: PropertyByAbsoluteBindingPath<
+      Type,
+      Path
+    > extends Array<unknown>
+      ? Path
+      : never;
+  }[AbsoluteBindingPath<Type>];
+
+  /**
+   * Valid absolute binding path for underlying `Array` or `object` types.
+   *
+   * @example
+   * type SalesOrder = { id: string, items: string[], parameters: { weight: number } };
+   * type PathInObject = PathInJSONModel<SalesOrder>; // "/id" | "/items" | "/parameters"
+   * let path: PathInObject = "/items"; // ok
+   * path = "/parameters"; // ok
+   * path = "/id"; // error
+   * path = "/items/0"; // error, since an element in the array is a string
+   */
+  export type AbsoluteTreeBindingPath<Type> = {
+    [Path in AbsoluteBindingPath<Type>]: PropertyByAbsoluteBindingPath<
+      Type,
+      Path
+    > extends Array<unknown>
+      ? Path
+      : PropertyByAbsoluteBindingPath<Type, Path> extends object
+        ? Path
+        : never;
+  }[AbsoluteBindingPath<Type>];
+
+  /**
+   * Valid absolute binding path for underlying object types (excludes arrays and primitives).
+   *
+   * @example
+   * type Order = { customer: { address: { city: string } }, items: string[], total: number };
+   * type ObjectPaths = AbsoluteObjectBindingPath<Order>; // "/customer" | "/customer/address"
+   */
+  export type AbsoluteObjectBindingPath<Type> = {
+    [Path in AbsoluteBindingPath<Type>]: PropertyByAbsoluteBindingPath<
+      Type,
+      Path
+    > extends Array<unknown>
+      ? never
+      : PropertyByAbsoluteBindingPath<Type, Path> extends object
+        ? Path
+        : never;
+  }[AbsoluteBindingPath<Type>];
 
   /**
    * Valid relative binding path in a JSONModel.
@@ -60392,6 +61416,76 @@ declare module "sap/ui/model/json/TypedJSONModel" {
     AbsoluteBindingPath<TypeAtPath<Type, Root>> extends `/${infer Rest}`
       ? Rest
       : never;
+
+  /**
+   * Valid relative binding path for underlying `Array` types.
+   * The root of the path is defined by the given root string.
+   *
+   * @example
+   * type SalesOrder = { buyer: { id: string, items: string[] } };
+   * type PathRelativeToSalesOrder = RelativeListBindingPath<SalesOrderWrapper, "/buyer">; // "id" | "items"
+   */
+  export type RelativeListBindingPath<
+    Type,
+    Root extends AbsoluteBindingPath<Type>,
+  > = {
+    [Path in RelativeBindingPath<Type, Root>]: PropertyByRelativeBindingPath<
+      Type,
+      Root,
+      Path
+    > extends Array<unknown>
+      ? Path
+      : never;
+  }[RelativeBindingPath<Type, Root>];
+
+  /**
+   * Valid relative binding path for underlying `Array` or `object` types.
+   * The root of the path is defined by the given root string.
+   *
+   * @example
+   * type SalesOrder = { buyer: { id: string, items: string[], parameters: { weight: number } } };
+   * type PathRelativeToSalesOrder = RelativeTreeBindingPath<SalesOrderWrapper, "/buyer">; // "items" | "parameters"
+   */
+  export type RelativeTreeBindingPath<
+    Type,
+    Root extends AbsoluteBindingPath<Type>,
+  > = {
+    [Path in RelativeBindingPath<Type, Root>]: PropertyByRelativeBindingPath<
+      Type,
+      Root,
+      Path
+    > extends Array<unknown>
+      ? Path
+      : PropertyByRelativeBindingPath<Type, Root, Path> extends object
+        ? Path
+        : never;
+  }[RelativeBindingPath<Type, Root>];
+
+  /**
+   * Valid relative binding path for underlying object types (excludes arrays and primitives).
+   * The root of the path is defined by the given root string.
+   *
+   * @example
+   * type SalesOrder = { buyer: { id: string, name: string }, items: string[] };
+   * type PathRelativeToSalesOrder = RelativeObjectBindingPath<SalesOrder, "/buyer">; // never (no nested objects)
+   *
+   * type Order = { customer: { address: { city: string } }, total: number };
+   * type PathInOrder = RelativeObjectBindingPath<Order, "/">; // "customer" | "customer/address"
+   */
+  export type RelativeObjectBindingPath<
+    Type,
+    Root extends AbsoluteBindingPath<Type>,
+  > = {
+    [Path in RelativeBindingPath<Type, Root>]: PropertyByRelativeBindingPath<
+      Type,
+      Root,
+      Path
+    > extends Array<unknown>
+      ? never
+      : PropertyByRelativeBindingPath<Type, Root, Path> extends object
+        ? Path
+        : never;
+  }[RelativeBindingPath<Type, Root>];
 
   /**
    * The type of a property in a JSONModel identified by the given path.
@@ -60550,45 +61644,18 @@ declare module "sap/ui/model/json/TypedJSONContext" {
 declare module "sap/ui/model/json/JSONPropertyBinding" {
   import ClientPropertyBinding from "sap/ui/model/ClientPropertyBinding";
 
-  import JSONModel from "sap/ui/model/json/JSONModel";
-
-  import Context from "sap/ui/model/Context";
-
   import Metadata from "sap/ui/base/Metadata";
 
   /**
-   * Property binding implementation for JSON format.
+   * Property binding implementation for JSON model.
    *
    * @ui5-protected DO NOT USE IN APPLICATIONS (only for related classes in the framework)
    */
   export default class JSONPropertyBinding extends ClientPropertyBinding {
     /**
-     * Creates a new JSONListBinding.
-     *
-     * This constructor should only be called by subclasses or model implementations, not by application or
-     * control code. Such code should use {@link sap.ui.model.json.JSONModel#bindProperty JSONModel#bindProperty }
-     * on the corresponding model instance instead.
-     *
      * @ui5-protected Do not call from applications (only from related classes in the framework)
      */
-    protected constructor(
-      /**
-       * Model instance that this binding is created for and that it belongs to
-       */
-      oModel: JSONModel,
-      /**
-       * Binding path to be used for this binding
-       */
-      sPath: string,
-      /**
-       * Binding context relative to which a relative binding path will be resolved
-       */
-      oContext: Context,
-      /**
-       * Map of optional parameters as defined by subclasses; this class does not introduce any own parameters
-       */
-      mParameters?: object
-    );
+    protected constructor();
 
     /**
      * Creates a new subclass of class sap.ui.model.json.JSONPropertyBinding with name `sClassName` and enriches
@@ -60623,72 +61690,32 @@ declare module "sap/ui/model/json/JSONPropertyBinding" {
      * @returns Metadata object describing this class
      */
     static getMetadata(): Metadata;
+    /**
+     * Sets the value for this `JSONPropertyBinding` if the binding is not suspended. If a new value is set,
+     * an {@link sap.ui.model.Model#propertyChange} event is fired with change reason {@link sap.ui.model.ChangeReason.Binding Binding}.
+     */
+    setValue(
+      /**
+       * The value to set for this binding
+       */
+      vValue: any
+    ): void;
   }
 }
 
 declare module "sap/ui/model/json/JSONTreeBinding" {
   import ClientTreeBinding from "sap/ui/model/ClientTreeBinding";
 
-  import JSONModel from "sap/ui/model/json/JSONModel";
-
-  import Filter from "sap/ui/model/Filter";
-
-  import Sorter from "sap/ui/model/Sorter";
-
   /**
-   * Tree binding implementation for JSON format.
-   *
-   * The bound data can contain JSON objects and arrays. Both will be used to build the tree structure. You
-   * can optionally define a set of arrays to be used for the tree structure in the parameter `arrayNames`.
-   * If this parameter is set, all other objects and arrays will be ignored.
+   * Tree binding implementation for JSON model. See {@link sap.ui.model.json.JSONModel#bindTree}
    *
    * @ui5-protected DO NOT USE IN APPLICATIONS (only for related classes in the framework)
    */
   export default class JSONTreeBinding extends ClientTreeBinding {
     /**
-     * Creates a new JSONListBinding.
-     *
-     * This constructor should only be called by subclasses or model implementations, not by application or
-     * control code. Such code should use {@link sap.ui.model.json.JSONModel#bindTree JSONModel#bindTree} on
-     * the corresponding model instance instead.
-     *
      * @ui5-protected Do not call from applications (only from related classes in the framework)
      */
-    protected constructor(
-      /**
-       * Model instance that this binding is created for and that it belongs to
-       */
-      oModel: JSONModel,
-      /**
-       * Path pointing to the tree or array that should be bound
-       */
-      sPath: string,
-      /**
-       * Context object for this binding, mandatory when a relative binding path is given
-       */
-      oContext?: object,
-      /**
-       * The filters to be used initially with type {@link sap.ui.model.FilterType.Application}; call {@link #filter }
-       * to replace them
-       */
-      aFilters?: Filter[] | Filter,
-      /**
-       * Additional model-specific parameters
-       */
-      mParameters?: {
-        /**
-         * Keys of arrays to be used for building the tree structure. If not specified, all arrays and objects in
-         * the bound data will be used. Note that for arrays nested inside differently named arrays, you need to
-         * add both to `arrayNames`. You always have to add the complete parent chain. If any array is ignored,
-         * its child arrays will be ignored as well even if they have been added to `arrayNames`.
-         */
-        arrayNames?: string[];
-      },
-      /**
-       * The sorters used initially; call {@link #sort} to replace them
-       */
-      aSorters?: Sorter[] | Sorter
-    );
+    protected constructor();
   }
 }
 
@@ -60820,6 +61847,25 @@ declare module "sap/ui/model/ListBinding" {
       oListener?: object
     ): void;
     /**
+     * Computes the binding's application filters by replacing application filters of the given type with the
+     * given new filters. Subclasses call this method from their filter method implementation.
+     *
+     * @since 1.146.0
+     * @ui5-protected Do not call from applications (only from related classes in the framework)
+     *
+     * @returns The new application filters
+     */
+    computeApplicationFilters(
+      /**
+       * The new filters for the given filter type
+       */
+      vFilter?: Filter[] | Filter,
+      /**
+       * The type of the application filters to replace, see {@link sap.ui.model.FilterType}
+       */
+      sFilterType?: "Application" | "ApplicationBound"
+    ): Filter[] | Filter | undefined;
+    /**
      * Detaches event handler `fnFunction` from the {@link #event:filter filter} event of this `sap.ui.model.ListBinding`.
      *
      * @deprecated As of version 1.11. use the `change` event.
@@ -60931,7 +61977,9 @@ declare module "sap/ui/model/ListBinding" {
        */
       aFilters?: Filter[] | Filter,
       /**
-       * The type of the filter to replace; if no type is given, the behavior depends on the model implementation
+       * The type of filter to replace. If no type is specified, the behavior depends on the model implementation.
+       * Since 1.146.0, you can use `sap.ui.model.FilterType.ApplicationBound` to replace bound application filters
+       * if the model implementation supports it.
        */
       sFilterType?: FilterType | keyof typeof FilterType
     ): this;
@@ -61648,9 +62696,9 @@ declare module "sap/ui/model/Model" {
        */
       mParameters?: object,
       /**
-       * Event handlers can be passed to the binding ({change:myHandler})
+       * **Deprecated as of version 1.144.0** - unused
        */
-      oEvents?: object
+      oEvents?: Record<string, Function>
     ): ContextBinding;
     /**
      *
@@ -61975,16 +63023,19 @@ declare module "sap/ui/model/Model" {
      */
     getMetaModel(): MetaModel | undefined;
     /**
+     * Returns the value of the property for the given `sPath` and `oContext`.
      *
-     * @returns The value for the given path/context or `undefined` if data could not be found
+     *
+     * @returns The the value of the property for the given path/context or `undefined` if data could not be
+     * found
      */
     getObject(
       /**
-       * Path to where to read the object
+       * The path to the object you want to read
        */
       sPath: string,
       /**
-       * Context with which the path should be resolved
+       * The context that resolves the path
        */
       oContext?: Context,
       /**
@@ -61998,29 +63049,31 @@ declare module "sap/ui/model/Model" {
      * The original value is the value that was last responded by a server if using a server model implementation.
      *
      *
-     * @returns vValue The value of the property
+     * @returns The value of the property
      */
     getOriginalProperty(
       /**
-       * Path/name of the property
+       * The path/name of the property
        */
       sPath: string,
       /**
-       * Context if available to access the property value
+       * Context for accessing the property value
        */
       oContext?: Context
     ): any;
     /**
+     * Returns the value of the property for the given `sPath` and `oContext`.
      *
-     * @returns Value of the addressed property
+     *
+     * @returns The value of the addressed property
      */
     getProperty(
       /**
-       * The path to where to read the attribute value
+       * The path to the attribute value you want to read
        */
       sPath: string,
       /**
-       * The context with which the path should be resolved
+       * The context that resolves the path
        */
       oContext?: Context
     ): any;
@@ -62230,7 +63283,7 @@ declare module "sap/ui/model/Model" {
     /**
      * HTTP status code returned by the request (if available)
      */
-    statusCode?: string;
+    statusCode?: string | number;
 
     /**
      * The status as a text, details not specified, intended only for diagnosis output
@@ -62305,6 +63358,8 @@ declare module "sap/ui/model/odata/ODataTreeBindingFlat" {
   /**
    * Adapter for TreeBindings to add the ListBinding functionality and use the tree structure in list based
    * controls.
+   *
+   * @deprecated As of version 1.150.0. will be replaced by OData V4 hierarchy functionality, see {@link topic:7d914317c0b64c23824bf932cc8a4ae1/section_RCH Recursive Hierarchy}
    */
   export default function ODataTreeBindingFlat(): void;
 }
@@ -62688,10 +63743,10 @@ declare module "sap/ui/model/odata/CountMode" {
   /**
    * Different modes for retrieving the count of collections.
    * See:
-   * 	sap.ui.model.ODataModel#bindList
-   * 	sap.ui.model.ODataModel#constructor
-   * 	sap.ui.model.v2.ODataModel#bindList
-   * 	sap.ui.model.v2.ODataModel#constructor
+   * 	sap.ui.model.odata.ODataModel#bindList
+   * 	sap.ui.model.odata.ODataModel#constructor
+   * 	sap.ui.model.odata.v2.ODataModel#bindList
+   * 	sap.ui.model.odata.v2.ODataModel#constructor
    */
   enum CountMode {
     /**
@@ -62804,7 +63859,7 @@ declare module "sap/ui/model/odata/MessageScope" {
   /**
    * Different scopes for retrieving messages from a service consumed via a {@link sap.ui.model.odata.v2.ODataModel}.
    * See:
-   * 	sap.ui.model.ODataModel#constructor
+   * 	sap.ui.model.odata.v2.ODataModel#constructor
    */
   enum MessageScope {
     /**
@@ -63502,19 +64557,25 @@ declare module "sap/ui/model/odata/ODataMessageParser" {
       /**
        * The response from the server containing body and headers
        */
-      oResponse: object,
+      oResponse: {
+        statusCode: number;
+
+        headers: Record<string, string>;
+
+        body: string;
+      },
       /**
        * The original request that lead to this response
        */
-      oRequest: object,
+      oRequest: Request,
       /**
-       * A map with the keys of the entities requested from the back-end mapped to true
+       * A map with the keys of the entities requested from the back end mapped to true
        */
-      mGetEntities?: object,
+      mGetEntities?: Record<string, true>,
       /**
-       * A map with the keys of the entities changed in the back-end mapped to true
+       * A map with the keys of the entities changed in the back end mapped to true
        */
-      mChangeEntities?: object,
+      mChangeEntities?: Record<string, true>,
       /**
        * Whether the used OData service supports the message scope {@link sap.ui.model.odata.MessageScope.BusinessObject}
        */
@@ -63533,6 +64594,45 @@ declare module "sap/ui/model/odata/ODataMessageParser" {
       sFieldName: string
     ): this;
   }
+
+  export type Request = {
+    /**
+     * The HTTP method used for this request
+     */
+    method: string;
+    /**
+     * The request URI of this request
+     */
+    requestUri: string;
+    /**
+     * The headers of this request
+     */
+    headers: Record<string, string>;
+    /**
+     * Entity key for created entities
+     */
+    key?: string;
+    /**
+     * Flag indicating if an entity was created
+     */
+    created?: boolean;
+    /**
+     * Deep path for nested entities
+     */
+    deepPath?: string;
+    /**
+     * Metadata for function imports
+     */
+    functionMetadata?: object;
+    /**
+     * Target for function imports
+     */
+    functionTarget?: string;
+    /**
+     * Flag for updating aggregated messages
+     */
+    updateAggregatedMessages?: boolean;
+  };
 }
 
 declare module "sap/ui/model/odata/ODataMetadata" {
@@ -64050,8 +65150,8 @@ declare module "sap/ui/model/odata/ODataMetaModel" {
     static getMetadata(): Metadata;
     /**
      * Gets the metadata context for the given function import and parameter name. The result can be used with
-     * {@link sap.ui.model.ODataMetaModel#getODataValueLists} to request the metadata for the value lists for
-     * that function import parameter.
+     * {@link sap.ui.model.odata.ODataMetaModel#getODataValueLists} to request the metadata for the value lists
+     * for that function import parameter.
      *
      * @since 1.129.0
      *
@@ -64290,7 +65390,7 @@ declare module "sap/ui/model/odata/ODataMetaModel" {
      *
      * @returns a Promise
      */
-    loaded(): Promise<any>;
+    loaded(): Promise<void>;
     /**
      * Refresh not supported by OData meta model!
      */
@@ -65286,7 +66386,7 @@ declare module "sap/ui/model/odata/ODataModel" {
     /**
      * Appends the change batch operations to the end of the batch stack. Only `PUTPOST` or `DELETE`
      * batch operations should be included in the specified array. The operations in the array will be included
-     * in a single changeset. To embed change operations in different change sets call this method with the
+     * in a single change set. To embed change operations in different change sets call this method with the
      * corresponding change operations again. If an illegal batch operation is added to the change set nothing
      * will be performed and false will be returned.
      *
@@ -66635,7 +67735,7 @@ declare module "sap/ui/model/odata/ODataUtils" {
        * the EDM type
        */
       sEdmType: string
-    ): Function;
+    ): (p1: any, p2: any) => int;
     /**
      * Adds an origin to the given service URL. If an origin is already present, it will only be replaced if
      * the parameters object contains the flag "force: true". In case the URL already contains URL parameters,
@@ -66848,7 +67948,7 @@ declare module "sap/ui/model/odata/type/Boolean" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Boolean";
     /**
      * Parses the given value from the given type to a boolean.
      *
@@ -66880,7 +67980,10 @@ declare module "sap/ui/model/odata/type/Boolean" {
 }
 
 declare module "sap/ui/model/odata/type/Byte" {
-  import Int from "sap/ui/model/odata/type/Int";
+  import {
+    default as Int,
+    IntTypeFormatOptions,
+  } from "sap/ui/model/odata/type/Int";
 
   import Metadata from "sap/ui/base/Metadata";
 
@@ -66902,13 +68005,7 @@ declare module "sap/ui/model/odata/type/Byte" {
       /**
        * Format options as defined in {@link sap.ui.core.format.NumberFormat.getIntegerInstance}
        */
-      oFormatOptions?: {
-        /**
-         * Whether the empty string and `null` are parsed to `0` if the `nullable` constraint is set to `false`;
-         * see {@link sap.ui.model.odata.type.Int#parseValue parseValue}; since 1.115.0
-         */
-        parseEmptyValueToZero?: boolean;
-      },
+      oFormatOptions?: IntTypeFormatOptions,
       /**
        * constraints; {@link sap.ui.model.odata.type.Int#validateValue validateValue} throws an error if any constraint
        * is violated
@@ -66958,7 +68055,7 @@ declare module "sap/ui/model/odata/type/Byte" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Byte";
     /**
      * Returns the type's supported range as object with properties `minimum` and `maximum`.
      *
@@ -66966,7 +68063,11 @@ declare module "sap/ui/model/odata/type/Byte" {
      *
      * @returns the range
      */
-    getRange(): object;
+    getRange(): {
+      minimum: number;
+
+      maximum: number;
+    };
   }
 }
 
@@ -66980,6 +68081,8 @@ declare module "sap/ui/model/odata/type/Currency" {
   import ParseException from "sap/ui/model/ParseException";
 
   import ValidateException from "sap/ui/model/ValidateException";
+
+  import { FormatOptions } from "sap/ui/core/format/NumberFormat";
 
   /**
    * This class represents the `Currency` composite type with the parts amount, currency, and currency customizing.
@@ -67006,32 +68109,7 @@ declare module "sap/ui/model/odata/type/Currency" {
        * the feature of ignoring messages, see {@link sap.ui.model.Binding#supportsIgnoreMessages}, and the corresponding
        * binding parameter is not set manually.
        */
-      oFormatOptions?: {
-        /**
-         * Not supported; the type derives this from its currency customizing part.
-         */
-        customCurrencies?: object;
-        /**
-         * Whether the amount is parsed to a string; set to `false` if the amount's underlying type is represented
-         * as a `number`, for example {@link sap.ui.model.odata.type.Int32}
-         */
-        parseAsString?: boolean;
-        /**
-         * Whether the amount is parsed if no currency is entered; defaults to `true` if neither `showMeasure` nor
-         * `showNumber` is set to a falsy value, otherwise defaults to `false`
-         */
-        unitOptional?: boolean;
-        /**
-         * Defines how an empty string is parsed into the amount. With the default value `0` the amount becomes
-         * `0` when an empty string is parsed.
-         */
-        emptyString?: any;
-        /**
-         * By default decimals are preserved, unless `oFormatOptions.style` is given as "short" or "long"; since
-         * 1.89.0
-         */
-        preserveDecimals?: boolean;
-      },
+      oFormatOptions?: CurrencyFormatOptions,
       /**
        * Only the 'skipDecimalsValidation' constraint is supported. Constraints are immutable, that is, they can
        * only be set once on construction.
@@ -67119,7 +68197,7 @@ declare module "sap/ui/model/odata/type/Currency" {
      *
      * @returns The type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Currency";
     /**
      * Parses the given string value to an array containing amount and currency.
      * See:
@@ -67158,6 +68236,99 @@ declare module "sap/ui/model/odata/type/Currency" {
       aValues: any[]
     ): void;
   }
+  /**
+   * Format options for the {@link sap.ui.model.odata.type.Currency} type.
+   */
+  export type CurrencyFormatOptions = FormatOptions & {
+    /**
+     * Defines whether the currency is shown as a code in currency format. The currency symbol is displayed
+     * when this option is set to `false` and a symbol exists for the given currency code.
+     */
+    currencyCode?: boolean;
+    /**
+     * Can be set to either 'standard' (the default value) or to 'accounting' for an accounting-specific currency
+     * display
+     */
+    currencyContext?:
+      | "standard"
+      | "accounting"
+      | "sap-standard"
+      | "sap-accounting";
+    /**
+     * The target length of places after the decimal separator; if the number has fewer decimals than specified
+     * in this option, it is padded with whitespaces at the end up to the target length. An additional whitespace
+     * character for the decimal separator is added for a number without any decimals. **Note:** This format
+     * option is only allowed if the following conditions apply:
+     * 	 - It has a value greater than 0.
+     * 	 - The `oFormatOptions.style` format option is **not** set to `"short"` or `"long"`.
+     */
+    decimalPadding?: int;
+    /**
+     * The number of decimal digits.
+     */
+    decimals?: int;
+    /**
+     * Defines how an empty string is parsed into the amount. With the default value `0`, the amount becomes
+     * `0` when an empty string is parsed.
+     */
+    emptyString?: any;
+    /**
+     * Deprecated as of 1.130; this format option does not have an effect on currency formats since decimals
+     * can always be determined, either through the given format options, custom currencies, or the CLDR
+     */
+    minFractionDigits?: int;
+    /**
+     * Whether the amount is parsed to a string; set to `false` if the amount's underlying type is represented
+     * as a `number`, for example {@link sap.ui.model.odata.type.Int32}
+     */
+    parseAsString?: boolean;
+    /**
+     * The maximum number of digits in the formatted representation of a number; if the `precision` is less
+     * than the overall length of the number, its fractional part is truncated through rounding. As the `precision`
+     * only affects the rounding of a number, its integer part can retain more digits than defined by this parameter.
+     * **Example:** With a `precision` of 2, `234.567` is formatted to `235`. **Note:** The formatted output
+     * may differ depending on locale.
+     */
+    precision?: int;
+    /**
+     * By default, decimals are preserved unless `oFormatOptions.style` is given as "short" or "long"; since
+     * 1.89.0
+     */
+    preserveDecimals?: boolean;
+    /**
+     * Defines whether the currency code or symbol is shown in the formatted string, for example true: "1.00
+     * EUR", false: "1.00" for locale "en" If both `showMeasure` and `showNumber` are `false`, an empty string
+     * is returned
+     */
+    showMeasure?: boolean;
+    /**
+     * Defines whether the number is shown as part of the result string, for example 1 EUR for locale "en"
+     * ```javascript
+     * `NumberFormat.getCurrencyInstance({showNumber: true}).format(1, "EUR"); // "1.00 EUR"````
+     *
+     * ```javascript
+     * `NumberFormat.getCurrencyInstance({showNumber: false}).format(1, "EUR"); // "EUR"````
+     *  If both `showMeasure` and `showNumber` are `false`, an empty string is returned
+     */
+    showNumber?: boolean;
+    /**
+     * The style of format. When set to `short` or `long`, numbers are formatted into the `short` form only.
+     * When this option is set, the default value of the `precision` option is set to `2`. This can be changed
+     * by setting either `min/maxFractionDigits`, `decimals`, `shortDecimals`, or the `precision` option itself.
+     */
+    style?: "short" | "long" | "standard";
+    /**
+     * Overrides the global configuration value {@link module:sap/base/i18n/Formatting.getTrailingCurrencyCode Formatting.getTrailingCurrencyCode},
+     * which has a default value of `true`. This is ignored if `oFormatOptions.currencyCode` is set to `false`,
+     * or if `oFormatOptions.pattern` is supplied.
+     */
+    trailingCurrencyCode?: boolean;
+    /**
+     * Whether the amount is parsed if no currency is entered; defaults to `true` if neither `showMeasure` nor
+     * `showNumber` is set to a falsy value, otherwise defaults to `false`
+     */
+    unitOptional?: boolean;
+  };
 }
 
 declare module "sap/ui/model/odata/type/Date" {
@@ -67277,7 +68448,7 @@ declare module "sap/ui/model/odata/type/Date" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Date";
     /**
      * Parses the given value to a date.
      *
@@ -67414,7 +68585,7 @@ declare module "sap/ui/model/odata/type/DateTime" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.DateTime";
   }
 }
 
@@ -67693,7 +68864,7 @@ declare module "sap/ui/model/odata/type/DateTimeOffset" {
      *
      * @returns The type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.DateTimeOffset";
     /**
      * Parses the given value to a `Date` instance (OData V2) or a string like "1970-12-31T23:59:58Z" (OData
      * V4), depending on the model's OData version.
@@ -67736,6 +68907,8 @@ declare module "sap/ui/model/odata/type/DateTimeWithTimezone" {
   import FormatException from "sap/ui/model/FormatException";
 
   import Metadata from "sap/ui/base/Metadata";
+
+  import UI5Date from "sap/ui/core/date/UI5Date";
 
   import ParseException from "sap/ui/model/ParseException";
 
@@ -67827,7 +69000,7 @@ declare module "sap/ui/model/odata/type/DateTimeWithTimezone" {
      *
      * @returns The type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.DateTimeWithTimezone";
     /**
      * Gets an array of indices that determine which parts of this type shall not propagate their model messages
      * to the attached control. Prerequisite is that the corresponding binding supports this feature, see {@link sap.ui.model.Binding#supportsIgnoreMessages}.
@@ -67845,12 +69018,21 @@ declare module "sap/ui/model/odata/type/DateTimeWithTimezone" {
     getPartsIgnoringMessages(): number[];
     /**
      * Returns a language-dependent placeholder text such as "e.g. " where  is formatted
-     * using this type.
+     * using this type. If given, a sample date within the given range is used.
      *
      *
      * @returns The language-dependent placeholder text or `undefined` if the type does not offer a placeholder
      */
-    getPlaceholderText(): string | undefined;
+    getPlaceholderText(
+      /**
+       * The minimum date
+       */
+      oMinimum?: UI5Date,
+      /**
+       * The maximum date
+       */
+      oMaximum?: UI5Date
+    ): string | undefined;
     /**
      * Parses the given value.
      *
@@ -67903,6 +69085,8 @@ declare module "sap/ui/model/odata/type/Decimal" {
 
   import ValidateException from "sap/ui/model/ValidateException";
 
+  import { FloatFormatOptions } from "sap/ui/core/format/NumberFormat";
+
   /**
    * This class represents the OData primitive type `Edm.Decimal`, see
    * type definition for OData V4.01 or
@@ -67919,23 +69103,11 @@ declare module "sap/ui/model/odata/type/Decimal" {
      */
     constructor(
       /**
-       * Format options as defined in {@link sap.ui.core.format.NumberFormat.getFloatInstance}. In contrast to
-       * NumberFormat `groupingEnabled` defaults to `true`. Note that `maxFractionDigits` and `minFractionDigits`
-       * are set to the value of the constraint `scale` unless it is "variable" or "floating". They can however
-       * be overwritten.
+       * Format options as defined in {@link sap.ui.core.format.NumberFormat.getFloatInstance}. Note that `maxFractionDigits`
+       * and `minFractionDigits` are set to the value of the constraint `scale` unless it is `"variable"` or `"floating"`.
+       * They can however be overwritten.
        */
-      oFormatOptions?: {
-        /**
-         * Whether the empty string and `null` are parsed to `"0"` if the `nullable` constraint is set to `false`;
-         * see {@link #parseValue parseValue}; since 1.115.0
-         */
-        parseEmptyValueToZero?: boolean;
-        /**
-         * by default decimals are preserved, unless `oFormatOptions.style` is given as "short" or "long"; since
-         * 1.89.0
-         */
-        preserveDecimals?: boolean;
-      },
+      oFormatOptions?: DecimalTypeFormatOptions,
       /**
        * constraints; {@link #validateValue validateValue} throws an error if any constraint is violated
        */
@@ -68045,7 +69217,7 @@ declare module "sap/ui/model/odata/type/Decimal" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Decimal";
     /**
      * Parses the given value, which is expected to be of the given type, to a decimal in `string` representation.
      *
@@ -68077,6 +69249,19 @@ declare module "sap/ui/model/odata/type/Decimal" {
       sValue: string
     ): void;
   }
+  /**
+   * The format options of the OData floating point number type {@link sap.ui.model.odata.type.Decimal}. It
+   * differs to the other two OData floating point number types {@link sap.ui.model.odata.type.Double} and
+   * {@link sap.ui.model.odata.type.Single} by parsing the empty string and `null` to string `"0"` if the
+   * `nullable` constraint is set to `false`.
+   */
+  export type DecimalTypeFormatOptions = FloatFormatOptions & {
+    /**
+     * Whether the empty string and `null` are parsed to `"0"` if the `nullable` constraint is set to `false`;
+     * see {@link #parseValue parseValue}; since 1.115.0
+     */
+    parseEmptyValueToZero?: boolean;
+  };
 }
 
 declare module "sap/ui/model/odata/type/Double" {
@@ -68089,6 +69274,8 @@ declare module "sap/ui/model/odata/type/Double" {
   import ParseException from "sap/ui/model/ParseException";
 
   import ValidateException from "sap/ui/model/ValidateException";
+
+  import { FloatFormatOptions } from "sap/ui/core/format/NumberFormat";
 
   /**
    * This class represents the OData primitive type `Edm.Double`, see
@@ -68106,21 +69293,9 @@ declare module "sap/ui/model/odata/type/Double" {
      */
     constructor(
       /**
-       * Format options as defined in {@link sap.ui.core.format.NumberFormat.getFloatInstance}. In contrast to
-       * NumberFormat `groupingEnabled` defaults to `true`.
+       * Format options as defined in {@link sap.ui.core.format.NumberFormat.getFloatInstance}.
        */
-      oFormatOptions?: {
-        /**
-         * Whether the empty string and `null` are parsed to `0` if the `nullable` constraint is set to `false`;
-         * see {@link #parseValue parseValue}; since 1.115.0
-         */
-        parseEmptyValueToZero?: boolean;
-        /**
-         * by default decimals are preserved, unless `oFormatOptions.style` is given as "short" or "long"; since
-         * 1.89.0
-         */
-        preserveDecimals?: boolean;
-      },
+      oFormatOptions?: FloatTypeFormatOptions,
       /**
        * constraints; {@link #validateValue validateValue} throws an error if any constraint is violated
        */
@@ -68187,7 +69362,7 @@ declare module "sap/ui/model/odata/type/Double" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Double";
     /**
      * Parses the given value, which is expected to be of the given type, to an Edm.Double in `number` representation.
      *
@@ -68222,6 +69397,17 @@ declare module "sap/ui/model/odata/type/Double" {
       fValue: number
     ): void;
   }
+  /**
+   * The format options of the OData floating point number types, {@link sap.ui.model.odata.type.Double} and
+   * {@link sap.ui.model.odata.type.Single}.
+   */
+  export type FloatTypeFormatOptions = FloatFormatOptions & {
+    /**
+     * Whether the empty string and `null` are parsed to `0` if the `nullable` constraint is set to `false`;
+     * see {@link #parseValue parseValue}; since 1.115.0
+     */
+    parseEmptyValueToZero?: boolean;
+  };
 }
 
 declare module "sap/ui/model/odata/type/Guid" {
@@ -68320,7 +69506,7 @@ declare module "sap/ui/model/odata/type/Guid" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Guid";
     /**
      * Parses the given value to a GUID.
      *
@@ -68361,6 +69547,8 @@ declare module "sap/ui/model/odata/type/Int" {
 
   import ValidateException from "sap/ui/model/ValidateException";
 
+  import { IntegerFormatOptions } from "sap/ui/core/format/NumberFormat";
+
   /**
    * This is an abstract base class for integer-based OData primitive types like `Edm.Int16` or `Edm.Int32`,
    * see
@@ -68377,13 +69565,7 @@ declare module "sap/ui/model/odata/type/Int" {
       /**
        * type-specific format options; see subtypes
        */
-      oFormatOptions?: {
-        /**
-         * Whether the empty string and `null` are parsed to `0` if the `nullable` constraint is set to `false`;
-         * see {@link #parseValue parseValue}; since 1.115.0
-         */
-        parseEmptyValueToZero?: boolean;
-      },
+      oFormatOptions?: IntTypeFormatOptions,
       /**
        * constraints; {@link #validateValue validateValue} throws an error if any constraint is violated
        */
@@ -68475,10 +69657,23 @@ declare module "sap/ui/model/odata/type/Int" {
       iValue: number
     ): void;
   }
+  /**
+   * The format options of the {@link sap.ui.model.odata.type.Int Int} based OData types.
+   */
+  export type IntTypeFormatOptions = IntegerFormatOptions & {
+    /**
+     * Whether the empty string and `null` are parsed to `0` if the `nullable` constraint is set to `false`;
+     * see {@link #parseValue parseValue}; since 1.115.0
+     */
+    parseEmptyValueToZero?: boolean;
+  };
 }
 
 declare module "sap/ui/model/odata/type/Int16" {
-  import Int from "sap/ui/model/odata/type/Int";
+  import {
+    default as Int,
+    IntTypeFormatOptions,
+  } from "sap/ui/model/odata/type/Int";
 
   import Metadata from "sap/ui/base/Metadata";
 
@@ -68501,13 +69696,7 @@ declare module "sap/ui/model/odata/type/Int16" {
        * Format options as defined in {@link sap.ui.core.format.NumberFormat.getIntegerInstance}. In contrast
        * to NumberFormat `groupingEnabled` defaults to `true`.
        */
-      oFormatOptions?: {
-        /**
-         * Whether the empty string and `null` are parsed to `0` if the `nullable` constraint is set to `false`;
-         * see {@link sap.ui.model.odata.type.Int#parseValue parseValue}; since 1.115.0
-         */
-        parseEmptyValueToZero?: boolean;
-      },
+      oFormatOptions?: IntTypeFormatOptions,
       /**
        * constraints; {@link sap.ui.model.odata.type.Int#validateValue validateValue} throws an error if any constraint
        * is violated
@@ -68557,7 +69746,7 @@ declare module "sap/ui/model/odata/type/Int16" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Int16";
     /**
      * Returns the type's supported range as object with properties `minimum` and `maximum`.
      *
@@ -68565,12 +69754,19 @@ declare module "sap/ui/model/odata/type/Int16" {
      *
      * @returns the range
      */
-    getRange(): object;
+    getRange(): {
+      minimum: number;
+
+      maximum: number;
+    };
   }
 }
 
 declare module "sap/ui/model/odata/type/Int32" {
-  import Int from "sap/ui/model/odata/type/Int";
+  import {
+    default as Int,
+    IntTypeFormatOptions,
+  } from "sap/ui/model/odata/type/Int";
 
   import Metadata from "sap/ui/base/Metadata";
 
@@ -68593,13 +69789,7 @@ declare module "sap/ui/model/odata/type/Int32" {
        * Format options as defined in {@link sap.ui.core.format.NumberFormat.getIntegerInstance}. In contrast
        * to NumberFormat `groupingEnabled` defaults to `true`.
        */
-      oFormatOptions?: {
-        /**
-         * Whether the empty string and `null` are parsed to `0` if the `nullable` constraint is set to `false`;
-         * see {@link sap.ui.model.odata.type.Int#parseValue parseValue}; since 1.115.0
-         */
-        parseEmptyValueToZero?: boolean;
-      },
+      oFormatOptions?: IntTypeFormatOptions,
       /**
        * constraints; {@link sap.ui.model.odata.type.Int#validateValue validateValue} throws an error if any constraint
        * is violated
@@ -68649,7 +69839,7 @@ declare module "sap/ui/model/odata/type/Int32" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Int32";
     /**
      * Returns the type's supported range as object with properties `minimum` and `maximum`.
      *
@@ -68657,12 +69847,18 @@ declare module "sap/ui/model/odata/type/Int32" {
      *
      * @returns the range
      */
-    getRange(): object;
+    getRange(): {
+      minimum: number;
+
+      maximum: number;
+    };
   }
 }
 
 declare module "sap/ui/model/odata/type/Int64" {
   import ODataType from "sap/ui/model/odata/type/ODataType";
+
+  import { IntTypeFormatOptions } from "sap/ui/model/odata/type/Int";
 
   import FormatException from "sap/ui/model/FormatException";
 
@@ -68691,13 +69887,7 @@ declare module "sap/ui/model/odata/type/Int64" {
        * Format options as defined in {@link sap.ui.core.format.NumberFormat.getIntegerInstance}. In contrast
        * to NumberFormat `groupingEnabled` defaults to `true`.
        */
-      oFormatOptions: {
-        /**
-         * Whether the empty string and `null` are parsed to `"0"` if the `nullable` constraint is set to `false`;
-         * see {@link #parseValue parseValue}; since 1.115.0
-         */
-        parseEmptyValueToZero?: boolean;
-      },
+      oFormatOptions: IntTypeFormatOptions,
       /**
        * constraints; {@link #validateValue validateValue} throws an error if any constraint is violated
        */
@@ -68777,7 +69967,7 @@ declare module "sap/ui/model/odata/type/Int64" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Int64";
     /**
      * Parses the given value, which is expected to be of the given type, to an Int64 in `string` representation.
      *
@@ -68815,6 +70005,8 @@ declare module "sap/ui/model/odata/type/ODataType" {
   import SimpleType from "sap/ui/model/SimpleType";
 
   import Metadata from "sap/ui/base/Metadata";
+
+  import UI5Date from "sap/ui/core/date/UI5Date";
 
   /**
    * This class is an abstract base class for all OData primitive types (see {@link https://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html#_Toc38530338 OData V4.01 Edm Types }
@@ -68884,12 +70076,25 @@ declare module "sap/ui/model/odata/type/ODataType" {
     static getMetadata(): Metadata;
     /**
      * Returns a language-dependent placeholder text such as "e.g. " where  is formatted
-     * using this type.
+     * using this type. The `oMinimum` and `oMaximum` parameters are supported since 1.149.0 and only by types
+     * that use {@link sap.ui.core.format.DateFormat} for formatting ({@link sap.ui.model.odata.type.Date},
+     * {@link sap.ui.model.odata.type.DateTime}, {@link sap.ui.model.odata.type.DateTimeOffset}, {@link sap.ui.model.odata.type.DateTimeWithTimezone},
+     * {@link sap.ui.model.odata.type.Time}, and {@link sap.ui.model.odata.type.TimeOfDay}). If given, a sample
+     * date within [`oMinimum`, `oMaximum`] is used.
      *
      *
      * @returns The language-dependent placeholder text or `undefined` if the type does not offer a placeholder
      */
-    getPlaceholderText(): string | undefined;
+    getPlaceholderText(
+      /**
+       * The minimum date
+       */
+      oMinimum?: UI5Date,
+      /**
+       * The maximum date
+       */
+      oMaximum?: UI5Date
+    ): string | undefined;
   }
 }
 
@@ -68985,7 +70190,7 @@ declare module "sap/ui/model/odata/type/Raw" {
      *
      * @returns The type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Raw";
     /**
      * Method not supported
      * See:
@@ -69006,7 +70211,10 @@ declare module "sap/ui/model/odata/type/Raw" {
 }
 
 declare module "sap/ui/model/odata/type/SByte" {
-  import Int from "sap/ui/model/odata/type/Int";
+  import {
+    default as Int,
+    IntTypeFormatOptions,
+  } from "sap/ui/model/odata/type/Int";
 
   import Metadata from "sap/ui/base/Metadata";
 
@@ -69028,13 +70236,7 @@ declare module "sap/ui/model/odata/type/SByte" {
       /**
        * Format options as defined in {@link sap.ui.core.format.NumberFormat.getIntegerInstance}
        */
-      oFormatOptions?: {
-        /**
-         * Whether the empty string and `null` are parsed to `0` if the `nullable` constraint is set to `false`;
-         * see {@link sap.ui.model.odata.type.Int#parseValue parseValue}; since 1.115.0
-         */
-        parseEmptyValueToZero?: boolean;
-      },
+      oFormatOptions?: IntTypeFormatOptions,
       /**
        * constraints; {@link sap.ui.model.odata.type.Int#validateValue validateValue} throws an error if any constraint
        * is violated
@@ -69084,7 +70286,7 @@ declare module "sap/ui/model/odata/type/SByte" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.SByte";
     /**
      * Returns the type's supported range as object with properties `minimum` and `maximum`.
      *
@@ -69092,12 +70294,18 @@ declare module "sap/ui/model/odata/type/SByte" {
      *
      * @returns the range
      */
-    getRange(): object;
+    getRange(): {
+      minimum: number;
+
+      maximum: number;
+    };
   }
 }
 
 declare module "sap/ui/model/odata/type/Single" {
   import ODataType from "sap/ui/model/odata/type/ODataType";
+
+  import { FloatTypeFormatOptions } from "sap/ui/model/odata/type/Double";
 
   import FormatException from "sap/ui/model/FormatException";
 
@@ -69123,21 +70331,9 @@ declare module "sap/ui/model/odata/type/Single" {
      */
     constructor(
       /**
-       * Format options as defined in {@link sap.ui.core.format.NumberFormat.getFloatInstance}. In contrast to
-       * NumberFormat `groupingEnabled` defaults to `true`.
+       * Format options as defined in {@link sap.ui.core.format.NumberFormat.getFloatInstance}.
        */
-      oFormatOptions?: {
-        /**
-         * Whether the empty string and `null` are parsed to `0` if the `nullable` constraint is set to `false`;
-         * see {@link #parseValue parseValue}; since 1.115.0
-         */
-        parseEmptyValueToZero?: boolean;
-        /**
-         * by default decimals are preserved, unless `oFormatOptions.style` is given as "short" or "long"; since
-         * 1.89.0
-         */
-        preserveDecimals?: boolean;
-      },
+      oFormatOptions?: FloatTypeFormatOptions,
       /**
        * constraints; {@link #validateValue validateValue} throws an error if any constraint is violated
        */
@@ -69203,7 +70399,7 @@ declare module "sap/ui/model/odata/type/Single" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Single";
     /**
      * Parses the given value, which is expected to be of the given type, to an Edm.Single in `number` representation.
      *
@@ -69340,7 +70536,7 @@ declare module "sap/ui/model/odata/type/Stream" {
      *
      * @returns The type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Stream";
     /**
      * Method not supported
      * See:
@@ -69485,7 +70681,7 @@ declare module "sap/ui/model/odata/type/String" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.String";
     /**
      * Parses the given value which is expected to be of the given type to a string. If `isDigitSequence` constraint
      * of this type is set to `true` and the parsed string is a sequence of digits, then the parsed string is
@@ -69635,7 +70831,7 @@ declare module "sap/ui/model/odata/type/Time" {
        */
       oDate: Date | UI5Date | null
     ): {
-      __edmType: string;
+      __edmType: "Edm.Time";
 
       ms: int;
     } | null;
@@ -69645,7 +70841,7 @@ declare module "sap/ui/model/odata/type/Time" {
      *
      * @returns the type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Time";
     /**
      * Parses the given value, which is expected to be of the given type, to a time object.
      *
@@ -69662,7 +70858,11 @@ declare module "sap/ui/model/odata/type/Time" {
        * See {@link sap.ui.model.odata.type} for more information.
        */
       sSourceType: string
-    ): object;
+    ): {
+      __edmType: "Edm.Time";
+
+      ms: int;
+    };
     /**
      * Validates whether the given value in model representation is valid and meets the defined constraints.
      */
@@ -69670,7 +70870,11 @@ declare module "sap/ui/model/odata/type/Time" {
       /**
        * the value to be validated
        */
-      oValue: object
+      oValue: {
+        __edmType: "Edm.Time";
+
+        ms: int;
+      }
     ): void;
   }
 }
@@ -69790,7 +70994,7 @@ declare module "sap/ui/model/odata/type/TimeOfDay" {
      *
      * @returns The type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.TimeOfDay";
     /**
      * Parses the given value, which is expected to be of the given type, to a string with an OData V4 Edm.TimeOfDay
      * value.
@@ -69837,6 +71041,8 @@ declare module "sap/ui/model/odata/type/Unit" {
 
   import ValidateException from "sap/ui/model/ValidateException";
 
+  import { FormatOptions } from "sap/ui/core/format/NumberFormat";
+
   /**
    * This class represents the `Unit` composite type with the parts measure, unit, and unit customizing. The
    * type may only be used for measure and unit parts from a {@link sap.ui.model.odata.v4.ODataModel} or a
@@ -69862,32 +71068,7 @@ declare module "sap/ui/model/odata/type/Unit" {
        * the feature of ignoring messages, see {@link sap.ui.model.Binding#supportsIgnoreMessages}, and the corresponding
        * binding parameter is not set manually.
        */
-      oFormatOptions?: {
-        /**
-         * Not supported; the type derives this from its unit customizing part.
-         */
-        customUnits?: object;
-        /**
-         * Whether the measure is parsed to a string; set to `false` if the measure's underlying type is represented
-         * as a `number`, for example {@link sap.ui.model.odata.type.Int32}
-         */
-        parseAsString?: boolean;
-        /**
-         * By default decimals are preserved, unless `oFormatOptions.style` is given as "short" or "long"; since
-         * 1.89.0
-         */
-        preserveDecimals?: boolean;
-        /**
-         * Whether the measure is parsed if no unit is entered; defaults to `true` if neither `showMeasure` nor
-         * `showNumber` is set to a falsy value, otherwise defaults to `false`
-         */
-        unitOptional?: boolean;
-        /**
-         * Defines how an empty string is parsed into the measure. With the default value `0` the measure becomes
-         * `0` when an empty string is parsed.
-         */
-        emptyString?: any;
-      },
+      oFormatOptions?: UnitFormatOptions,
       /**
        * Only the 'skipDecimalsValidation' constraint is supported. Constraints are immutable, that is, they can
        * only be set once on construction.
@@ -69979,7 +71160,7 @@ declare module "sap/ui/model/odata/type/Unit" {
      *
      * @returns The type's name
      */
-    getName(): string;
+    getName(): "sap.ui.model.odata.type.Unit";
     /**
      * Parses the given string value to an array containing measure and unit.
      * See:
@@ -70018,6 +71199,95 @@ declare module "sap/ui/model/odata/type/Unit" {
       aValues: any[]
     ): void;
   }
+  /**
+   * Format options for the {@link sap.ui.model.odata.type.Unit}.
+   */
+  export type UnitFormatOptions = FormatOptions & {
+    /**
+     * The number of decimals to be used for formatting the numerical value of the unit composite type; if none
+     * of the format options `maxFractionDigits`, `minFractionDigits` or `decimals` are given, the following
+     * defaults apply:
+     * 	 -  **0** if the numerical value is of an OData integer type, i.e. {@link sap.ui.model.odata.type.Int }
+     *     or {@link sap.ui.model.odata.type.Int64}
+     * 	 -  the **scale constraint of the numerical value's type** if this type is {@link sap.ui.model.odata.type.Decimal }
+     *     and the scale is not "variable"
+     * 	 -  **3** otherwise
+     */
+    decimals?: int;
+    /**
+     * The target length of places after the decimal separator; if the number has fewer decimals than specified
+     * in this option, it is padded with whitespaces at the end up to the target length. An additional whitespace
+     * character for the decimal separator is added for a number without any decimals. **Note:** This format
+     * option is only allowed if the following conditions apply:
+     * 	 - It has a value greater than 0
+     * 	 - The `oFormatOptions.style` format option is **not** set to `"short"` or `"long"`
+     */
+    decimalPadding?: int;
+    /**
+     * Defines how an empty string is parsed into the measure. With the default value `0` the measure becomes
+     * `0` when an empty string is parsed.
+     */
+    emptyString?: null | number | string;
+    /**
+     * The minimal number of decimal digits.
+     */
+    minFractionDigits?: int;
+    /**
+     * Whether the measure is parsed to a string; set to `false` if the measure's underlying type is represented
+     * as a `number`, for example {@link sap.ui.model.odata.type.Int32}
+     */
+    parseAsString?: boolean;
+    /**
+     * The maximum number of digits in the formatted representation of a number; if the `precision` is less
+     * than the overall length of the number, its fractional part is truncated through rounding. As the `precision`
+     * only affects the rounding of a number, its integer part can retain more digits than defined by this parameter.
+     * **Example:** With a `precision` of 2, `234.567` is formatted to `235`. **Note:** The formatted output
+     * may differ depending on locale.
+     */
+    precision?: int;
+    /**
+     * By default decimals are preserved, unless `oFormatOptions.style` is given as "short" or "long"; since
+     * 1.89.0
+     */
+    preserveDecimals?: boolean;
+    /**
+     * Defines whether the unit of measure is shown in the formatted string, for example 1 day for locale "en"
+     *
+     * ```javascript
+     * NumberFormat.getUnitInstance({showMeasure: true})
+     *     .format(1, "duration-day"); // "1 day"```
+     *
+     * ```javascript
+     * NumberFormat.getUnitInstance({showMeasure: false})
+     *     .format(1, "duration-day"); // "1"```
+     *  If both `showMeasure` and `showNumber` are set to false, an empty string is returned.
+     */
+    showMeasure?: boolean;
+    /**
+     * Defines whether the number is shown as part of the formatted string, for example 1 day for locale "en"
+     *
+     * ```javascript
+     * NumberFormat.getUnitInstance({showNumber: true})
+     *     .format(1, "duration-day"); // "1 day"```
+     *
+     * ```javascript
+     * NumberFormat.getUnitInstance({showNumber: false})
+     *     .format(1, "duration-day"); // "day"```
+     *  If both `showMeasure` and `showNumber` are false, an empty string is returned
+     */
+    showNumber?: boolean;
+    /**
+     * The style of format. When set to `short` or `long`, numbers are formatted into compact forms. When this
+     * option is set, the default value of the `precision` option is set to `2`. This can be changed by setting
+     * either `min/maxFractionDigits`, `decimals`, `shortDecimals`, or the `precision` option itself.
+     */
+    style?: "short" | "long" | "standard";
+    /**
+     * Whether the measure is parsed if no unit is entered; defaults to `true` if neither `showMeasure` nor
+     * `showNumber` is set to a falsy value, otherwise defaults to `false`
+     */
+    unitOptional?: boolean;
+  };
 }
 
 declare module "sap/ui/model/odata/UpdateMethod" {
@@ -70182,8 +71452,8 @@ declare module "sap/ui/model/odata/v2/Context" {
          */
         groupId?: string;
         /**
-         * ID of the `ChangeSet` that this request should belong to. If not provided, the `changeSetId` defined
-         * for the type of the entity to be deleted is used.
+         * ID of the change set that this request should belong to. If not provided, the `changeSetId` defined for
+         * the type of the entity to be deleted is used.
          */
         changeSetId?: string;
         /**
@@ -70234,6 +71504,8 @@ declare module "sap/ui/model/odata/v2/ODataAnnotations" {
   import ODataMetadata from "sap/ui/model/odata/ODataMetadata";
 
   import Metadata from "sap/ui/base/Metadata";
+
+  import Event from "sap/ui/base/Event";
 
   /**
    * Annotation loader for OData V2 services
@@ -70333,7 +71605,16 @@ declare module "sap/ui/model/odata/v2/ODataAnnotations" {
        * containing a URL or an object of type {@link sap.ui.model.odata.v2.ODataAnnotations.Source}.
        */
       vSource: string | string[] | Source | Source[]
-    ): Promise<any>;
+    ): Promise<
+      Array<
+        | {
+            source: Source;
+
+            data: any;
+          }
+        | Error
+      >
+    >;
     /**
      * Attaches the given callback to the `allFailed` event.
      *
@@ -70776,7 +72057,7 @@ declare module "sap/ui/model/odata/v2/ODataAnnotations" {
      *
      * @returns A promise that resolves after the last added sources have been processed
      */
-    loaded(): Promise<any>;
+    loaded(): Promise<void>;
     /**
      * Set custom headers which are provided in a key/value map. These headers are used for all requests. The
      * "Accept-Language" header cannot be modified and is set using the core's language setting.
@@ -70808,8 +72089,8 @@ declare module "sap/ui/model/odata/v2/ODataAnnotations" {
    */
   export type failedParameters = {
     /**
-     * An array of Errors, see {@link sap.ui.model.v2.ODataAnnotations#error} that occurred while loading a
-     * group of annotations
+     * An array of Errors, see {@link sap.ui.model.odata.v2.ODataAnnotations#error} that occurred while loading
+     * a group of annotations
      */
     result: Error[];
   };
@@ -70819,7 +72100,7 @@ declare module "sap/ui/model/odata/v2/ODataAnnotations" {
    */
   export type loadedParameters = {
     /**
-     * An array of results and Errors (see {@link sap.ui.model.v2.ODataAnnotations#success} and {@link sap.ui.model.v2.ODataAnnotations#error})
+     * An array of results and Errors (see {@link sap.ui.model.odata.v2.ODataAnnotations#success} and {@link sap.ui.model.odata.v2.ODataAnnotations#error})
      * that occurred while loading a group of annotations
      */
     result: Source[] | Error[] | any;
@@ -70861,6 +72142,58 @@ declare module "sap/ui/model/odata/v2/ODataAnnotations" {
      */
     result: Source;
   };
+
+  /**
+   * Parameters of the ODataAnnotations#error event.
+   */
+  export interface ODataAnnotations$ErrorEventParameters {}
+
+  /**
+   * Event object of the ODataAnnotations#error event.
+   */
+  export type ODataAnnotations$ErrorEvent = Event<
+    ODataAnnotations$ErrorEventParameters,
+    ODataAnnotations
+  >;
+
+  /**
+   * Parameters of the ODataAnnotations#failed event.
+   */
+  export interface ODataAnnotations$FailedEventParameters {}
+
+  /**
+   * Event object of the ODataAnnotations#failed event.
+   */
+  export type ODataAnnotations$FailedEvent = Event<
+    ODataAnnotations$FailedEventParameters,
+    ODataAnnotations
+  >;
+
+  /**
+   * Parameters of the ODataAnnotations#loaded event.
+   */
+  export interface ODataAnnotations$LoadedEventParameters {}
+
+  /**
+   * Event object of the ODataAnnotations#loaded event.
+   */
+  export type ODataAnnotations$LoadedEvent = Event<
+    ODataAnnotations$LoadedEventParameters,
+    ODataAnnotations
+  >;
+
+  /**
+   * Parameters of the ODataAnnotations#success event.
+   */
+  export interface ODataAnnotations$SuccessEventParameters {}
+
+  /**
+   * Event object of the ODataAnnotations#success event.
+   */
+  export type ODataAnnotations$SuccessEvent = Event<
+    ODataAnnotations$SuccessEventParameters,
+    ODataAnnotations
+  >;
 }
 
 declare module "sap/ui/model/odata/v2/ODataContextBinding" {
@@ -71197,7 +72530,7 @@ declare module "sap/ui/model/odata/v2/ODataListBinding" {
        */
       mParameters?: {
         /**
-         * The ID of the `ChangeSet` that this request should belong to
+         * The ID of the change set that this request should belong to
          */
         changeSetId?: string;
         /**
@@ -71472,9 +72805,9 @@ declare module "sap/ui/model/odata/v2/ODataTreeBinding" {
 
   import FilterType from "sap/ui/model/FilterType";
 
-  import Metadata from "sap/ui/base/Metadata";
-
   import Context from "sap/ui/model/Context";
+
+  import Metadata from "sap/ui/base/Metadata";
 
   import Context1 from "sap/ui/model/odata/v2/Context";
 
@@ -71483,6 +72816,8 @@ declare module "sap/ui/model/odata/v2/ODataTreeBinding" {
   /**
    * Tree binding implementation for the {@link sap.ui.model.odata.v2.ODataModel}. Use {@link sap.ui.model.odata.v2.ODataModel#bindTree }
    * for creating an instance.
+   *
+   * @deprecated As of version 1.150.0. will be replaced by OData V4 hierarchy functionality, see {@link topic:7d914317c0b64c23824bf932cc8a4ae1/section_RCH Recursive Hierarchy}
    */
   export default class ODataTreeBinding extends TreeBinding {
     /**
@@ -71544,7 +72879,7 @@ declare module "sap/ui/model/odata/v2/ODataTreeBinding" {
        * If set to true, no change event will be fired
        */
       bSuppressChange: boolean
-    ): Promise<any>;
+    ): Promise<void>;
     /**
      * Applies the given filters to the ODataTreeBinding.
      *
@@ -71594,7 +72929,7 @@ declare module "sap/ui/model/odata/v2/ODataTreeBinding" {
       /**
        * the context element of the node
        */
-      oContext: Object
+      oContext: Context
     ): int;
     /**
      * Get a download URL with the specified format considering the sort/filter/custom parameters.
@@ -72375,6 +73710,8 @@ declare module "sap/ui/model/odata/v4/Context" {
     static getMetadata(): Metadata;
     /**
      * Collapses the group node that this context points to.
+     *
+     * **Note:** It is unsafe to keep a reference to a context instance which is not {@link #isKeepAlive kept alive}.
      * See:
      * 	#expand
      * 	#isExpanded
@@ -72436,6 +73773,9 @@ declare module "sap/ui/model/odata/v4/Context" {
      * is supported. As a precondition, the context must not be both {@link #setKeepAlive kept alive} and hidden
      * (for example due to a filter), and the group ID must not have {@link sap.ui.model.odata.v4.SubmitMode.API}.
      * Such a deletion is not a pending change.
+     *
+     * When using data aggregation without `groupLevels`, single entities can be deleted (since 1.151.0, see
+     * {@link #isAggregated}). The group ID must not have {@link sap.ui.model.odata.v4.SubmitMode.API}.
      * See:
      * 	#hasPendingChanges
      * 	#resetChanges
@@ -72477,12 +73817,15 @@ declare module "sap/ui/model/odata/v4/Context" {
       bDoNotRequestCount?: boolean
     ): Promise<void>;
     /**
+     * Note: You may want to call {@link #delete} instead in order to delete the OData entity on the server
+     * side.
+     *
      * Destroys this context, that is, it removes this context from all dependent bindings and drops references
      * to {@link #getBinding binding} and {@link #getModel model}, so that the context cannot be used anymore;
      * it keeps path and index for debugging purposes. A destroyed context can be recognized by calling {@link #getBinding},
      * which returns `undefined`.
      *
-     * **BEWARE:** Do not call this function! The lifetime of an OData V4 context is completely controlled by
+     * **BEWARE: Do not call this function!** The lifetime of an OData V4 context is completely controlled by
      * its binding.
      * See:
      * 	sap.ui.base.Object#destroy
@@ -72561,7 +73904,9 @@ declare module "sap/ui/model/odata/v4/Context" {
      *
      * @returns The context's index within the binding's collection. It is `undefined` if
      * 	 it does not belong to a list binding,  it is {@link #isKeepAlive kept alive}, but not in the collection
-     * currently.
+     * currently. When collapsing a node's ancestor in a recursive hierarchy, the index becomes `undefined`.
+     * After expanding, the index is only determined again when that node comes into view, so to say. Use {@link sap.ui.model.odata.v4.ODataListBinding#getAllCurrentContexts }
+     * to try to determine the index again.
      */
     getIndex(): number | undefined;
     /**
@@ -72645,6 +73990,20 @@ declare module "sap/ui/model/odata/v4/Context" {
      */
     hasPendingChanges(): boolean;
     /**
+     * Indicates whether this context represents aggregated data rather than a single entity instance. This
+     * method returns `true` only in case of data aggregation (but not for a recursive hierarchy) and not for
+     * non-expandable nodes (so-called leaves; see {@link #isExpanded}) if all of the entity type's key properties
+     * are available as groups. For a list binding's {@link sap.ui.model.odata.v4.ODataListBinding#getHeaderContext header context},
+     * the returned value matches that of every leaf.
+     * See:
+     * 	sap.ui.model.odata.v4.ODataListBinding#setAggregation
+     *
+     * @since 1.144.0
+     *
+     * @returns Whether this context represents aggregated data
+     */
+    isAggregated(): boolean;
+    /**
      * Tells whether this node is an ancestor of (or the same as) the given node (in case of a recursive hierarchy,
      * see {@link sap.ui.model.odata.v4.ODataListBinding#setAggregation}).
      *
@@ -72714,10 +74073,23 @@ declare module "sap/ui/model/odata/v4/Context" {
      */
     isKeepAlive(): boolean;
     /**
+     * Tells whether this context is outdated:
+     * 	`undefined`: The outdated state has not been determined yet `true`: The context is outdated `false`:
+     * The context is up to date
+     *
+     * The outdated state can also be accessed via the instance annotation "@$ui5.context.isOutdated".
+     *
+     * @experimental As of version 1.147.
+     *
+     * @returns Whether this context is outdated, or `undefined` if the outdated state has not been determined
+     * yet
+     */
+    isOutdated(): boolean | undefined;
+    /**
      * Tells whether this context is currently selected, but not {@link #delete deleted} on the client. Selection
-     * was experimental as of version 1.111.0. Since 1.122.0, the selection state can also be accessed via instance
-     * annotation "@$ui5.context.isSelected" at the entity. Note that the annotation does not take the deletion
-     * state into account.
+     * was experimental as of version 1.111.0. Since 1.122.0, the selection state can also be accessed via the
+     * instance annotation "@$ui5.context.isSelected" at the entity. Note that the annotation does not take
+     * the deletion state into account.
      * See:
      * 	#setSelected
      *
@@ -72801,6 +74173,10 @@ declare module "sap/ui/model/odata/v4/Context" {
     /**
      * Refreshes the single entity represented by this context. Use {@link #requestRefresh} if you want to wait
      * for the refresh.
+     *
+     * When using data aggregation without `groupLevels` and without `"grandTotal like 1.84"` (see {@link sap.ui.model.odata.v4.ODataListBinding#setAggregation}),
+     * single entities (see {@link #isAggregated}) can be refreshed and the grand total is updated accordingly
+     * (@experimental as of version 1.145.0).
      *
      * @since 1.53.0
      */
@@ -72935,7 +74311,7 @@ declare module "sap/ui/model/odata/v4/Context" {
        */
       sGroupId?: string,
       /**
-       * Allows to remove the context
+       * Allows to remove the context, see {@link #refresh} for details
        */
       bAllowRemoval?: boolean
     ): Promise<void>;
@@ -72967,10 +74343,17 @@ declare module "sap/ui/model/odata/v4/Context" {
      * or creates this method first waits for them to be processed.
      *
      * The 'dataRequested' and 'dataReceived' events are not fired unless a binding is refreshed completely.
-     * Whatever should happen in the event handler attached to...
+     * In that case, they are fired only at the binding itself, not at the model! Whatever should happen in
+     * the event handler attached to...
      * 	 'dataRequested', can instead be done before calling {@link #requestSideEffects}.  'dataReceived',
      * can instead be done once the `oPromise` returned by {@link #requestSideEffects} fulfills or rejects (using
      * `oPromise.then(function () {...}, function () {...})`).
+     *
+     * Since 1.109.0, this context can also represent a node in a recursive hierarchy (see {@link sap.ui.model.odata.v4.ODataListBinding#setAggregation}).
+     *
+     * When using data aggregation but no recursive hierarchy, and without `groupLevels` or `"grandTotal like
+     * 1.84"` (see {@link sap.ui.model.odata.v4.ODataListBinding#setAggregation}), this context can also represent
+     * a single entity (see {@link #isAggregated}, since 1.151.0).
      * See:
      * 	sap.ui.model.odata.v4.ODataContextBinding#getBoundContext
      * 	sap.ui.model.odata.v4.ODataContextBinding#invoke
@@ -72979,13 +74362,15 @@ declare module "sap/ui/model/odata/v4/Context" {
      *
      * @since 1.61.0
      *
-     * @returns A promise which is resolved without a defined result, or rejected with an error if loading of
-     * side effects fails. Use it to set fields affected by side effects to read-only before {@link #requestSideEffects }
+     * @returns A promise which is resolved without a defined result, or rejected with an error if the side
+     * effects fail to load. Use it to set fields affected by side effects to read-only before {@link #requestSideEffects }
      * and make them editable again when the promise resolves; in the error handler, you can repeat the loading
      * of side effects.
-     *  The promise is rejected if the call wants to refresh a whole list binding (via header context or an
-     * absolute path), but the deletion of a row context (see {@link #delete}) is pending with a different group
-     * ID.
+     *  The promise is rejected if
+     * 	 the call attempts to refresh an entire list binding (via header context or an absolute path) while
+     * the deletion of a row context (see {@link #delete}) is pending with a different group ID,  this is
+     * the row context of a list binding with data aggregation which has `groupLevels` or `"grandTotal like
+     * 1.84"`, or  this context does not represent a single entity
      */
     requestSideEffects(
       /**
@@ -73000,8 +74385,11 @@ declare module "sap/ui/model/odata/v4/Context" {
        *
        * Since 1.82.0, absolute paths are supported. Absolute paths must start with the entity container (example
        * "/com.sap.gateway.default.iwbep.tea_busi.v0001.Container/TEAMS") of the service. All (navigation) properties
-       * in the complete model matching such an absolute path are updated. Since 1.85.0, "14.3.11 Expression edm:String"
-       * is accepted as well.
+       * in the complete model matching such an absolute path are updated. Since 1.146.0, {@link sap.ui.model.odata.v4.ODataModel#requestSideEffects }
+       * can be used as well.
+       *
+       * Since 1.85.0, "14.3.11 Expression edm:String" is accepted as well. Since 1.145.0, you can use `null`
+       * values (and `{$Null : null}`) as synonyms for empty navigation property paths.
        *
        * Since 1.108.8, a property path matching the "com.sap.vocabularies.Common.v1.Messages" annotation of a
        * list binding's entity type is treated specially for a row context of a list binding: It is loaded even
@@ -73012,8 +74400,8 @@ declare module "sap/ui/model/odata/v4/Context" {
         NavigationPropertyPathExpression | PropertyPathExpression | string
       >,
       /**
-       * The group ID to be used (since 1.69.0); if not specified, the update group ID for the context's binding
-       * is used, see {@link #getUpdateGroupId}. If a different group ID is specified, make sure that {@link #requestSideEffects }
+       * The group ID to be used (since 1.69.0). If not specified, the {@link #getUpdateGroupId update group ID }
+       * for the context's binding is used. If a different group ID is specified, make sure that {@link #requestSideEffects }
        * is called after the corresponding updates have been successfully processed by the server and that there
        * are no pending changes for the affected properties.
        */
@@ -73046,6 +74434,14 @@ declare module "sap/ui/model/odata/v4/Context" {
      * the context if it is no longer needed.
      *
      * Note: This is only supported if the model uses the `autoExpandSelect` parameter.
+     *
+     * Note: This can be used for single entities in a data aggregation scenario (since 1.151.0), see {@link #isAggregated}.
+     * Such a kept-alive context
+     * 	 can be used as a binding context,  can be used for updating data (see {@link #setProperty}),
+     * can be refreshed (see {@link #refresh} and {@link #requestRefresh}),  is refreshed when its list
+     * binding's {@link sap.ui.model.odata.v4.ODataListBinding#refresh}) is called, and  is refreshed when
+     * {@link #requestSideEffects}) is called on its list binding's header context.  Other APIs are not
+     * supported.
      * See:
      * 	#isKeepAlive
      *
@@ -73059,9 +74455,9 @@ declare module "sap/ui/model/odata/v4/Context" {
       /**
        * Callback function that is called once for a kept-alive context without any argument just before the context
        * is destroyed; see {@link #destroy}. If a context has been replaced in a list binding (see {@link #replaceWith }
-       * and {@link sap.ui.odata.v4.ODataContextBinding#invoke}), the callback will later also be called just
-       * before the replacing context is destroyed, but with that context as the only argument. Supported since
-       * 1.84.0
+       * and {@link sap.ui.model.odata.v4.ODataContextBinding#invoke}), the callback will later also be called
+       * just before the replacing context is destroyed, but with that context as the only argument. Supported
+       * since 1.84.0
        */
       fnOnBeforeDestroy?: (p1: Context | undefined) => void,
       /**
@@ -73089,9 +74485,10 @@ declare module "sap/ui/model/odata/v4/Context" {
      *
      * @returns A promise which is resolved without a defined result in case of success, or rejected with an
      * instance of `Error` in case of failure, for example if the annotation belongs to the read-only namespace
-     * "@$ui5.*". With `bRetry` it is only rejected with an `Error` instance where `oError.canceled === true`
-     * when the entity has been deleted while the request was pending or the property has been reset via the
-     * methods
+     * "@$ui5.*", or if `sGroupId` is `null` and the outdated flag at the header context would be set or the
+     * grand total would be affected. With `bRetry` it is only rejected with an `Error` instance where `oError.canceled
+     * === true` when the entity has been deleted while the request was pending or the property has been reset
+     * via the methods
      * 	 {@link sap.ui.model.odata.v4.ODataModel#resetChanges}  {@link sap.ui.model.odata.v4.ODataContextBinding#resetChanges }
      * or  {@link sap.ui.model.odata.v4.ODataListBinding#resetChanges}.
      */
@@ -73549,14 +74946,22 @@ declare module "sap/ui/model/odata/v4/ODataContextBinding" {
      * has to be bi-directional. Also a navigation property binding has to be available for the entity set of
      * the first segment in the parent context's path. **Note:** Ensure your service implementation returns
      * all selected key properties; otherwise, no return value context is provided.
+     *  Since 1.151.0, if the operation returns an "Edm.Stream" and the group ID '$stream' is used, the promise
+     * resolves with a partial `Response` object containing only:
+     * 	 `body`: The response's `ReadableStream`  `headers`: The response's `Headers`  The promise
+     * rejects with an `Error` instance if '$stream' is used with a wrong return type or the fetch request fails.
+     * In the latter case, the error contains the following properties:
+     * 	 `status`: {number} HTTP status code  `statusText`: {string} (optional) HTTP status text
      */
     invoke(
       /**
        * The group ID to be used for the request; if not specified, the group ID for this binding is used, see
        * {@link #constructor} and {@link #getGroupId}. To use the update group ID, see {@link #getUpdateGroupId},
        * it needs to be specified explicitly. Valid values are `undefined`, '$auto', '$auto.*', '$direct', '$single',
-       * or application group IDs as specified in {@link sap.ui.model.odata.v4.ODataModel}. If '$single' is used,
-       * the request will be sent as fast as '$direct', but wrapped in a batch request like '$auto' (since 1.121.0).
+       * '$stream', or application group IDs as specified in {@link sap.ui.model.odata.v4.ODataModel}. If '$single'
+       * is used, the request will be sent as fast as '$direct', but wrapped in a batch request like '$auto' (since
+       * 1.121.0). If '$stream' is used with an operation that returns "Edm.Stream", the stream response's body
+       * and headers can be retrieved (since 1.151.0).
        */
       sGroupId?: string,
       /**
@@ -73587,11 +74992,20 @@ declare module "sap/ui/model/odata/v4/ODataContextBinding" {
        * binding parameter is set to `true`. Since 1.97.0.
        */
       bReplaceWithRVC?: boolean
-    ): Promise<Context | undefined>;
+    ): Promise<
+      | Context
+      | {
+          body: ReadableStream;
+
+          headers: Headers;
+        }
+      | undefined
+    >;
     /**
      * Method not supported
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
     isInitial(): boolean;
     /**
@@ -73735,8 +75149,7 @@ declare module "sap/ui/model/odata/v4/ODataContextBinding" {
   /**
    * Parameters of the ODataContextBinding#change event.
    */
-  export interface ODataContextBinding$ChangeEventParameters
-    extends Binding$ChangeEventParameters {}
+  export interface ODataContextBinding$ChangeEventParameters extends Binding$ChangeEventParameters {}
 
   /**
    * Event object of the ODataContextBinding#change event.
@@ -73749,8 +75162,7 @@ declare module "sap/ui/model/odata/v4/ODataContextBinding" {
   /**
    * Parameters of the ODataContextBinding#dataReceived event.
    */
-  export interface ODataContextBinding$DataReceivedEventParameters
-    extends Binding$DataReceivedEventParameters {
+  export interface ODataContextBinding$DataReceivedEventParameters extends Binding$DataReceivedEventParameters {
     /**
      * The error object if a back-end request failed. If there are multiple failed back-end requests, the error
      * of the first one is provided.
@@ -73769,8 +75181,7 @@ declare module "sap/ui/model/odata/v4/ODataContextBinding" {
   /**
    * Parameters of the ODataContextBinding#dataRequested event.
    */
-  export interface ODataContextBinding$DataRequestedEventParameters
-    extends Binding$DataRequestedEventParameters {}
+  export interface ODataContextBinding$DataRequestedEventParameters extends Binding$DataRequestedEventParameters {}
 
   /**
    * Event object of the ODataContextBinding#dataRequested event.
@@ -74133,6 +75544,9 @@ declare module "sap/ui/model/odata/v4/ODataListBinding" {
      * is set to `undefined`.  The created context always knows its {@link sap.ui.model.odata.v4.Context#getPath path},
      * which can be used for {@link #getKeepAliveContext}.
      *
+     * When using data aggregation without `groupLevels` and without `"grandTotal like 1.84"` (see {@link #setAggregation}),
+     * single entities can be created (since 1.151.0, see {@link sap.ui.model.odata.v4.Context#isAggregated}).
+     *
      * @since 1.43.0
      *
      * @returns The context object for the created entity; its method {@link sap.ui.model.odata.v4.Context#created }
@@ -74337,7 +75751,8 @@ declare module "sap/ui/model/odata/v4/ODataListBinding" {
        */
       vFilters?: Filter | Filter[],
       /**
-       * The filter type to be used
+       * The filter type to be used. Since 1.146.0, you may use {@link sap.ui.model.FilterType.ApplicationBound }
+       * to replace bound application filters.
        */
       sFilterType?: FilterType | keyof typeof FilterType
     ): this;
@@ -74419,7 +75834,7 @@ declare module "sap/ui/model/odata/v4/ODataListBinding" {
      *
      * If known, the value represents the sum of the element count of the collection on the server and the number
      * of {@link sap.ui.model.odata.v4.Context#isInactive active} {@link sap.ui.model.odata.v4.Context#isTransient transient }
-     * entities created on the client, minus the {@link #sap.ui.model.data.v4.Context#delete deleted} entities.
+     * entities created on the client, minus the {@link #sap.ui.model.odata.v4.Context#delete deleted} entities.
      * Otherwise, it is `undefined`. The value is a number of type `Edm.Int64`. Since 1.91.0, in case of data
      * aggregation with group levels, the count is the leaf count on the server; it is only determined if the
      * `$count` system query option is given. Since 1.110.0, in case of a recursive hierarchy, the count is
@@ -74464,12 +75879,13 @@ declare module "sap/ui/model/odata/v4/ODataListBinding" {
      * 	sap.ui.model.ListBinding#getDistinctValues
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
-    getDistinctValues(_sPath?: string): any[];
+    getDistinctValues(): any[];
     /**
      * Returns a URL by which the complete content of the list can be downloaded in JSON format. The request
      * delivers all entities considering the binding's query options (such as filters or sorters). Returns `null`
-     * if the binding's filter is {@link sap.ui.filter.Filter.NONE}. The returned URL does not specify `$skip`
+     * if the binding's filter is {@link sap.ui.model.Filter.NONE}. The returned URL does not specify `$skip`
      * and `$top` and leaves it up to the server how many rows it delivers. Many servers tend to choose a small
      * limit without `$skip` and `$top`, so it might be wise to add an appropriate value for `$top` at least.
      *
@@ -74497,9 +75913,11 @@ declare module "sap/ui/model/odata/v4/ODataListBinding" {
      */
     getGroupId(): string;
     /**
-     * Returns the header context which allows binding to `$count` or `@$ui5.context.isSelected`.
+     * Returns the header context which allows binding to `$count`, `@$ui5.context.isOutdated`, or `@$ui5.context.isSelected`.
      * See:
      * 	#getCount
+     * 	sap.ui.model.odata.v4.Context#isOutdated
+     * 	sap.ui.model.odata.v4.Context#isSelected
      *
      * @since 1.45.0
      *
@@ -74648,6 +76066,7 @@ declare module "sap/ui/model/odata/v4/ODataListBinding" {
      * Method not supported
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
     isInitial(): boolean;
     /**
@@ -74728,7 +76147,7 @@ declare module "sap/ui/model/odata/v4/ODataListBinding" {
     /**
      * Resolves with a URL by which the complete content of the list can be downloaded in JSON format. The request
      * delivers all entities considering the binding's query options (such as filters or sorters). Resolves
-     * with `null` if the binding's filter is {@link sap.ui.filter.Filter.NONE}.
+     * with `null` if the binding's filter is {@link sap.ui.model.Filter.NONE}.
      *
      * The returned URL does not specify `$skip` and `$top` and leaves it up to the server how many rows it
      * delivers. Many servers tend to choose a small limit without `$skip` and `$top`, so it might be wise to
@@ -74843,10 +76262,10 @@ declare module "sap/ui/model/odata/v4/ODataListBinding" {
          */
         aggregate?: object;
         /**
-         * Whether created nodes are shown in place at the position specified by the service (since 1.130.0); only
-         * the value `true` is allowed. Otherwise, created nodes are displayed out of place as the first children
-         * of their parent or as the first roots, but not in their usual position as defined by the service and
-         * the current sort order.
+         * Whether created nodes are shown in place at the position specified by the service (since 1.130.0), supported
+         * only if a `hierarchyQualifier` is given; only the value `true` is allowed. Otherwise, created nodes are
+         * displayed out of place as the first children of their parent or as the first roots, but not in their
+         * usual position as defined by the service and the current sort order.
          */
         createInPlace?: boolean;
         /**
@@ -74941,6 +76360,9 @@ declare module "sap/ui/model/odata/v4/ODataListBinding" {
        * The dynamic sorters to be used; they replace the dynamic sorters given in {@link sap.ui.model.odata.v4.ODataModel#bindList}.
        * A nullish or missing value is treated as an empty array and thus removes all dynamic sorters. Static
        * sorters, as defined in the '$orderby' binding parameter, are always applied after the dynamic sorters.
+       * Since 1.149.0, if any sorter has {@link sap.ui.model.Sorter#getGroupPaths group paths} and the {@link sap.ui.model.odata.v4.ODataModel model}'s
+       * `autoExpandSelect` parameter is set, those paths contribute to `$select` and `$expand`; not supported
+       * for {@link #setAggregation data aggregation}.
        */
       vSorters?: Sorter | Sorter[]
     ): this;
@@ -75061,8 +76483,7 @@ declare module "sap/ui/model/odata/v4/ODataListBinding" {
   /**
    * Parameters of the ODataListBinding#change event.
    */
-  export interface ODataListBinding$ChangeEventParameters
-    extends Binding$ChangeEventParameters {
+  export interface ODataListBinding$ChangeEventParameters extends Binding$ChangeEventParameters {
     /**
      * During automatic determination of $expand and $select, a "virtual" context is first added with detailed
      * reason "AddVirtualContext" and then removed with detailed reason "RemoveVirtualContext" (since 1.69.0);
@@ -75141,8 +76562,7 @@ declare module "sap/ui/model/odata/v4/ODataListBinding" {
   /**
    * Parameters of the ODataListBinding#dataReceived event.
    */
-  export interface ODataListBinding$DataReceivedEventParameters
-    extends Binding$DataReceivedEventParameters {
+  export interface ODataListBinding$DataReceivedEventParameters extends Binding$DataReceivedEventParameters {
     /**
      * The error object if a back-end request failed. If there are multiple failed back-end requests, the error
      * of the first one is provided.
@@ -75161,8 +76581,7 @@ declare module "sap/ui/model/odata/v4/ODataListBinding" {
   /**
    * Parameters of the ODataListBinding#dataRequested event.
    */
-  export interface ODataListBinding$DataRequestedEventParameters
-    extends Binding$DataRequestedEventParameters {}
+  export interface ODataListBinding$DataRequestedEventParameters extends Binding$DataRequestedEventParameters {}
 
   /**
    * Event object of the ODataListBinding#dataRequested event.
@@ -75206,8 +76625,7 @@ declare module "sap/ui/model/odata/v4/ODataListBinding" {
   /**
    * Parameters of the ODataListBinding#refresh event.
    */
-  export interface ODataListBinding$RefreshEventParameters
-    extends Binding$RefreshEventParameters {}
+  export interface ODataListBinding$RefreshEventParameters extends Binding$RefreshEventParameters {}
 
   /**
    * Event object of the ODataListBinding#refresh event.
@@ -75452,18 +76870,9 @@ declare module "sap/ui/model/odata/v4/ODataMetaModel" {
      * 	sap.ui.model.Model#bindTree
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
-    bindTree(
-      _sPath: string,
-
-      _oContext?: Context,
-
-      _aFilters?: Filter[],
-
-      _mParameters?: object,
-
-      _aSorters?: Sorter[]
-    ): TreeBinding;
+    bindTree(): TreeBinding;
     /**
      * Returns a snapshot of each $metadata or annotation file loaded so far, combined into a single "JSON"
      * object according to the streamlined OData V4 Metadata JSON Format.
@@ -75563,6 +76972,7 @@ declare module "sap/ui/model/odata/v4/ODataMetaModel" {
      * Method not supported
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
     getOriginalProperty(): void;
     /**
@@ -75594,7 +77004,8 @@ declare module "sap/ui/model/odata/v4/ODataMetaModel" {
       /**
        * Type-specific format options, since 1.81.0. The boolean format option "parseKeepsEmptyString" applies
        * to {@link sap.ui.model.odata.type.String} only and is ignored for all other types. All other format options
-       * are passed "as is".
+       * are passed "as is". Since 1.152.0, "parseKeepsEmptyString" is automatically set based on the model parameter
+       * of the same name unless you provide `parseKeepsEmptyString: false` in `mFormatOptions`.
        */
       mFormatOptions?: object
     ): ODataType;
@@ -75630,6 +77041,7 @@ declare module "sap/ui/model/odata/v4/ODataMetaModel" {
      * 	sap.ui.model.Model#refresh
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
     refresh(): void;
     /**
@@ -75674,7 +77086,7 @@ declare module "sap/ui/model/odata/v4/ODataMetaModel" {
 
         Text: string;
 
-        UnitSpecificScale: string;
+        UnitSpecificScale: number;
       }
     > | null>;
     /**
@@ -75819,9 +77231,9 @@ declare module "sap/ui/model/odata/v4/ODataMetaModel" {
      * of type "Edm.Int64". Otherwise, it is invalid.
      *
      * A segment which represents an OData simple identifier (or the special names "$ReturnType", since 1.71.0,
-     * or "$Parameter", since 1.73.0) needs special preparations. The same applies to the empty segment after
-     * a trailing slash.   If the current object has a "$Action", "$Function" or "$Type" property, it
-     * is used for scope lookup first. This way, "/EMPLOYEES/ENTRYDATE" addresses the same object as "/EMPLOYEES/$Type/ENTRYDATE",
+     * or "$Parameter", since 1.73.0) needs special preparations. The same applies to the empty segment (typically
+     * after a trailing slash).   If the current object has a "$Action", "$Function" or "$Type" property,
+     * it is used for scope lookup first. This way, "/EMPLOYEES/ENTRYDATE" addresses the same object as "/EMPLOYEES/$Type/ENTRYDATE",
      * namely the "ENTRYDATE" child of the entity type corresponding to the "EMPLOYEES" child of the entity
      * container. The other cases jump from an operation import to the corresponding operation overloads.
      * Else if the segment is the first one within its path, the last schema child addressed via scope lookup
@@ -75842,6 +77254,8 @@ declare module "sap/ui/model/odata/v4/ODataMetaModel" {
      *
      * Operation overloads are then filtered by binding parameter; multiple overloads after filtering are invalid
      * except if addressing all overloads via the segment "@$ui5.overload", for example "/acme.NewAction/@$ui5.overload".
+     * Since 1.144.0, multiple overloads for an unbound function are tolerated when addressing the return type
+     * (which is the same for all of them).
      *
      * Once a single overload has been determined, its parameters can be immediately addressed, for example
      * "/TEAMS/acme.NewAction/Team_ID", or the special name "$Parameter" can be used (since 1.73.0), for example
@@ -75931,7 +77345,8 @@ declare module "sap/ui/model/odata/v4/ODataMetaModel" {
       /**
        * Type-specific format options, since 1.81.0. The boolean format option "parseKeepsEmptyString" applies
        * to {@link sap.ui.model.odata.type.String} only and is ignored for all other types. All other format options
-       * are passed "as is".
+       * are passed "as is". Since 1.152.0, "parseKeepsEmptyString" is automatically set based on the model parameter
+       * of the same name unless you provide `parseKeepsEmptyString: false` in `mFormatOptions`.
        */
       mFormatOptions?: object
     ): Promise<ODataType>;
@@ -75976,7 +77391,7 @@ declare module "sap/ui/model/odata/v4/ODataMetaModel" {
 
         Text: string;
 
-        UnitSpecificScale: string;
+        UnitSpecificScale: number;
       }
     > | null>;
     /**
@@ -75997,7 +77412,9 @@ declare module "sap/ui/model/odata/v4/ODataMetaModel" {
      *
      * For fixed values, only one mapping is expected and the qualifier is ignored. The mapping is available
      * with key "" and has an additional property "$qualifier" which is the original qualifier (useful in case
-     * of "ValueListRelevantQualifiers" annotation).
+     * of "ValueListRelevantQualifiers" annotation). Since 1.151.0, multiple mappings are supported in case
+     * of "ValueListRelevantQualifiers" annotation but missing `oContext` instance; in this case qualifiers
+     * are unchanged.
      *
      * The promise is rejected with an error if there is no value list information available for the given property
      * path. Use {@link #getValueListType} to determine if value list information exists. It is also rejected
@@ -76011,7 +77428,8 @@ declare module "sap/ui/model/odata/v4/ODataMetaModel" {
      * 	 There is a reference, but the referenced service does not contain mappings for the property.  The
      * referenced service contains annotation targets in the namespace of the data service that are not mappings
      * for the property.  Two different referenced services contain a mapping using the same qualifier.
-     *  A service is referenced twice.  There are multiple mappings for a fixed value list.  A `com.sap.vocabularies.Common.v1.ValueList`
+     *  A service is referenced twice.  There are multiple mappings for a fixed value list (with given
+     * `oContext` instance or missing "ValueListRelevantQualifiers" annotation).  A `com.sap.vocabularies.Common.v1.ValueList`
      * annotation in a referenced service has the property `CollectionRoot` or `SearchSupported`.
      */
     requestValueListInfo(
@@ -76052,6 +77470,7 @@ declare module "sap/ui/model/odata/v4/ODataMetaModel" {
      * Method not supported
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
     setLegacySyntax(): void;
     /**
@@ -76110,7 +77529,7 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
    *
    * Every resource path (relative to the service root URL, no query options) according to "4 Resource Path" in specification "OData Version 4.01. Part 2: URL Conventions" is a valid data
    * binding path within this model if a leading slash is added; for example "/" + "SalesOrderList('A%2FB%26C')"
-   * to access an entity instance with key "A/B&C". Note that appropriate URI encoding is necessary, see the
+   * to access an entity instance with key "A/B&C". Note that appropriate URL encoding is necessary, see the
    * example of {@link sap.ui.model.odata.v4.ODataUtils.formatLiteral}. "4.5.1 Addressing Actions" needs an
    * operation binding, see {@link sap.ui.model.odata.v4.ODataContextBinding}.
    *
@@ -76203,6 +77622,13 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
          * is called.
          */
         operationMode?: OperationMode | keyof typeof OperationMode;
+        /**
+         * Whether the format option `parseKeepsEmptyString` is set to `true` for all instances of {@link sap.ui.model.odata.type.String }
+         * that are created automatically during type detection; only the value `true` is allowed; see {@link #getParseKeepsEmptyString}.
+         *
+         * @since 1.152.0
+         */
+        parseKeepsEmptyString?: boolean;
         /**
          * Root URL of the service to request data from. The path part of the URL must end with a forward slash
          * according to OData V4 specification ABNF, rule "serviceRoot". You may append OData custom query options
@@ -76427,8 +77853,7 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
       oContext?: Context1,
       /**
        * The dynamic sorters to be used initially. Call {@link sap.ui.model.odata.v4.ODataListBinding#sort} to
-       * replace them. Static sorters, as defined in the '$orderby' binding parameter, are always applied after
-       * the dynamic sorters. Supported since 1.39.0.
+       * replace them, see there for more details. Supported since 1.39.0.
        */
       vSorters?: Sorter | Sorter[],
       /**
@@ -76676,18 +78101,9 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
      * 	sap.ui.model.Model#bindTree
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
-    bindTree(
-      _sPath: string,
-
-      _oContext?: Context1,
-
-      _aFilters?: Filter[],
-
-      _mParameters?: object,
-
-      _aSorters?: Sorter[]
-    ): TreeBinding;
+    bindTree(): TreeBinding;
     /**
      * Changes the HTTP headers used for data and metadata requests sent by this model.
      *
@@ -76804,6 +78220,7 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
      * Method not supported
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
     destroyBindingContext(): void;
     /**
@@ -76950,7 +78367,7 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
      *
      * @since 1.107.0
      *
-     * @returns The proper URI-encoded key predicate, for example "(Sector='A%2FB%26C',ID='42')" or "('42')",
+     * @returns The proper URL-encoded key predicate, for example "(Sector='A%2FB%26C',ID='42')" or "('42')",
      * or `undefined` if at least one key property is undefined.
      */
     getKeyPredicate(
@@ -76993,6 +78410,7 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
      * Method not supported
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
     getObject(): void;
     /**
@@ -77007,14 +78425,29 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
      * Method not supported
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
     getOriginalProperty(): void;
+    /**
+     * Returns whether the `parseKeepsEmptyString` format option is set to `true` for all instances of {@link sap.ui.model.odata.type.String }
+     * that are created automatically during {@link sap.ui.model.odata.v4.ODataMetaModel#requestUI5Type type detection }
+     * (as defined by the `parseKeepsEmptyString` model parameter, see {@link #constructor}). Use this model
+     * setting if your OData service cannot handle `null` values for string properties.
+     * See:
+     * 	#constructor
+     *
+     * @since 1.152.0
+     *
+     * @returns Whether the `parseKeepsEmptyString` model parameter is set
+     */
+    getParseKeepsEmptyString(): boolean;
     /**
      * Method not supported
      * See:
      * 	sap.ui.model.Model#getProperty
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
     getProperty(): void;
     /**
@@ -77109,7 +78542,7 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
      *
      * @since 1.107.0
      *
-     * @returns A promise that gets resolved with the proper URI-encoded key predicate, for example "(Sector='A%2FB%26C',ID='42')"
+     * @returns A promise that gets resolved with the proper URL-encoded key predicate, for example "(Sector='A%2FB%26C',ID='42')"
      * or "('42')", or `undefined` if at least one key property is undefined. It gets rejected if the metadata
      * cannot be fetched, or in case the entity has no key properties according to the metadata.
      */
@@ -77123,6 +78556,25 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
        */
       oEntity: object
     ): Promise<string | undefined>;
+    /**
+     * Loads side effects for the given absolute paths on all affected bindings. For more information about
+     * side effects in general, see {@link sap.ui.model.odata.v4.Context#requestSideEffects}.
+     *
+     * @since 1.146.0
+     *
+     * @returns A promise which is resolved without a defined result, or rejected with an error if the side
+     * effects fail to load.
+     */
+    requestSideEffects(
+      /**
+       * The absolute paths for which to request side effects, for example "/SalesOrderList/SO_2_SOITEM/Note".
+       */
+      aAbsolutePaths: string[],
+      /**
+       * The group ID to be used. If not specified, the {@link #getUpdateGroupId update group ID} is used.
+       */
+      sGroupId?: string
+    ): Promise<void>;
     /**
      * Resets all property changes, created entities, and entity deletions associated with the given group ID
      * which have not been successfully submitted via {@link #submitBatch}. Resets also invalid user input for
@@ -77168,6 +78620,7 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
      * Method not supported
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
     setLegacySyntax(): void;
     /**
@@ -77177,9 +78630,9 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
      * The handler is called with an `Error` having a property `retryAfter` of type `Date`, which is the earliest
      * point in time when the request should be repeated. The handler has to return a promise. With this promise,
      * you can control the repetition of all pending requests including the failed HTTP request. If the promise
-     * is resolved, the requests are repeated; if it is rejected, the requests are not repeated. If it is rejected
-     * with the same `Error` reason as previously passed to the handler, then this reason is reported to the
-     * message model.
+     * is resolved, the requests are repeated; if it is rejected, the requests are not repeated but fail with
+     * same reason as the promise. If the promise is rejected with the same `Error` reason as previously passed
+     * to the handler, this reason is reported to the message model.
      *
      * @since 1.134.0
      */
@@ -77187,7 +78640,7 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
       /**
        * A "Retry-After" handler
        */
-      fnRetryAfter: (p1: Error) => Promise<undefined>
+      fnRetryAfter: (p1: Error) => Promise<void>
     ): void;
     /**
      * Submits the requests associated with the given group ID in one batch request. Requests from subsequent
@@ -77269,12 +78722,15 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
 
   /**
    * Parameters of the ODataModel#parseError event.
+   *
+   * @deprecated As of version 1.37.0. this event is not supported
    */
-  export interface ODataModel$ParseErrorEventParameters
-    extends Model$ParseErrorEventParameters {}
+  export interface ODataModel$ParseErrorEventParameters extends Model$ParseErrorEventParameters {}
 
   /**
    * Event object of the ODataModel#parseError event.
+   *
+   * @deprecated As of version 1.37.0. this event is not supported
    */
   export type ODataModel$ParseErrorEvent = Event<
     ODataModel$ParseErrorEventParameters,
@@ -77284,8 +78740,7 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
   /**
    * Parameters of the ODataModel#propertyChange event.
    */
-  export interface ODataModel$PropertyChangeEventParameters
-    extends Model$PropertyChangeEventParameters {
+  export interface ODataModel$PropertyChangeEventParameters extends Model$PropertyChangeEventParameters {
     /**
      * A promise on the outcome of the PATCH request, much like {@link sap.ui.model.odata.v4.Context#setProperty }
      * provides it for `bRetry === true`; missing in case there is no PATCH
@@ -77308,12 +78763,15 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
 
   /**
    * Parameters of the ODataModel#requestCompleted event.
+   *
+   * @deprecated As of version 1.37.0. this event is not supported
    */
-  export interface ODataModel$RequestCompletedEventParameters
-    extends Model$RequestCompletedEventParameters {}
+  export interface ODataModel$RequestCompletedEventParameters extends Model$RequestCompletedEventParameters {}
 
   /**
    * Event object of the ODataModel#requestCompleted event.
+   *
+   * @deprecated As of version 1.37.0. this event is not supported
    */
   export type ODataModel$RequestCompletedEvent = Event<
     ODataModel$RequestCompletedEventParameters,
@@ -77322,12 +78780,15 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
 
   /**
    * Parameters of the ODataModel#requestFailed event.
+   *
+   * @deprecated As of version 1.37.0. this event is not supported
    */
-  export interface ODataModel$RequestFailedEventParameters
-    extends Model$RequestFailedEventParameters {}
+  export interface ODataModel$RequestFailedEventParameters extends Model$RequestFailedEventParameters {}
 
   /**
    * Event object of the ODataModel#requestFailed event.
+   *
+   * @deprecated As of version 1.37.0. this event is not supported
    */
   export type ODataModel$RequestFailedEvent = Event<
     ODataModel$RequestFailedEventParameters,
@@ -77336,12 +78797,15 @@ declare module "sap/ui/model/odata/v4/ODataModel" {
 
   /**
    * Parameters of the ODataModel#requestSent event.
+   *
+   * @deprecated As of version 1.37.0. this event is not supported
    */
-  export interface ODataModel$RequestSentEventParameters
-    extends Model$RequestSentEventParameters {}
+  export interface ODataModel$RequestSentEventParameters extends Model$RequestSentEventParameters {}
 
   /**
    * Event object of the ODataModel#requestSent event.
+   *
+   * @deprecated As of version 1.37.0. this event is not supported
    */
   export type ODataModel$RequestSentEvent = Event<
     ODataModel$RequestSentEventParameters,
@@ -77543,6 +79007,7 @@ declare module "sap/ui/model/odata/v4/ODataPropertyBinding" {
      * Method not supported
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
     isInitial(): boolean;
     /**
@@ -77645,6 +79110,7 @@ declare module "sap/ui/model/odata/v4/ODataPropertyBinding" {
      * 	sap.ui.model.Binding#resume
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
     resume(): void;
     /**
@@ -77709,6 +79175,7 @@ declare module "sap/ui/model/odata/v4/ODataPropertyBinding" {
      * 	sap.ui.model.Binding#suspend
      *
      * @since 1.37.0
+     * @deprecated As of version 1.37.0. calling this method is not supported
      */
     suspend(): void;
     /**
@@ -77724,8 +79191,7 @@ declare module "sap/ui/model/odata/v4/ODataPropertyBinding" {
   /**
    * Parameters of the ODataPropertyBinding#change event.
    */
-  export interface ODataPropertyBinding$ChangeEventParameters
-    extends Binding$ChangeEventParameters {}
+  export interface ODataPropertyBinding$ChangeEventParameters extends Binding$ChangeEventParameters {}
 
   /**
    * Event object of the ODataPropertyBinding#change event.
@@ -77738,8 +79204,7 @@ declare module "sap/ui/model/odata/v4/ODataPropertyBinding" {
   /**
    * Parameters of the ODataPropertyBinding#dataReceived event.
    */
-  export interface ODataPropertyBinding$DataReceivedEventParameters
-    extends Binding$DataReceivedEventParameters {
+  export interface ODataPropertyBinding$DataReceivedEventParameters extends Binding$DataReceivedEventParameters {
     /**
      * The error object if a back-end request failed. If there are multiple failed back-end requests, the error
      * of the first one is provided.
@@ -77758,8 +79223,7 @@ declare module "sap/ui/model/odata/v4/ODataPropertyBinding" {
   /**
    * Parameters of the ODataPropertyBinding#dataRequested event.
    */
-  export interface ODataPropertyBinding$DataRequestedEventParameters
-    extends Binding$DataRequestedEventParameters {}
+  export interface ODataPropertyBinding$DataRequestedEventParameters extends Binding$DataRequestedEventParameters {}
 
   /**
    * Event object of the ODataPropertyBinding#dataRequested event.
@@ -77847,6 +79311,110 @@ declare module "sap/ui/model/odata/v4/ODataUtils" {
        */
       sDateTimeOffset: string
     ): Date;
+    /**
+     * Parses a filter string to a syntax tree. In this tree:
+     * 	 Paths are leaves with `id="PATH"` and the path in `value`.  Literals are leaves with `id="VALUE"`
+     * and the literal (as parsed) in `value`.  Operations are nodes with the operator in `id`, the operator
+     * including the surrounding required space in `value`, and `left` and `right` containing syntax trees for
+     * the operands. `not` only uses `right`.  Functions are nodes with `id="FUNCTION"`, the name in `value`,
+     * and an array of `parameters`.  If the type is known (especially for logical operators and functions),
+     * it is given in `type`. If a function parameter may have different types (like Edm.Decimal or Edm.Double
+     * in `round`), it has the property `ambiguous: true`. `at` always contains the position where this token
+     * started (starting with 1).
+     *
+     * Example: `parseFilter("foo eq 'bar' and length(baz) ne 5")` results in
+     * ```javascript
+     *
+     * {
+     *     id : "and", value : " and ", type : "Edm.Boolean", at : 14,
+     *     left : {
+     *         id : "eq", value : " eq ", type : "Edm.Boolean", at : 5,
+     *         left : {id : "PATH", value : "foo", at : 1},
+     *         right : {id : "VALUE", value : "'bar'", at : 8}
+     *     },
+     *     right : {
+     *         id : "ne", value : " ne ", type : "Edm.Boolean", at : 30,
+     *         left : {
+     *             id : "FUNCTION", value : "length", type : "Edm.Int32", at : 18,
+     *             parameters : [{id : "PATH", value : "baz", at : 25}]
+     *         },
+     *         right : {id : "VALUE", value : "5", at : 33}
+     *     }
+     * }
+     * ```
+     *
+     *
+     * @since 1.152.0
+     *
+     * @returns The syntax tree
+     */
+    parseFilter(
+      /**
+       * The filter string
+       */
+      sFilter: string
+    ): object;
+    /**
+     * Parses a system query option "$select" or "$expand" into an object representation.
+     *
+     * The value for "$select" is an array of strings.
+     *
+     * The value for "$expand" is an object with the path as key and the options object as value. Each option
+     * itself becomes a property with the option name as key and the option value as value. If there are no
+     * options, the value for the path is `null`.
+     *
+     * If `bParseFilter` is set, the value for "$filter" is a syntax tree as described in {@link #.parseFilter};
+     * otherwise it is the string passed to it.
+     *
+     * The value for all other options is the string passed to them.
+     *
+     * **Example:**
+     *
+     *
+     * ```javascript
+     *
+     * sOption = "$expand=SO_2_BP,SO_2_SOITEM($expand=SOITEM_2_PRODUCT($expand=PRODUCT_2_BP"
+     *     + ";$select=ID,Name);$select=*;$count=true;$orderby=Name desc)"
+     * ```
+     *  is converted to
+     * ```javascript
+     *
+     * {
+     *     "$expand" : {
+     *         "SO_2_BP" : null,
+     *         "SO_2_SOITEM" : {
+     *             "$count" : "true",
+     *             "$expand" : {
+     *                 "SOITEM_2_PRODUCT" : {
+     *                     "$expand" : {
+     *                         "PRODUCT_2_BP" : null
+     *                     },
+     *                     "$select" : ["ID", "Name"]
+     *                 }
+     *             },
+     *             "$orderby" : "Name desc",
+     *             "$select" : ["*"]
+     *         }
+     *     }
+     * }
+     * ```
+     *
+     *
+     * @since 1.152.0
+     *
+     * @returns The option as an object with the option name as key and the parsed value as value
+     */
+    parseSystemQueryOption(
+      /**
+       * The option string
+       */
+      sOption: string,
+      /**
+       * Whether to parse the value of "$filter" into a syntax tree as described in {@link #.parseFilter}; by
+       * default, the value remains a string
+       */
+      bParseFilter?: boolean
+    ): object;
     /**
      * Parses an "Edm.TimeOfDay" value and returns the corresponding JavaScript `Date` value (UTC with a date
      * value of "1970-01-01").
@@ -78951,6 +80519,11 @@ declare module "sap/ui/model/Sorter" {
              */
             group?: boolean | Function;
             /**
+             * An array of paths that are required for grouping. Supported since 1.147.0; consult the documentation
+             * of the specific model implementation whether it evaluates these paths.
+             */
+            groupPaths?: string[];
+            /**
              * The binding path for this sorter
              */
             path?: string;
@@ -79059,6 +80632,14 @@ declare module "sap/ui/model/Sorter" {
      * @returns The group function
      */
     getGroupFunction(): Function;
+    /**
+     * Returns the group paths.
+     *
+     * @since 1.147.0
+     *
+     * @returns The array of group paths or `undefined` if this sorter has no group paths.
+     */
+    getGroupPaths(): string[] | undefined;
     /**
      * Returns the binding path for this sorter; see the path parameter of {@link sap.ui.model.Sorter#constructor}.
      *
@@ -79263,6 +80844,25 @@ declare module "sap/ui/model/TreeBinding" {
       oListener?: object
     ): void;
     /**
+     * Computes the binding's application filters by replacing application filters of the given type with the
+     * given new filters. Subclasses call this method from their filter method implementation.
+     *
+     * @since 1.146.0
+     * @ui5-protected Do not call from applications (only from related classes in the framework)
+     *
+     * @returns The new application filters
+     */
+    computeApplicationFilters(
+      /**
+       * The new filters for the given filter type
+       */
+      vFilter?: Filter[] | Filter,
+      /**
+       * The type of the application filters to replace, see {@link sap.ui.model.FilterType}
+       */
+      sFilterType?: "Application" | "ApplicationBound"
+    ): Filter[] | Filter | undefined;
+    /**
      * Detaches event handler `fnFunction` from the {@link #event:_filter _filter} event of this `sap.ui.model.TreeBinding`.
      *
      * The passed function and listener object must match the ones used for event registration.
@@ -79291,7 +80891,9 @@ declare module "sap/ui/model/TreeBinding" {
        */
       aFilters?: Filter[] | Filter,
       /**
-       * The type of the filter to replace; if no type is given, the behavior depends on the model implementation
+       * The type of filter to replace. If no type is specified, the behavior depends on the model implementation.
+       * Since 1.146.0, you can use `sap.ui.model.FilterType.ApplicationBound` to set bound application filters
+       * if the model implementation supports it.
        */
       sFilterType?: FilterType | keyof typeof FilterType
     ): void;
@@ -79396,12 +80998,24 @@ declare module "sap/ui/model/TreeBindingUtils" {
       /**
        * the sections into which oNewSection will be merged
        */
-      aSections: object[],
+      aSections: Array<{
+        startIndex: number;
+
+        length: number;
+      }>,
       /**
        * the section which should be merged into aNewSections
        */
-      oNewSection: object
-    ): object[];
+      oNewSection: {
+        startIndex: number;
+
+        length: number;
+      }
+    ): Array<{
+      startIndex: number;
+
+      length: number;
+    }>;
   }
   const TreeBindingUtils: TreeBindingUtils;
   export default TreeBindingUtils;
@@ -79544,6 +81158,8 @@ declare module "sap/ui/model/type/Currency" {
 
   import ParseException from "sap/ui/model/ParseException";
 
+  import { FormatOptions } from "sap/ui/core/format/NumberFormat";
+
   /**
    * This class represents the composite type `Currency`, which consists of the parts "amount" (of type `number`
    * or `string`) and "currency" (of type `string`). In case the amount is a `string`, it must be the JavaScript
@@ -79562,20 +81178,7 @@ declare module "sap/ui/model/type/Currency" {
        * feature of ignoring model messages, see {@link sap.ui.model.Binding#supportsIgnoreMessages}, and the
        * corresponding binding parameter is not set manually.
        */
-      oFormatOptions?: {
-        /**
-         * By default decimals are preserved, unless `oFormatOptions.style` is given as "short" or "long"; since
-         * 1.89.0
-         */
-        preserveDecimals?: boolean;
-        /**
-         * A set of format options as defined for {@link sap.ui.core.format.NumberFormat.getCurrencyInstance} which
-         * describes the format of amount and currency in the model in case the model holds this in one property
-         * of type `string`, e.g. as "EUR 22". If an empty object is given, grouping is disabled, the
-         * decimal separator is a dot and the grouping separator is a comma.
-         */
-        source?: object;
-      },
+      oFormatOptions?: CurrencyFormatOptions,
       /**
        * Constraints for the value part
        */
@@ -79680,12 +81283,120 @@ declare module "sap/ui/model/type/Currency" {
       aCurrentValues?: any[]
     ): any[] | string;
   }
+  /**
+   * Format options for the {@link sap.ui.model.type.Currency} type.
+   */
+  export type CurrencyFormatOptions = FormatOptions & {
+    /**
+     * Defines whether the currency is shown as a code in currency format. The currency symbol is displayed
+     * when this option is set to `false` and a symbol exists for the given currency code.
+     */
+    currencyCode?: boolean;
+    /**
+     * Can be set to either 'standard' (the default value) or to 'accounting' for an accounting-specific currency
+     * display
+     */
+    currencyContext?:
+      | "standard"
+      | "accounting"
+      | "sap-standard"
+      | "sap-accounting";
+    /**
+     * Defines a set of custom currencies exclusive to this NumberFormat instance. Custom currencies must not
+     * consist only of digits. If custom currencies are defined on the instance, no other currencies can be
+     * formatted and parsed by this instance. Globally available custom currencies can be added via the global
+     * configuration. See {@link module:sap/base/i18n/Formatting.setCustomCurrencies Formatting.setCustomCurrencies }
+     * and {@link module:sap/base/i18n/Formatting.addCustomCurrencies Formatting.addCustomCurrencies}.
+     */
+    customCurrencies?: Record<string, object>;
+    /**
+     * The number of decimal digits.
+     */
+    decimals?: int;
+    /**
+     * The target length of places after the decimal separator; if the number has fewer decimals than specified
+     * in this option, it is padded with whitespaces at the end up to the target length. An additional whitespace
+     * character for the decimal separator is added for a number without any decimals. **Note:** This format
+     * option is only allowed if the following conditions apply:
+     * 	 - It has a value greater than 0.
+     * 	 - The `oFormatOptions.style` format option is **not** set to `"short"` or `"long"`.
+     */
+    decimalPadding?: int;
+    /**
+     * Since 1.130.0. Defines what value an empty string is parsed into and what value is formatted as an empty
+     * string. The {@link #format} and {@link #parse} functions are done in a symmetric way. For example, when
+     * this parameter is set to `NaN`, an empty string is parsed as `NaN`, and `NaN` is formatted as an empty
+     * string.
+     */
+    emptyString?: null | number | string;
+    /**
+     * Deprecated as of 1.130; this format option does not have an effect on currency formats since decimals
+     * can always be determined, either through the given format options, custom currencies or the CLDR
+     */
+    minFractionDigits?: int;
+    /**
+     * Since 1.28.2, whether to parse the number as a string in order to keep the precision for large numbers.
+     * Numbers in scientific notation are parsed back to standard notation. For example, `5e-3` is parsed to
+     * `0.005`.
+     */
+    parseAsString?: boolean;
+    /**
+     * The maximum number of digits in the formatted representation of a number; if the `precision` is less
+     * than the overall length of the number, its fractional part is truncated through rounding. As the `precision`
+     * only affects the rounding of a number, its integer part can retain more digits than defined by this parameter.
+     * **Example:** With a `precision` of 2, `234.567` is formatted to `235`. **Note:** The formatted output
+     * may differ depending on locale.
+     */
+    precision?: int;
+    /**
+     * By default, decimals are preserved unless `oFormatOptions.style` is given as "short" or "long"; since
+     * 1.89.0
+     */
+    preserveDecimals?: boolean;
+    /**
+     * Defines whether the currency code or symbol is shown in the formatted string, for example true: "1.00
+     * EUR", false: "1.00" for locale "en" If both `showMeasure` and `showNumber` are `false`, an empty string
+     * is returned
+     */
+    showMeasure?: boolean;
+    /**
+     * Defines whether the number is shown as part of the result string, for example 1 EUR for locale "en"
+     * ```javascript
+     * `NumberFormat.getCurrencyInstance({showNumber: true}).format(1, "EUR"); // "1.00 EUR"````
+     *
+     * ```javascript
+     * `NumberFormat.getCurrencyInstance({showNumber: false}).format(1, "EUR"); // "EUR"````
+     *  If both `showMeasure` and `showNumber` are `false`, an empty string is returned
+     */
+    showNumber?: boolean;
+    /**
+     * A set of format options as defined for {@link sap.ui.core.format.NumberFormat.getCurrencyInstance} which
+     * describes the format of amount and currency in the model in case the model holds this in one property
+     * of type `string`, for example as "EUR 22". If an empty object is given, grouping is disabled, the decimal
+     * separator is a dot, and the grouping separator is a comma.
+     */
+    source?: object;
+    /**
+     * The style of format. When set to `short` or `long`, numbers are formatted into the `short` form only.
+     * When this option is set, the default value of the `precision` option is set to `2`. This can be changed
+     * by setting either `min/maxFractionDigits`, `decimals`, `shortDecimals`, or the `precision` option itself.
+     */
+    style?: "short" | "long" | "standard";
+    /**
+     * Overrides the global configuration value {@link module:sap/base/i18n/Formatting.getTrailingCurrencyCode Formatting.getTrailingCurrencyCode},
+     * which has a default value of `true`. This is ignored if `oFormatOptions.currencyCode` is set to `false`,
+     * or if `oFormatOptions.pattern` is supplied.
+     */
+    trailingCurrencyCode?: boolean;
+  };
 }
 
 declare module "sap/ui/model/type/Date" {
   import SimpleType from "sap/ui/model/SimpleType";
 
   import Metadata from "sap/ui/base/Metadata";
+
+  import UI5Date from "sap/ui/core/date/UI5Date";
 
   /**
    * This class represents date simple types.
@@ -79769,13 +81480,25 @@ declare module "sap/ui/model/type/Date" {
      */
     getOutputPattern(): string;
     /**
-     * Returns a language-dependent placeholder text such as "e.g. " where  is formatted
-     * using this type.
+     * Returns a language-dependent placeholder text for this type. The `oMinimum` and `oMaximum` parameters
+     * are supported since 1.150.
+     *
+     * If given, a sample date within [`oMinimum`, `oMaximum`] is used. If not given, `oConstraints.minimum`/`oConstraints.maximum`
+     * are used as fallback.
      *
      *
      * @returns The language-dependent placeholder text or `undefined` if the type does not offer a placeholder
      */
-    getPlaceholderText(): string | undefined;
+    getPlaceholderText(
+      /**
+       * The minimum date
+       */
+      oMinimum?: UI5Date,
+      /**
+       * The maximum date
+       */
+      oMaximum?: UI5Date
+    ): string | undefined;
   }
 }
 
@@ -79908,13 +81631,25 @@ declare module "sap/ui/model/type/DateInterval" {
       sTargetType: string
     ): string;
     /**
-     * Returns a language-dependent placeholder text such as "e.g. " where  is formatted
-     * using this type.
+     * Returns a language-dependent placeholder text for this type. The `oMinimum` and `oMaximum` parameters
+     * are supported since 1.150.
+     *
+     * If given, a sample date within [`oMinimum`, `oMaximum`] is used. If not given, `oConstraints.minimum`/`oConstraints.maximum`
+     * are used as fallback.
      *
      *
      * @returns The language-dependent placeholder text or `undefined` if the type does not offer a placeholder
      */
-    getPlaceholderText(): string | undefined;
+    getPlaceholderText(
+      /**
+       * The minimum date
+       */
+      oMinimum?: UI5Date,
+      /**
+       * The maximum date
+       */
+      oMaximum?: UI5Date
+    ): string | undefined;
     /**
      * Parses the given value to an array of two values representing the start date and the end date of the
      * interval, where the time part of the start date is 0 and the time part of end date is the end of day
@@ -80178,6 +81913,8 @@ declare module "sap/ui/model/type/Float" {
 
   import Metadata from "sap/ui/base/Metadata";
 
+  import { FloatFormatOptions } from "sap/ui/core/format/NumberFormat";
+
   /**
    * This class represents float simple types.
    */
@@ -80189,19 +81926,7 @@ declare module "sap/ui/model/type/Float" {
       /**
        * Format options as defined in {@link sap.ui.core.format.NumberFormat.getFloatInstance}
        */
-      oFormatOptions?: {
-        /**
-         * By default decimals are preserved, unless `oFormatOptions.style` is given as "short" or "long"; since
-         * 1.89.0
-         */
-        preserveDecimals?: boolean;
-        /**
-         * Additional set of format options to be used if the property in the model is not of type string and needs
-         * formatting as well. If an empty object is given, the grouping is disabled and a dot is used as decimal
-         * separator.
-         */
-        source?: object;
-      },
+      oFormatOptions?: FloatTypeFormatOptions,
       /**
        * Value constraints
        */
@@ -80249,12 +81974,25 @@ declare module "sap/ui/model/type/Float" {
      */
     static getMetadata(): Metadata;
   }
+  /**
+   * The format options of the {@link sap.ui.model.type.Float} type.
+   */
+  export type FloatTypeFormatOptions = FloatFormatOptions & {
+    /**
+     * Additional set of format options to be used if the property in the model is not of type string and needs
+     * formatting as well. If an empty object is given, the grouping is disabled and a dot is used as decimal
+     * separator.
+     */
+    source?: Record<string, any>;
+  };
 }
 
 declare module "sap/ui/model/type/Integer" {
   import SimpleType from "sap/ui/model/SimpleType";
 
   import Metadata from "sap/ui/base/Metadata";
+
+  import { IntegerFormatOptions } from "sap/ui/core/format/NumberFormat";
 
   /**
    * This class represents integer simple types.
@@ -80265,16 +82003,10 @@ declare module "sap/ui/model/type/Integer" {
      */
     constructor(
       /**
-       * Format options as defined in {@link sap.ui.core.format.NumberFormat.getIntegerInstance}
+       * The option object, which supports the following parameters. If no options are given, default values according
+       * to the type and locale settings are used.
        */
-      oFormatOptions?: {
-        /**
-         * Additional set of format options to be used if the property in the model is not of type string and needs
-         * formatting as well. If an empty object is given, the grouping is disabled and a dot is used as decimal
-         * separator.
-         */
-        source?: object;
-      },
+      oFormatOptions?: IntegerTypeFormatOptions,
       /**
        * Value constraints
        */
@@ -80322,6 +82054,17 @@ declare module "sap/ui/model/type/Integer" {
      */
     static getMetadata(): Metadata;
   }
+  /**
+   * The format options of the {@link sap.ui.model.type.Integer} type.
+   */
+  export type IntegerTypeFormatOptions = IntegerFormatOptions & {
+    /**
+     * Additional set of format options to be used if the property in the model is not of type `string` and
+     * needs formatting as well. If an empty object is given, the grouping is disabled and a dot is used as
+     * decimal separator.
+     */
+    source?: Record<string, any>;
+  };
 }
 
 declare module "sap/ui/model/type/String" {
@@ -80623,6 +82366,8 @@ declare module "sap/ui/model/type/Unit" {
 
   import ParseException from "sap/ui/model/ParseException";
 
+  import { FormatOptions } from "sap/ui/core/format/NumberFormat";
+
   /**
    * This class represents the Unit composite type.
    */
@@ -80638,30 +82383,7 @@ declare module "sap/ui/model/type/Unit" {
        * model messages, see {@link sap.ui.model.Binding#supportsIgnoreMessages}, and the corresponding binding
        * parameter is not set manually.
        */
-      oFormatOptions?: {
-        /**
-         * The number of decimals to be used for formatting the numerical value of the unit composite type; if none
-         * of the format options `maxFractionDigits`, `minFractionDigits` or `decimals` are given, the following
-         * defaults apply:
-         * 	 -  **0** if the numerical value is of an OData integer type, i.e. {@link sap.ui.model.odata.type.Int }
-         *     or {@link sap.ui.model.odata.type.Int64}
-         * 	 -  the **scale constraint of the numerical value's type** if this type is {@link sap.ui.model.odata.type.Decimal }
-         *     and the scale is not "variable"
-         * 	 -  **3** otherwise
-         */
-        decimals?: object;
-        /**
-         * By default decimals are preserved, unless `oFormatOptions.style` is given as "short" or "long"; since
-         * 1.89.0
-         */
-        preserveDecimals?: boolean;
-        /**
-         * Additional set of format options to be used if the property in the model is not of type `string` and
-         * needs formatting as well. If an empty object is given, the grouping is disabled and a dot is used as
-         * decimal separator.
-         */
-        source?: object;
-      },
+      oFormatOptions?: UnitFormatOptions,
       /**
        * Value constraints
        */
@@ -80776,6 +82498,115 @@ declare module "sap/ui/model/type/Unit" {
       aCurrentValues?: any[]
     ): any[] | string;
   }
+  /**
+   * Format options for the {@link sap.ui.model.type.Unit Unit type}.
+   */
+  export type UnitFormatOptions = FormatOptions & {
+    /**
+     * Defines the allowed units for formatting and parsing, for example `["size-meter", "volume-liter", ...]`
+     * If this option is not specified, all units are allowed.
+     */
+    allowedUnits?: string[];
+    /**
+     * Defines a set of custom units, for example:
+     * ```javascript
+     * {"electric-inductance": {
+     *      "displayName": "henry",
+     *      "unitPattern-count-one": "{0} H",
+     *      "unitPattern-count-other": "{0} H",
+     *      "perUnitPattern": "{0}/H",
+     *      "decimals": 2,
+     *      "precision": 4
+     *   }
+     * }```
+     */
+    customUnits?: Record<string, object>;
+    /**
+     * The number of decimals to be used for formatting the numerical value of the unit composite type; if none
+     * of the format options `maxFractionDigits`, `minFractionDigits` or `decimals` are given, the following
+     * defaults apply:
+     * 	 -  **0** if the numerical value is of an OData integer type, i.e. {@link sap.ui.model.odata.type.Int }
+     *     or {@link sap.ui.model.odata.type.Int64}
+     * 	 -  the **scale constraint of the numerical value's type** if this type is {@link sap.ui.model.odata.type.Decimal }
+     *     and the scale is not "variable"
+     * 	 -  **3** otherwise
+     */
+    decimals?: int;
+    /**
+     * The target length of places after the decimal separator; if the number has fewer decimals than specified
+     * in this option, it is padded with whitespaces at the end up to the target length. An additional whitespace
+     * character for the decimal separator is added for a number without any decimals. **Note:** This format
+     * option is only allowed if the following conditions apply:
+     * 	 - It has a value greater than 0
+     * 	 - The `oFormatOptions.style` format option is **not** set to `"short"` or `"long"`
+     */
+    decimalPadding?: int;
+    /**
+     * Defines how an empty string is parsed into the measure. With the default value `0` the measure becomes
+     * `0` when an empty string is parsed.
+     */
+    emptyString?: null | number | string;
+    /**
+     * The minimal number of decimal digits.
+     */
+    minFractionDigits?: int;
+    /**
+     * Whether the measure is parsed to a string; set to `false` if the measure's underlying type is represented
+     * as a `number`, for example {@link sap.ui.model.type.Integer}
+     */
+    parseAsString?: boolean;
+    /**
+     * The maximum number of digits in the formatted representation of a number; if the `precision` is less
+     * than the overall length of the number, its fractional part is truncated through rounding. As the `precision`
+     * only affects the rounding of a number, its integer part can retain more digits than defined by this parameter.
+     * **Example:** With a `precision` of 2, `234.567` is formatted to `235`. **Note:** The formatted output
+     * may differ depending on locale.
+     */
+    precision?: int;
+    /**
+     * By default decimals are preserved, unless `oFormatOptions.style` is given as "short" or "long"; since
+     * 1.89.0
+     */
+    preserveDecimals?: boolean;
+    /**
+     * Defines whether the unit of measure is shown in the formatted string, for example 1 day for locale "en"
+     *
+     * ```javascript
+     * NumberFormat.getUnitInstance({showMeasure: true})
+     *     .format(1, "duration-day"); // "1 day"```
+     *
+     * ```javascript
+     * NumberFormat.getUnitInstance({showMeasure: false})
+     *     .format(1, "duration-day"); // "1"```
+     *  If both `showMeasure` and `showNumber` are set to false, an empty string is returned.
+     */
+    showMeasure?: boolean;
+    /**
+     * Defines whether the number is shown as part of the formatted string, for example 1 day for locale "en"
+     *
+     * ```javascript
+     * NumberFormat.getUnitInstance({showNumber: true})
+     *     .format(1, "duration-day"); // "1 day"```
+     *
+     * ```javascript
+     * NumberFormat.getUnitInstance({showNumber: false})
+     *     .format(1, "duration-day"); // "day"```
+     *  If both `showMeasure` and `showNumber` are false, an empty string is returned
+     */
+    showNumber?: boolean;
+    /**
+     * Additional set of format options to be used if the property in the model is not of type `string` and
+     * needs formatting as well. If an empty object is given, the grouping is disabled and a dot is used as
+     * decimal separator.
+     */
+    source?: object;
+    /**
+     * The style of format. When set to `short` or `long`, numbers are formatted into compact forms. When this
+     * option is set, the default value of the `precision` option is set to `2`. This can be changed by setting
+     * either `min/maxFractionDigits`, `decimals`, `shortDecimals`, or the `precision` option itself.
+     */
+    style?: "short" | "long" | "standard";
+  };
 }
 
 declare module "sap/ui/model/ValidateException" {
@@ -80807,6 +82638,8 @@ declare module "sap/ui/model/xml/XMLModel" {
   import ClientModel from "sap/ui/model/ClientModel";
 
   import Metadata from "sap/ui/base/Metadata";
+
+  import Context from "sap/ui/model/Context";
 
   /**
    * Model implementation for the XML format.
@@ -80859,7 +82692,12 @@ declare module "sap/ui/model/xml/XMLModel" {
      * Returns the object for the given path and context.
      *
      *
-     * @returns The object
+     * @returns The object at the specified path:
+     * 	 - An XML DOM Element node object when the path resolves to an element.
+     * 	 - A string value when the path points to an attribute (using the @attribute syntax) or text content.
+     *
+     * 	 - `null` when the document has no root element or the path cannot be resolved.
+     * 	 - `undefined` when the path resolution returns an empty result.
      */
     getObject(
       /**
@@ -80869,8 +82707,8 @@ declare module "sap/ui/model/xml/XMLModel" {
       /**
        * The context which will be used to retrieve the object
        */
-      oContext?: object
-    ): object;
+      oContext?: Context
+    ): Element | string | null | undefined;
     /**
      * Returns the value for the property with the given `sPropertyName`.
      *
@@ -80885,7 +82723,7 @@ declare module "sap/ui/model/xml/XMLModel" {
       /**
        * The context which will be used to retrieve the property
        */
-      oContext?: object
+      oContext?: Context
     ): string;
     /**
      * Serializes the current XML data of the model into a string.
@@ -80926,7 +82764,7 @@ declare module "sap/ui/model/xml/XMLModel" {
       /**
        * An object of additional header key/value pairs to send along with the request
        */
-      mHeaders?: object
+      mHeaders?: Record<string, string>
     ): void;
     /**
      * Sets the provided XML encoded data object to the model
@@ -80969,7 +82807,7 @@ declare module "sap/ui/model/xml/XMLModel" {
       /**
        * The context which will be used to set the property
        */
-      oContext?: object,
+      oContext?: Context,
       /**
        * Whether to update other bindings dependent on this property asynchronously
        */
@@ -81139,6 +82977,25 @@ declare module "sap/ui/test/actions/Action" {
      */
     static getMetadata(): ManagedObjectMetadata;
     /**
+     * Finds the most suitable jQuery element to execute an action on. A control may have many elements in its
+     * DOM representation. The most suitable one is chosen by priority:
+     * 	 - If the user provided an idSuffix, return the element that matches it, or null
+     * 	 - If there is a control adapter for the action - return the element that matches it. See `controlAdapters`
+     *     at {@link sap.ui.test.Press} for an example
+     * 	 - If there is no control adapter, or it matches no elements, return the focusDomRef of the control.
+     *     Note that some controls may not have a focusDomRef.
+     *
+     * @ui5-protected Do not call from applications (only from related classes in the framework)
+     *
+     * @returns the jQuery element which is most suitable for the action
+     */
+    $(
+      /**
+       * the control to execute an action on
+       */
+      oControl: object
+    ): jQuery;
+    /**
      * Checks if the matcher is matching - will get an instance of sap.ui.core.Control as parameter Should be
      * overwritten by subclasses
      *
@@ -81164,6 +83021,14 @@ declare module "sap/ui/test/actions/Action" {
      * @returns Value of property `idSuffix`
      */
     getIdSuffix(): string;
+    /**
+     * Returns the QUnitUtils
+     *
+     * @ui5-protected Do not call from applications (only from related classes in the framework)
+     *
+     * @returns QUnit utils of the current window or the OPA frame
+     */
+    getUtils(): /* was: sap.ui.test.qunit.QUnitUtils */ any;
     /**
      * Sets a new value for property {@link #getIdSuffix idSuffix}.
      *
@@ -81622,8 +83487,12 @@ declare module "sap/ui/test/actions/EnterText" {
     /**
      * Gets current value of property {@link #getKeepFocus keepFocus}.
      *
+     * If it is set to `true`, the input will remain focused after text is entered. Use this for inputs with
+     * a suggestion list that you want to keep open.
+     *
      * Default value is `false`.
      *
+     * @since 1.67
      *
      * @returns Value of property `keepFocus`
      */
@@ -81631,8 +83500,13 @@ declare module "sap/ui/test/actions/EnterText" {
     /**
      * Gets current value of property {@link #getPressEnterKey pressEnterKey}.
      *
+     * If it is set to `true`, an ENTER key will be entered after the text. Use this for inputs that shouldn't
+     * lose the focus after a text is entered. (e.g. inputs in a sap.m.Popover shouldn't be focused out, as
+     * this will make the popover close in FF and IE11)
+     *
      * Default value is `false`.
      *
+     * @since 1.76
      *
      * @returns Value of property `pressEnterKey`
      */
@@ -81672,10 +83546,14 @@ declare module "sap/ui/test/actions/EnterText" {
     /**
      * Sets a new value for property {@link #getKeepFocus keepFocus}.
      *
+     * If it is set to `true`, the input will remain focused after text is entered. Use this for inputs with
+     * a suggestion list that you want to keep open.
+     *
      * When called with a value of `null` or `undefined`, the default value of the property will be restored.
      *
      * Default value is `false`.
      *
+     * @since 1.67
      *
      * @returns Reference to `this` in order to allow method chaining
      */
@@ -81688,10 +83566,15 @@ declare module "sap/ui/test/actions/EnterText" {
     /**
      * Sets a new value for property {@link #getPressEnterKey pressEnterKey}.
      *
+     * If it is set to `true`, an ENTER key will be entered after the text. Use this for inputs that shouldn't
+     * lose the focus after a text is entered. (e.g. inputs in a sap.m.Popover shouldn't be focused out, as
+     * this will make the popover close in FF and IE11)
+     *
      * When called with a value of `null` or `undefined`, the default value of the property will be restored.
      *
      * Default value is `false`.
      *
+     * @since 1.76
      *
      * @returns Reference to `this` in order to allow method chaining
      */
@@ -81739,8 +83622,21 @@ declare module "sap/ui/test/actions/EnterText" {
      */
     clearTextFirst?: boolean | PropertyBindingInfo | `{${string}}`;
 
+    /**
+     * If it is set to `true`, the input will remain focused after text is entered. Use this for inputs with
+     * a suggestion list that you want to keep open.
+     *
+     * @since 1.67
+     */
     keepFocus?: boolean | PropertyBindingInfo | `{${string}}`;
 
+    /**
+     * If it is set to `true`, an ENTER key will be entered after the text. Use this for inputs that shouldn't
+     * lose the focus after a text is entered. (e.g. inputs in a sap.m.Popover shouldn't be focused out, as
+     * this will make the popover close in FF and IE11)
+     *
+     * @since 1.76
+     */
     pressEnterKey?: boolean | PropertyBindingInfo | `{${string}}`;
   }
 }
@@ -81760,6 +83656,10 @@ declare module "sap/ui/test/actions/Press" {
   /**
    * The `Press` action is used to simulate a press interaction with a control. Most controls are supported,
    * for example buttons, links, list items, tables, filters, and form controls.
+   *
+   * The `Press` action can also simulate right-click (context menu) interactions by setting the `rightClick`
+   * property to true. This is useful for testing controls with custom context menus, such as `sap.ui.table.Table`
+   * and `sap.m.Table`.
    *
    * The `Press` action targets a special DOM element representing the control. This DOM element can be customized.
    *
@@ -81856,7 +83756,10 @@ declare module "sap/ui/test/actions/Press" {
     static getMetadata(): ManagedObjectMetadata;
     /**
      * Sets focus on given control and triggers a 'tap' event on it (which is internally translated into a 'press'
-     * event). Logs an error if control is not visible (i.e. has no dom representation)
+     * event). If `keyDown` or `keyUp` is set to `true`, dispatches the corresponding keyboard event instead
+     * of mouse events. If `rightClick` property is set to `true`, triggers a `contextmenu` event instead, along
+     * with appropriate `mousedown` and `mouseup` events. Logs an error if control is not visible (i.e. has
+     * no dom representation)
      */
     executeOn(
       /**
@@ -81884,6 +83787,43 @@ declare module "sap/ui/test/actions/Press" {
      * @returns Value of property `ctrlKey`
      */
     getCtrlKey(): boolean;
+    /**
+     * Gets current value of property {@link #getKeyDown keyDown}.
+     *
+     * If it is set to `true`, a `keydown` keyboard event will be dispatched instead of mouse events. The modifier
+     * keys (shiftKey, altKey, ctrlKey) will be applied to the keyboard event if set.
+     *
+     * @since 1.146
+     *
+     * @returns Value of property `keyDown`
+     */
+    getKeyDown(): boolean;
+    /**
+     * Gets current value of property {@link #getKeyUp keyUp}.
+     *
+     * If it is set to `true`, a `keyup` keyboard event will be dispatched instead of mouse events. The modifier
+     * keys (shiftKey, altKey, ctrlKey) will be applied to the keyboard event if set.
+     *
+     * @since 1.146
+     *
+     * @returns Value of property `keyUp`
+     */
+    getKeyUp(): boolean;
+    /**
+     * Gets current value of property {@link #getRightClick rightClick}.
+     *
+     * If set to `true`, a right-click (context menu) event will be triggered instead of a left-click. This
+     * simulates the native browser right-click behavior by dispatching `mousedown` and `mouseup` with `button:
+     * 2`, followed by a `contextmenu` event. The `xPercentage` and `yPercentage` properties can be used to
+     * specify the position of the right-click event.
+     *
+     * Default value is `false`.
+     *
+     * @since 1.147
+     *
+     * @returns Value of property `rightClick`
+     */
+    getRightClick(): boolean;
     /**
      * Gets current value of property {@link #getShiftKey shiftKey}.
      *
@@ -81949,6 +83889,64 @@ declare module "sap/ui/test/actions/Press" {
        * New value for property `ctrlKey`
        */
       bCtrlKey: boolean
+    ): this;
+    /**
+     * Sets a new value for property {@link #getKeyDown keyDown}.
+     *
+     * If it is set to `true`, a `keydown` keyboard event will be dispatched instead of mouse events. The modifier
+     * keys (shiftKey, altKey, ctrlKey) will be applied to the keyboard event if set.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * @since 1.146
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setKeyDown(
+      /**
+       * New value for property `keyDown`
+       */
+      bKeyDown: boolean
+    ): this;
+    /**
+     * Sets a new value for property {@link #getKeyUp keyUp}.
+     *
+     * If it is set to `true`, a `keyup` keyboard event will be dispatched instead of mouse events. The modifier
+     * keys (shiftKey, altKey, ctrlKey) will be applied to the keyboard event if set.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * @since 1.146
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setKeyUp(
+      /**
+       * New value for property `keyUp`
+       */
+      bKeyUp: boolean
+    ): this;
+    /**
+     * Sets a new value for property {@link #getRightClick rightClick}.
+     *
+     * If set to `true`, a right-click (context menu) event will be triggered instead of a left-click. This
+     * simulates the native browser right-click behavior by dispatching `mousedown` and `mouseup` with `button:
+     * 2`, followed by a `contextmenu` event. The `xPercentage` and `yPercentage` properties can be used to
+     * specify the position of the right-click event.
+     *
+     * When called with a value of `null` or `undefined`, the default value of the property will be restored.
+     *
+     * Default value is `false`.
+     *
+     * @since 1.147
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    setRightClick(
+      /**
+       * New value for property `rightClick`
+       */
+      bRightClick?: boolean
     ): this;
     /**
      * Sets a new value for property {@link #getShiftKey shiftKey}.
@@ -82044,6 +84042,32 @@ declare module "sap/ui/test/actions/Press" {
      * @since 1.98
      */
     yPercentage?: float | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * If it is set to `true`, a `keydown` keyboard event will be dispatched instead of mouse events. The modifier
+     * keys (shiftKey, altKey, ctrlKey) will be applied to the keyboard event if set.
+     *
+     * @since 1.146
+     */
+    keyDown?: boolean | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * If it is set to `true`, a `keyup` keyboard event will be dispatched instead of mouse events. The modifier
+     * keys (shiftKey, altKey, ctrlKey) will be applied to the keyboard event if set.
+     *
+     * @since 1.146
+     */
+    keyUp?: boolean | PropertyBindingInfo | `{${string}}`;
+
+    /**
+     * If set to `true`, a right-click (context menu) event will be triggered instead of a left-click. This
+     * simulates the native browser right-click behavior by dispatching `mousedown` and `mouseup` with `button:
+     * 2`, followed by a `contextmenu` event. The `xPercentage` and `yPercentage` properties can be used to
+     * specify the position of the right-click event.
+     *
+     * @since 1.147
+     */
+    rightClick?: boolean | PropertyBindingInfo | `{${string}}`;
   }
 }
 
@@ -82127,6 +84151,8 @@ declare module "sap/ui/test/actions/Scroll" {
     /**
      * Gets current value of property {@link #getX x}.
      *
+     * The x scroll position.
+     *
      * Default value is `0`.
      *
      *
@@ -82136,6 +84162,8 @@ declare module "sap/ui/test/actions/Scroll" {
     /**
      * Gets current value of property {@link #getY y}.
      *
+     * The y scroll position.
+     *
      * Default value is `0`.
      *
      *
@@ -82144,6 +84172,8 @@ declare module "sap/ui/test/actions/Scroll" {
     getY(): int;
     /**
      * Sets a new value for property {@link #getX x}.
+     *
+     * The x scroll position.
      *
      * When called with a value of `null` or `undefined`, the default value of the property will be restored.
      *
@@ -82160,6 +84190,8 @@ declare module "sap/ui/test/actions/Scroll" {
     ): this;
     /**
      * Sets a new value for property {@link #getY y}.
+     *
+     * The y scroll position.
      *
      * When called with a value of `null` or `undefined`, the default value of the property will be restored.
      *
@@ -82179,8 +84211,14 @@ declare module "sap/ui/test/actions/Scroll" {
    * Describes the settings that can be provided to the Scroll constructor.
    */
   export interface $ScrollSettings extends $ActionSettings {
+    /**
+     * The x scroll position.
+     */
     x?: int | PropertyBindingInfo | `{${string}}`;
 
+    /**
+     * The y scroll position.
+     */
     y?: int | PropertyBindingInfo | `{${string}}`;
   }
 }
@@ -82702,8 +84740,7 @@ declare module "sap/ui/test/matchers/AggregationContainsPropertyEqual" {
   /**
    * Describes the settings that can be provided to the AggregationContainsPropertyEqual constructor.
    */
-  export interface $AggregationContainsPropertyEqualSettings
-    extends $MatcherSettings {
+  export interface $AggregationContainsPropertyEqualSettings extends $MatcherSettings {
     /**
      * The Name of the aggregation that is used for matching.
      */
@@ -83107,6 +85144,8 @@ declare module "sap/ui/test/matchers/AggregationLengthEquals" {
 }
 
 declare module "sap/ui/test/matchers/Ancestor" {
+  import UI5Element from "sap/ui/core/Element";
+
   /**
    * Checks if a control has a defined ancestor.
    *
@@ -83120,19 +85159,21 @@ declare module "sap/ui/test/matchers/Ancestor" {
    *
    * @since 1.27
    */
-  export default class Ancestor {
-    constructor(
+  interface Ancestor {
+    new (
       /**
-       * the ancestor control to check, if undefined, validates every control to true. Can be a control or a control
-       * ID
+       * The ancestor control to check, if undefined, validates every control to true.
+       * Can be a control or a control ID
        */
       vAncestor: object | string,
       /**
-       * specifies if the ancestor should be a direct ancestor (parent)
+       * Specifies if the ancestor should be a direct ancestor (parent)
        */
       bDirect?: boolean
-    );
+    ): (p1: UI5Element) => boolean;
   }
+  const Ancestor: Ancestor;
+  export default Ancestor;
 }
 
 declare module "sap/ui/test/matchers/BindingPath" {
@@ -83389,6 +85430,8 @@ declare module "sap/ui/test/matchers/BindingPath" {
 }
 
 declare module "sap/ui/test/matchers/Descendant" {
+  import UI5Element from "sap/ui/core/Element";
+
   /**
    * Checks if a control has a given descendant.
    *
@@ -83402,19 +85445,21 @@ declare module "sap/ui/test/matchers/Descendant" {
    *
    * @since 1.66
    */
-  export default class Descendant {
-    constructor(
+  interface Descendant {
+    new (
       /**
-       * The descendant control to check. If undefined, it validates every control to true. Can be a control or
-       * a control ID
+       * The descendant control to check. If undefined, it validates every control to true.
+       * Can be a control or a control ID
        */
       vDescendantControl: object | string,
       /**
-       * specifies if the descendant should be a direct child
+       * Specifies if the descendant should be a direct child
        */
       bDirect?: boolean
-    );
+    ): (p1: UI5Element) => boolean;
   }
+  const Descendant: Descendant;
+  export default Descendant;
 }
 
 declare module "sap/ui/test/matchers/I18NText" {
@@ -84086,6 +86131,8 @@ declare module "sap/ui/test/matchers/Matcher" {
 }
 
 declare module "sap/ui/test/matchers/Properties" {
+  import UI5Element from "sap/ui/core/Element";
+
   /**
    * Checks if a control's properties have the provided values - all properties have to match their values.
    *
@@ -84114,25 +86161,17 @@ declare module "sap/ui/test/matchers/Properties" {
    *
    * @since 1.27
    */
-  export default class Properties {
-    constructor(
+  interface Properties {
+    new (
       /**
-       * the object with the properties to be checked. Example:
-       * ```javascript
-       *
-       * // Would filter for an enabled control with the text "Accept".
-       * new Properties({
-       *     // The property text has the exact value "Accept"
-       *     text: "Accept",
-       *     // The property enabled also has to be true
-       *     enabled: true
-       * })
-       * ```
-       *  If the value is a RegExp, it tests the RegExp with the value. RegExp only works with string properties.
+       * The object with the properties to be checked.
+       * If a value is a RegExp, it tests the RegExp with the value. RegExp only works with string properties.
        */
       oProperties: object
-    );
+    ): (p1: UI5Element) => boolean;
   }
+  const Properties: Properties;
+  export default Properties;
 }
 
 declare module "sap/ui/test/matchers/PropertyStrictEquals" {
@@ -84287,6 +86326,8 @@ declare module "sap/ui/test/matchers/PropertyStrictEquals" {
 }
 
 declare module "sap/ui/test/matchers/Sibling" {
+  import UI5Element from "sap/ui/core/Element";
+
   /**
    * Checks if a control has a defined sibling. Available as a declarative matcher with the following syntax:
    *
@@ -84299,36 +86340,38 @@ declare module "sap/ui/test/matchers/Sibling" {
    *
    * @since 1.91
    */
-  export default class Sibling {
-    constructor(
+  interface Sibling {
+    new (
       /**
        * the sibling control to check. Can be a control or a control ID. If undefined, the result will always
        * be true.
        */
       vSibling: object | string,
       /**
-       * specifies how to match
+       * Specifies how to match
        */
       oOptions?: {
         /**
-         * whether to match by relationships of the DOM references. false by default
+         * Whether to match by relationships of the DOM references, false by default
          */
         useDom: boolean;
         /**
-         * match only if control's DOM reference is before the sibling's in the DOM tree
+         * Match only if control's DOM reference is before the sibling's in the DOM tree
          */
         prev: boolean;
         /**
-         * match only if control's DOM reference is after the sibling's in the DOM tree,
+         * Match only if control's DOM reference is after the sibling's in the DOM tree
          */
         next: boolean;
         /**
-         * how many levels of ancestors to search
+         * How many levels of ancestors to search
          */
         level: boolean;
       }
-    );
+    ): (p1: UI5Element) => boolean;
   }
+  const Sibling: Sibling;
+  export default Sibling;
 }
 
 declare module "sap/ui/test/Opa" {
@@ -85287,7 +87330,7 @@ declare module "sap/ui/test/Opa5" {
      *             viewName: "my.View"
      *             controlType: "sap.m.Input",
      *             success: function (aInputs) {
-     *                 // aInputs are all sap.m.Inputs inside of a view called 'my.View'
+     *                 // aInputs are all sap.m.Input controls inside of a view called 'my.View'
      *             }
      *         });
      *     ```
@@ -85507,6 +87550,27 @@ declare module "sap/ui/test/Opa5" {
      */
     viewId?: string;
     /**
+     * The namespace to be prepended to the view name defined in the `viewName` parameter. When set, all `waitFor`
+     * calls inside the page object will resolve the view by `viewNamespace + "." + viewName`.
+     *
+     * Example:
+     * ```javascript
+     *
+     *     Opa5.createPageObjects({
+     *       onMyPage: {
+     *         viewName: "myView",
+     *         viewNamespace: "my.app.namespace",
+     *         assertions: { ... }
+     *       }
+     *     });
+     *   ```
+     *
+     *
+     * Note: If all page objects share the same `viewNamespace`, consider setting it globally via {@link sap.ui.test.Opa5.extendConfig }
+     * to avoid repetition.
+     */
+    viewNamespace?: string;
+    /**
      * Base class for the page object's actions and assertions
      */
     baseClass?: Function;
@@ -85622,7 +87686,7 @@ declare module "sap/ui/test/OpaPlugin" {
       FNMetaImpl?: Function
     ): Function;
     /**
-     * Returns the registered element with the given ID, if any. Internally forwards to {@link sap.ui.core.Element#getElementById }
+     * Returns the registered element with the given ID, if any. Internally forwards to {@link sap.ui.core.Element.getElementById }
      * or the corresponsing legacy API. The legacy API is used when the tested app is loaded in an iframe that
      * uses a lower UI5 version.
      *
@@ -85637,7 +87701,7 @@ declare module "sap/ui/test/OpaPlugin" {
       sId: ID | null | undefined
     ): UI5Element | undefined;
     /**
-     * Retrieves a resource bundle for the given library and locale. Internally forwards to {@link sap.ui.core.Lib#getResourceBundleFor }
+     * Retrieves a resource bundle for the given library and locale. Internally forwards to {@link sap.ui.core.Lib.getResourceBundleFor }
      * or the corresponsing legacy API. The legacy API is used when the tested app is loaded in an iframe that
      * uses a lower UI5 version.
      *
@@ -85652,8 +87716,8 @@ declare module "sap/ui/test/OpaPlugin" {
      */
     static getMetadata(): Metadata;
     /**
-     * Returns the root element of the static, hidden area. Internally forwards to {@link sap.ui.core.StaticArea#getDomRef }
-     * or the corresponsing legacy API. The legacy API is used when the tested app is loaded in an iframe that
+     * Returns the root element of the static, hidden area. Internally forwards to {@link module:sap/ui/core/StaticArea.getDomRef }
+     * or the corresponding legacy API. The legacy API is used when the tested app is loaded in an iframe that
      * uses a lower UI5 version.
      *
      * @ui5-protected Do not call from applications (only from related classes in the framework)
@@ -85663,8 +87727,8 @@ declare module "sap/ui/test/OpaPlugin" {
     static getStaticAreaDomRef(): Element;
     /**
      * Returns `true` if there are any pending rendering tasks or when such rendering tasks are currently being
-     * executed. Internally forwards to {@link sap.ui.core.Rendering#isPending} or the corresponsing legacy
-     * API. The legacy API is used when the tested app is loaded in an iframe that uses a lower UI5 version.
+     * executed. Internally forwards to {@link module:sap/ui/core/Rendering.isPending} or the corresponsing
+     * legacy API. The legacy API is used when the tested app is loaded in an iframe that uses a lower UI5 version.
      *
      * @ui5-protected Do not call from applications (only from related classes in the framework)
      *
@@ -85833,7 +87897,7 @@ declare module "sap/ui/test/OpaPlugin" {
          *
          *         // control type is often combined with viewName - only controls that are inside of the view
          *         // and have the correct type will be returned
-         *         // here all sap.m.Inputs inside of a view called 'my.View' will be returned
+         *         // here all sap.m.Input controls inside of a view called 'my.View' will be returned
          *         new OpaPlugin().getMatchingControls({
          *             viewName: "my.View"
          *             controlType: "sap.m.Input"
@@ -86057,7 +88121,7 @@ declare module "sap/ui/test/RecordReplay" {
         /**
          * Clear existing text before interaction
          */
-        clearTextFirst?: string;
+        clearTextFirst?: boolean;
         /**
          * If ENTER key will be entered after the text
          */
@@ -86136,8 +88200,13 @@ declare module "sap/ui/test/RecordReplay" {
    * 'InteractionType'.
    */
   enum InteractionType {
+    /**
+     * "EnterText" interaction type.
+     */
     EnterText = "ENTER_TEXT",
-
+    /**
+     * "Press" Interaction type.
+     */
     Press = "PRESS",
   }
 }
@@ -86224,9 +88293,11 @@ declare namespace sap {
              */
             async?: boolean;
             /**
-             * @since 1.27.0 Hints for the asynchronous loading. **Beware:** This parameter is only used internally
-             * by the UI5 framework and compatibility cannot be guaranteed. The parameter must not be used in productive
-             * code, except in code delivered by the UI5 teams.
+             * Hints for the asynchronous loading. **Beware:** This parameter is only used internally by the UI5 framework
+             * and compatibility cannot be guaranteed. The parameter must not be used in productive code, except in
+             * code delivered by the UI5 teams.
+             *
+             * @since 1.27.0
              */
             asyncHints?: {
               /**
@@ -86238,33 +88309,41 @@ declare namespace sap {
                */
               components?: string[];
               /**
-               * @since 1.37.0 a `Promise` or and array of `Promise`s for which the Component instantiation should wait
-               * (experimental setting)
+               * a `Promise` or and array of `Promise`s for which the Component instantiation should wait (experimental
+               * setting)
+               *
+               * @since 1.37.0
                */
               waitFor?: Promise<any> | Array<Promise<any>>;
             };
             /**
-             * @since 1.49.0 Controls when and from where to load the manifest for the Component. When set to any truthy
-             * value, the manifest will be loaded asynchronously by default and evaluated before the Component controller,
-             * if it is set to a falsy value other than `undefined`, the manifest will be loaded after the controller.
-             * A non-empty string value will be interpreted as the URL location from where to load the manifest. A non-null
-             * object value will be interpreted as manifest content. Setting this property to a value other than `undefined`,
+             * Controls when and from where to load the manifest for the Component. When set to any truthy value, the
+             * manifest will be loaded asynchronously by default and evaluated before the Component controller, if it
+             * is set to a falsy value other than `undefined`, the manifest will be loaded after the controller. A non-empty
+             * string value will be interpreted as the URL location from where to load the manifest. A non-null object
+             * value will be interpreted as manifest content. Setting this property to a value other than `undefined`,
              * completely deactivates the properties `manifestUrl` and `manifestFirst`, no matter what their values
              * are.
+             *
+             * @since 1.49.0
              */
             manifest?: boolean | string | object;
             /**
-             * @since 1.33.0 Specifies the URL from where the manifest should be loaded from Using this property implies
-             * `vConfig.manifestFirst=true`.
+             * Specifies the URL from where the manifest should be loaded from Using this property implies `vConfig.manifestFirst=true`.
+             *
              * **DEPRECATED since 1.49.0, use `vConfig.manifest=url` instead!**. Note that this property is ignored
              * when `vConfig.manifest` has a value other than `undefined`.
+             *
+             * @since 1.33.0
              */
             manifestUrl?: string;
             /**
-             * @since 1.33.0 defines whether the manifest is loaded before or after the Component controller. Defaults
-             * to `sap.ui.getCore().getConfiguration().getManifestFirst()`
+             * defines whether the manifest is loaded before or after the Component controller. Defaults to `sap.ui.getCore().getConfiguration().getManifestFirst()`
+             *
              * **DEPRECATED since 1.49.0, use `vConfig.manifest=true|false` instead!** Note that this property is ignored
              * when `vConfig.manifest` has a value other than `undefined`.
+             *
+             * @since 1.33.0
              */
             manifestFirst?: boolean;
             /**
@@ -88982,6 +91061,8 @@ declare namespace sap {
 
     "sap/base/strings/formatMessage": undefined;
 
+    "sap/base/strings/highlightText": undefined;
+
     "sap/base/strings/hyphenate": undefined;
 
     "sap/base/strings/whitespaceReplacer": undefined;
@@ -88989,6 +91070,8 @@ declare namespace sap {
     "sap/base/util/array/diff": undefined;
 
     "sap/base/util/array/uniqueSort": undefined;
+
+    "sap/base/util/clamp": undefined;
 
     "sap/base/util/deepClone": undefined;
 
@@ -89330,6 +91413,8 @@ declare namespace sap {
 
     "sap/ui/core/tmpl/TemplateControl": undefined;
 
+    "sap/ui/core/tooltip/TooltipEnablement": undefined;
+
     "sap/ui/core/TooltipBase": undefined;
 
     "sap/ui/core/UIArea": undefined;
@@ -89401,6 +91486,8 @@ declare namespace sap {
     "sap/ui/dom/denormalizeScrollBeginRTL": undefined;
 
     "sap/ui/dom/denormalizeScrollLeftRTL": undefined;
+
+    "sap/ui/dom/detectTextSelection": undefined;
 
     "sap/ui/dom/getOwnerWindow": undefined;
 
@@ -89705,6 +91792,8 @@ declare namespace sap {
     "sap/ui/model/xml/XMLModel": undefined;
 
     "sap/ui/model/xml/XMLTreeBinding": undefined;
+
+    "sap/ui/performance/FetchInterceptor": undefined;
 
     "sap/ui/performance/Measurement": undefined;
 

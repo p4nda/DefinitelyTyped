@@ -513,7 +513,21 @@ function TestWebElement() {
     element = element.findElement({ id: "ABC" });
     element.findElements({ className: "ABC" }).then((elements: webdriver.WebElement[]) => {});
 
-    stringPromise = element.getAttribute("class");
+    const maybeAttr: Promise<string | null> = element.getAttribute("class");
+    maybeAttr.then(v => {
+        if (v !== null) {
+            v.toUpperCase();
+        }
+    });
+    const maybeDomAttr: Promise<string | null> = element.getDomAttribute("class");
+    maybeDomAttr.then(v => {
+        if (v !== null) {
+            v.toUpperCase();
+        }
+    });
+    stringPromise = element.getProperty("value");
+    stringPromise = element.getAriaRole();
+    stringPromise = element.getAccessibleName();
     stringPromise = element.getCssValue("display");
     driver = element.getDriver();
     element.getLocation().then((location: webdriver.ILocation) => {});
@@ -597,6 +611,29 @@ function TestUntilModule() {
     conditionWebElement = webdriver.until.elementTextIs(el, "text");
     conditionWebElement = webdriver.until.elementTextMatches(el, /text/);
     conditionWebElements = webdriver.until.elementsLocated(webdriver.By.className("class"));
+}
+
+// Test for https://github.com/SeleniumHQ/selenium/issues/14239
+// driver.wait(until.elementsLocated(...)) should return Promise<WebElement[]>, not WebElementPromise
+async function TestElementsLocatedReturnsArray() {
+    let driver: webdriver.WebDriver = new webdriver.Builder().withCapabilities(webdriver.Capabilities.chrome()).build();
+
+    // elementsLocated should return Condition<WebElement[]>
+    // driver.wait should correctly resolve this to Promise<WebElement[]>
+    const elements: webdriver.WebElement[] = await driver.wait(
+        webdriver.until.elementsLocated(webdriver.By.css(".foo")),
+    );
+
+    // These should compile - elements is an array
+    const length: number = elements.length;
+    elements.forEach((el: webdriver.WebElement) => el.click());
+    const mapped: string[] = elements.map((el: webdriver.WebElement) => "test");
+
+    // elementLocated (singular) should still return WebElementPromise
+    const singleElement: webdriver.WebElement = await driver.wait(
+        webdriver.until.elementLocated(webdriver.By.css(".foo")),
+    );
+    singleElement.click();
 }
 
 function TestShadowRoot() {

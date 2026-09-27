@@ -47,6 +47,7 @@ cal.removeEventById(345)
         end: new Date(Date.now() + 2 * 60 * 60 * 1000),
     });
 cal.refetchEvents();
+cal.refetchResources();
 cal.dateFromPoint(0, 0);
 cal.getView();
 cal.next();
@@ -60,6 +61,7 @@ const dateFormat: Intl.DateTimeFormatOptions = {
     day: "numeric",
 };
 
+// exact details of theme aren't checked by typescript, but at least test with realistic theme data
 const defaultTheme = {
     allDay: "ec-all-day",
     active: "ec-active",
@@ -79,6 +81,7 @@ const defaultTheme = {
     daySide: "ec-day-side",
     draggable: "ec-draggable",
     dragging: "ec-dragging",
+    endClipped: "ec-end-clipped",
     event: "ec-event",
     eventBody: "ec-event-body",
     eventTag: "ec-event-tag",
@@ -108,6 +111,7 @@ const defaultTheme = {
     selecting: "ec-selecting",
     sidebar: "ec-sidebar",
     sidebarTitle: "ec-sidebar-title",
+    startClipped: "ec-start-clipped",
     today: "ec-today",
     time: "ec-time",
     times: "ec-times",
@@ -124,6 +128,7 @@ cal = createCalendar(target, plugins, {
     allDayContent: "content",
     allDaySlot: true,
     buttonText: { foo: "bar" },
+    columnWidth: "20px",
     customButtons: {
         foo: {
             text: "Foo",
@@ -135,10 +140,13 @@ cal = createCalendar(target, plugins, {
             click: () => undefined,
         },
     },
+    customScrollbars: true,
     date: "1997-04-12",
     dateClick: (_info: Calendar.DateClickInfo) => {},
+    dateIncrement: { days: 7 },
     datesAboveResources: false,
     datesSet: (_info: Calendar.DatesSetInfo) => {},
+    dayCellContent: { html: "" },
     dayCellFormat: dateFormat,
     dayHeaderAriaLabelFormat: dateFormat,
     dayHeaderFormat: dateFormat,
@@ -204,18 +212,22 @@ cal = createCalendar(target, plugins, {
     height: "100%",
     hiddenDays: [2],
     highlightedDates: ["2024-01-01", new Date()],
+    icons: { collapse: { html: "&minus;" }, expand: { html: "&plus;" } },
     lazyFetching: true,
     listDayFormat: dateFormat,
     listDaySideFormat: dateFormat,
     loading: (_isLoading: boolean) => {},
     locale: "en-US",
     longPressDelay: 100,
+    monthHeaderFormat: { month: "long" },
     moreLinkContent: "content",
     noEventsClick: (_info: Calendar.NoEventsClickInfo) => {},
     noEventsContent: "content",
     nowIndicator: true,
     pointer: true,
+    refetchResourcesOnNavigate: true,
     resizeConstraint: (_info: Calendar.EventResizeInfo) => true,
+    resourceExpand: (_info: Calendar.ResourceExpandInfo) => {},
     resources: [{ id: "foo" }, { id: "bar", extendedProps: { fred: "barney" } }],
     resourceLabelContent: "content",
     resourceLabelDidMount: (_info: Calendar.ResourceDidMountInfo) => {},
@@ -236,7 +248,9 @@ cal = createCalendar(target, plugins, {
     slotMinTime: 300,
     slotMaxTime: "04:00:00",
     slotWidth: 100,
+    snapDuration: 200,
     theme: defaultTheme,
+    timeZone: "+02:00",
     titleFormat: dateFormat,
     unselect: (_info: Calendar.UnselectInfo) => {},
     unselectAuto: true,
@@ -263,6 +277,8 @@ cal.setOption("buttonText", () => {
         customButtons.bar = { text: "Bar", active: false, click: () => undefined };
         return customButtons;
     })
+    .setOption("columnWidth", undefined)
+    .setOption("dayCellContent", (_arg: Calendar.DayCellContentArg) => "content")
     .setOption("dayCellFormat", (_d: Date) => "content")
     .setOption("dayHeaderAriaLabelFormat", (_d: Date) => "content")
     .setOption("dayHeaderFormat", (_d: Date) => "content")
@@ -273,8 +289,10 @@ cal.setOption("buttonText", () => {
     })
     .setOption("eventTimeFormat", (_start: Date, _end: Date) => "content")
     .setOption("flexibleSlotTimeLimits", { eventFilter: (_ev: Calendar.Event) => false })
+    .setOption("icons", (_icons: Calendar.Icons) => ({ expand: "content" }))
     .setOption("listDayFormat", (_d: Date) => "content")
     .setOption("listDaySideFormat", (_d: Date) => "content")
+    .setOption("monthHeaderFormat", (_date: Date) => "content")
     .setOption("moreLinkContent", (_info: Calendar.MoreLinkInfo) => "content")
     .setOption("noEventsContent", () => "content")
     .setOption("resourceLabelContent", (_info: Calendar.ResourceLabelInfo) => "content")
@@ -299,11 +317,20 @@ cal.setOption("buttonText", () => {
         }
         return result;
     })
+    .setOption("timeZone", "UTC")
     .setOption("titleFormat", (_s: Date, _e: Date) => "content")
     .setOption("views", { resourceTimeGrid: { selectMinDistance: 300 } })
     .setOption("buttonText", (text: Calendar.ButtonTextMapping) => {
         return { ...text, foo: "bar" };
     });
+
+// define a custom view while inheriting options from a standard view
+cal.setOption("views", {
+    resourceTimelineThreeDays: {
+        type: "resourceTimelineDay",
+        duration: { days: 3 },
+    },
+});
 
 // check some invalid combinations for FooInput and Foo types
 // @ts-expect-error
@@ -315,6 +342,7 @@ let validResource: Calendar.Resource = {
     title: "content",
     eventBackgroundColor: undefined,
     eventTextColor: undefined,
+    expanded: true,
     extendedProps: { a: 1, b: "two", c: [] },
 };
 const { title, ...rest } = validResource;

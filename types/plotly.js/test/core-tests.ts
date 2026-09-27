@@ -28,7 +28,15 @@ const trace2 = {
     ],
     type: "scatter",
 } as ScatterData;
-const data = [trace1, trace2];
+const trace3 = {
+    x0: 1999,
+    dx: 1,
+    y0: 0,
+    dy: 5,
+    z: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]],
+    type: "heatmap",
+} as PlotData;
+const data = [trace1, trace2, trace3];
 const tickangle: "auto" = "auto";
 const layout = {
     title: {
@@ -42,6 +50,7 @@ const layout = {
         showgrid: false,
         zeroline: false,
         tickangle,
+        scaleanchor: false,
     },
     yaxis: {
         title: {
@@ -531,12 +540,36 @@ const layout = {
             y: [0.45803057, 0.51208141, 0.29845217, 0.09788102, 0.2866858],
             type: "scatter",
             yaxis: "y",
+            fill: "none",
+            fillcolor: "#000000",
+            fillpattern: {
+                shape: ["+", "-"],
+                path: "",
+                fillmode: "replace",
+                bgcolor: ["#ffffff"],
+                fgcolor: ["#ff0000"],
+                fgopacity: 0.5,
+                size: 1,
+                solidity: [0, 0.5],
+            },
         },
         {
             x: [1, 2, 3, 4, 5],
             y: [150.36977661, 641.21444452, 39.2096064, 546.90053751, 97.10039431],
             type: "scatter",
             yaxis: "y2",
+            fill: "none",
+            fillcolor: "#000000",
+            fillpattern: {
+                shape: ["+", "-"],
+                path: "",
+                fillmode: "replace",
+                bgcolor: ["#ffffff"],
+                fgcolor: ["#ff0000"],
+                fgopacity: 0.5,
+                size: 1,
+                solidity: [0, 0.5],
+            },
         },
     ];
     const layout: Partial<Layout> = {

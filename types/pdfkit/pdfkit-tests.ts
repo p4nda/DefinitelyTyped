@@ -10,6 +10,7 @@ import mtext = require("pdfkit/js/mixins/text");
 
 import PDFDocument = require("pdfkit");
 import PDFDocumentStandalone = require("pdfkit/js/pdfkit.standalone");
+import stream = require("stream");
 
 import font = require("pdfkit/js/mixins/fonts");
 import pdfData = require("pdfkit/js/data");
@@ -33,6 +34,15 @@ var doc: PDFKit.PDFDocument = new PDFDocument({
     font: "Arial",
     fontLayoutCache: true,
 });
+
+const readable: stream.Readable = doc;
+
+// $ExpectType PDFDocument
+doc.destroy();
+// $ExpectType boolean
+doc.destroyed;
+// $ExpectType boolean
+doc.readableEnded;
 
 // $ExpectType PDFDocument
 doc.addPage();
@@ -458,6 +468,28 @@ doc.table({
         if (i === 0) return { border: { top: 2 }, borderColor: { top: "black" } };
         if (i === 3) return { border: { bottom: 2 }, borderColor: { bottom: "black" } };
     },
+    data: [
+        ["Header 1", "Header 2", "Header 3"],
+        ["Sample value 1", "Sample value 2", "Sample value 3"],
+        ["Sample value 1", "Sample value 2", "Sample value 3"],
+        ["Sample value 1", "Sample value 2", "Sample value 3"],
+    ],
+});
+
+// Alternative way to define the same styles as above using arrays
+doc.table({
+    // Set the style for all cells
+    defaultStyle: { border: 1, borderColor: "gray" },
+    // Set the style for cells based on their column
+    columnStyles: [{ border: { left: 2 }, borderColor: { left: "black" } }, {
+        border: { right: 2 },
+        borderColor: { right: "black" },
+    }],
+    // Set the style for cells based on their row
+    rowStyles: [{ border: { top: 2 }, borderColor: { top: "black" } }, {
+        border: { bottom: 2 },
+        borderColor: { bottom: "black" },
+    }],
     data: [
         ["Header 1", "Header 2", "Header 3"],
         ["Sample value 1", "Sample value 2", "Sample value 3"],

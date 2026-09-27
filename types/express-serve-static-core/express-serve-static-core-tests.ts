@@ -45,16 +45,16 @@ app.route("/:foo").get(req => {
     req.is(1);
 });
 
-// Params can used as an array
-app.get<express.ParamsArray>("/*", req => {
-    req.params[0]; // $ExpectType string
-    req.params.length; // $ExpectType number
+// Wildcard parameters return string arrays
+app.get("/*foo", req => {
+    req.params.foo; // $ExpectType string[]
+    req.params.foo.length; // $ExpectType number
 });
 
-// Params can used as an array - under route
-app.route("/*").get<express.ParamsArray>(req => {
-    req.params[0]; // $ExpectType string
-    req.params.length; // $ExpectType number
+// Wildcard parameters return string arrays - under route
+app.route("/*foo").get(req => {
+    req.params.foo; // $ExpectType string[]
+    req.params.foo.length; // $ExpectType number
 });
 
 // Params can be a custom type
@@ -74,10 +74,16 @@ app.route("/:foo/:bar").get<{ foo: string; bar: number }>(req => {
     req.params.baz;
 });
 
-// Optional params
-app.get("/:foo/:bar?", req => {
+// Regular expressions have parameters that always are strings, never arrays of strings
+app.get(/^\/(.*?)\|(?<b>\d+)/, req => {
+    req.params[0]; // $ExpectType string
     req.params.foo; // $ExpectType string
-    req.params.bar; // $ExpectType string | undefined
+});
+
+// Regular expressions have parameters that always are strings, never arrays of strings - under route
+app.route(/^\/(.*?)\|(?<b>\d+)/).get(req => {
+    req.params[0]; // $ExpectType string
+    req.params.foo; // $ExpectType string
 });
 
 // Express 5.0: Optional params
@@ -105,14 +111,6 @@ app.get("/:foo/:bar-:baz/:qux", req => {
     req.params.qux; // $ExpectType string
     // @ts-expect-error
     req.params.quxx;
-});
-
-// regex parameters - not supported
-app.get("/:foo/:bar(\\d:+)/:baz", req => {
-    req.params.foo; // $ExpectType string
-    req.params.bar; // $ExpectType string
-    req.params.qux; // $ExpectType string
-    req.params.quxx; // $ExpectType string
 });
 
 // long path parameters - https://github.com/DefinitelyTyped/DefinitelyTyped/pull/53513#issuecomment-870550063
@@ -302,13 +300,16 @@ app.get<{}, any, any, {}, { foo: boolean }>("/locals", (req, res, next) => {
 
 app.get("/file.txt", (req, res) => {
     res.download("/some/path/to/file.txt", "file.txt", { maxAge: 3_600_000 }, error => {
-        // $ExpectType Error
+        // $ExpectType Error | undefined
         error;
     });
 });
 
 app.get("/file2.txt", (req, res) => {
-    res.sendFile("/some/path/to/file2.txt", { maxAge: 3_600_000 });
+    res.sendFile("/some/path/to/file2.txt", { maxAge: 3_600_000 }, error => {
+        // $ExpectType Error | undefined
+        error;
+    });
     // @ts-expect-error
     res.sendFile("/some/path/to/file2.txt", { "max-age": 3_600_000 });
 });
@@ -353,3 +354,6 @@ app.router.stack;
 app.on("mount", (app) => {
     app; // $ExpectType Application<Record<string,any>
 });
+
+// QUERY method presence depends on environment
+app.query?.("/foo/bar", (req) => req.method);

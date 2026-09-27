@@ -49,6 +49,7 @@ Autodesk.Viewing.Initializer(options, async () => {
     modelTests(model);
     modelStructurePanelTests(viewer);
     preferencesTests(viewer);
+    rayIntersectTests(viewer);
     showHideTests(viewer);
     worldUpTests(viewer);
     selectionTests(viewer);
@@ -570,6 +571,20 @@ async function visualClustersTests(viewer: Autodesk.Viewing.GuiViewer3D): Promis
     ext.reset();
 }
 
+function rayIntersectTests(viewer: Autodesk.Viewing.GuiViewer3D): void {
+    const ray = new THREE.Ray(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1));
+
+    // $ExpectType HitTestResult | undefined
+    const result = viewer.impl.rayIntersect(ray, true, [2120], [viewer.model.id]);
+
+    if (result) {
+        // $ExpectType number
+        result.dbId;
+        // $ExpectType Vector3
+        result.point;
+    }
+}
+
 function worldUpTests(viewer: Autodesk.Viewing.GuiViewer3D): void {
     const expectedUp = new THREE.Vector3(0, 0, 1);
 
@@ -753,9 +768,9 @@ async function cameraMappingTest(viewer: Autodesk.Viewing.GuiViewer3D): Promise<
 async function dbIdRemappingTest(viewer: Autodesk.Viewing.GuiViewer3D): Promise<void> {
     // Override `PropDbLoader#load` so that the svf1/svf2 dbid mapping is always loaded.
     const _load = Autodesk.Viewing.Private.PropDbLoader.prototype.load;
-    Autodesk.Viewing.Private.PropDbLoader.prototype.load = function() {
+    Autodesk.Viewing.Private.PropDbLoader.prototype.load = function(options) {
         this.needsDbIdRemap = true;
-        _load.call(this);
+        _load.apply(this, options);
     };
 
     // Override `PropDbLoader#processLoadResult` so that the dbid mapping is stored within all models (by default it is only stored in 2D models).

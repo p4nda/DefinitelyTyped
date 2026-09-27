@@ -286,3 +286,23 @@ const p13nEngine = new Engine();
 // version 1.142.0 added - tests are not required as the type definitions are generated and the generator is sufficiently tested
 
 // version 1.143.0 added - tests are not required as the type definitions are generated and the generator is sufficiently tested
+
+// version 1.144.0 added - tests are not required as the type definitions are generated and the generator is sufficiently tested
+
+// version 1.145.0 added - tests are not required as the type definitions are generated and the generator is sufficiently tested
+
+// version 1.146.0 added - tests are not required as the type definitions are generated and the generator is sufficiently tested
+
+// version 1.147.0 added - tests are not required as the type definitions are generated and the generator is sufficiently tested
+
+// sap.ui.webc.* libraries removed - tests are not required as the type definitions are generated and the generator is sufficiently tested
+
+// version 1.148.0 added - tests are not required as the type definitions are generated and the generator is sufficiently tested
+
+// version 1.149.0 added - tests are not required as the type definitions are generated and the generator is sufficiently tested
+
+// version 1.150.0 added - tests are not required as the type definitions are generated and the generator is sufficiently tested
+
+// version 1.151.0 added - tests are not required as the type definitions are generated and the generator is sufficiently tested
+
+// version 1.152.0 added - tests are not required as the type definitions are generated and the generator is sufficiently tested

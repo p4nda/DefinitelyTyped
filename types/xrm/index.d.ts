@@ -321,6 +321,24 @@ declare namespace Xrm {
          * Returns the difference in minutes between the local time and Coordinated Universal Time (UTC).
          */
         getTimeZoneOffsetMinutes(): number;
+        /**
+         * Returns a promise resolving to an object whose properties are the privilege GUIDs and whose values are privilege info objects for each security role privilege assigned to the user.
+         * @see {@link https://learn.microsoft.com/en-us/power-apps/developer/model-driven-apps/clientapi/reference/xrm-utility/getglobalcontext/usersettings#getsecurityroleprivilegesinfo-method Microsoft Docs: getSecurityRolePrivilegesInfo}
+         *
+         * @param successCallback Optional. A callback function to execute when the operation is successful.
+         * @param errorCallback Optional. A callback function to execute if the operation fails.
+         * @returns A promise that resolves to a dictionary where each key is a privilege GUID and value is an object with privilege details.
+         */
+        getSecurityRolePrivilegesInfo(
+            successCallback?: (
+                result: {
+                    [privilegeId: string]: { id: string; businessUnitId: string; privilegeName: string; depth: number };
+                },
+            ) => void,
+            errorCallback?: (error: { errorCode: number; message: string }) => void,
+        ): Promise<
+            { [privilegeId: string]: { id: string; businessUnitId: string; privilegeName: string; depth: number } }
+        >;
     }
 
     /**
@@ -1220,6 +1238,13 @@ declare namespace Xrm {
      */
     interface Ui {
         /**
+         * Adds a function to be called on the form Loaded event.
+         * The function will be added to the bottom of the event handler pipeline.
+         * @see {@link https://learn.microsoft.com/power-apps/developer/model-driven-apps/clientapi/reference/formcontext-ui/addloaded External Link: ui.addLoaded (Client API reference)}
+         */
+        addLoaded(handler: Events.LoadEventHandler | Events.LoadEventHandlerAsync): void;
+
+        /**
          * Adds a function to be called on the form OnLoad event.
          * The function will be added to the bottom of the event handler pipeline.
          * @see {@link https://learn.microsoft.com/power-apps/developer/model-driven-apps/clientapi/reference/formcontext-ui/addonload External Link: ui.addOnLoad (Client API reference)}
@@ -1302,6 +1327,12 @@ declare namespace Xrm {
          * @see {@link https://learn.microsoft.com/power-apps/developer/model-driven-apps/clientapi/reference/formcontext-ui/removeonload External Link: ui.removeOnLoad (Client API reference)}
          */
         removeOnLoad(handler: Events.LoadEventHandler | Events.LoadEventHandlerAsync): void;
+
+        /**
+         * Removes a function from the form Loaded event.
+         * @see {@link https://learn.microsoft.com/power-apps/developer/model-driven-apps/clientapi/reference/formcontext-ui/removeloaded External Link: ui.removeLoaded (Client API reference)}
+         */
+        removeLoaded(handler: Events.LoadEventHandler | Events.LoadEventHandlerAsync): void;
 
         /**
          * Sets the name of the table to be displayed on the form.
@@ -1862,14 +1893,14 @@ declare namespace Xrm {
              * @param itemNameOrNumber The item name or item number to get.
              * @returns The T matching the key itemName or the T in the itemNumber-th place.
              */
-            get<TSubType extends T>(itemNameOrNumber: string | number): TSubType;
+            get(itemNameOrNumber: string | number): T | null;
 
             /**
              * Gets the item given by key or index.
              * @param itemNameOrNumber The item name or item number to get.
              * @returns The T matching the key itemName or the T in the itemNumber-th place.
              */
-            get(itemNameOrNumber: string | number): T | null;
+            get<TSubType extends T>(itemNameOrNumber: string | number): TSubType;
 
             /**
              * Gets the item using a delegate matching function or the entire array of T if delegate is not provided.
@@ -2919,7 +2950,7 @@ declare namespace Xrm {
              * @param value The enumeration value of the option desired.
              * @returns The option.
              */
-            getOption(value: number): OptionSetValue;
+            getOption(value: T): OptionSetValue;
 
             /**
              * Gets the option matching a label.
@@ -2954,7 +2985,7 @@ declare namespace Xrm {
              *              OptionSet attribute. Attributes on Quick Create Forms will not save values set
              *              with this method.
              */
-            setValue(value: number | null): void;
+            setValue(value: T | null): void;
 
             /**
              * A collection of all the controls on the form that interface with this attribute.
@@ -2985,7 +3016,7 @@ declare namespace Xrm {
              * @param value The enumeration value of the option desired.
              * @returns The option.
              */
-            getOption(value: number): OptionSetValue;
+            getOption(value: T): OptionSetValue;
 
             /**
              * Gets the option matching a label.
@@ -3020,13 +3051,13 @@ declare namespace Xrm {
              *              OptionSet attribute. Attributes on Quick Create Forms will not save values set
              *              with this method.
              */
-            setValue(value: number[] | null): void;
+            setValue(value: T[] | null): void;
 
             /**
              * A collection of all the controls on the form that interface with this attribute.
              * @see {@link https://docs.microsoft.com/en-us/dynamics365/customer-engagement/developer/clientapi/reference/collections External Link: Collections (Client API reference)}
              */
-            controls: Collection.ItemCollection<Controls.OptionSetControl>;
+            controls: Collection.ItemCollection<Controls.MultiSelectOptionSetControl>;
         }
 
         /**
@@ -3896,7 +3927,7 @@ declare namespace Xrm {
          * @remarks     An Iframe control provides additional methods, so use {@link IframeControl} where
          *              appropriate.  Silverlight controls should use {@link SilverlightControl}.
          */
-        interface FramedControl extends Control {
+        interface FramedControl extends Control, UiCanSetVisibleElement {
             /**
              * Returns the content window that represents an IFRAME or web resource.
              * @returns A promise that contains a content window instance representing an IFRAME or web resource.
@@ -5336,7 +5367,7 @@ declare namespace Xrm {
             /**
              * The error code. If you just set errorCode, the message for the error code is automatically
              * retrieved from the server and displayed in the error dialog.
-             * If you specify an invalid errorCode value, an error dialog with a default error message is displyed.
+             * If you specify an invalid errorCode value, an error dialog with a default error message is displayed.
              */
             errorCode?: number | undefined;
             /**
@@ -5574,6 +5605,26 @@ declare namespace Xrm {
             dashboardId?: string | undefined;
         }
 
+        interface GenerativePage {
+            pageType: "generative";
+            /**
+             * The ID of the generative page to open.
+             */
+            pageId: string;
+            /**
+             * The GUID of a record to pass to the page.
+             */
+            recordId?: string | undefined;
+            /**
+             * The logical name of the Dataverse table corresponding to the recordId.
+             */
+            entityName?: string | undefined;
+            /**
+             * A JSON object containing additional custom parameters to pass to the page.
+             */
+            data?: { [index: string]: any } | undefined;
+        }
+
         /**
          * Options for navigating to a page: whether to open inline or in a dialog. If you don't specify this parameter, page is opened inline by default.
          */
@@ -5630,7 +5681,8 @@ declare namespace Xrm {
                 | Navigation.PageInputEntityList
                 | Navigation.CustomPage
                 | Navigation.PageInputHtmlWebResource
-                | Navigation.Dashboard,
+                | Navigation.Dashboard
+                | Navigation.GenerativePage,
             navigationOptions?: Navigation.NavigationOptions,
         ): Async.PromiseLike<any>;
 
@@ -5996,13 +6048,6 @@ declare namespace Xrm {
      */
     interface WebApi extends WebApiOffline {
         /**
-         * Returns a boolean value indicating whether an entity is offline enabled.
-         * @param entityLogicalName    Logical name of the entity. For example: "account".
-         * @returns true if the entity is offline enabled; otherwise false.
-         */
-        isAvailableOffline(entityLogicalName: string): boolean;
-
-        /**
          * Provides methods to use Web API to create and manage records and execute Web API actions and functions in Customer Engagement when connected to the Customer Engagement server (online mode).
          * @see {@link https://learn.microsoft.com/en-us/power-apps/developer/model-driven-apps/clientapi/reference/xrm-webapi/online External Link: Xrm.WebApi.online (Client API reference)}
          */
@@ -6138,6 +6183,14 @@ declare namespace Xrm {
          * @see {@link https://learn.microsoft.com/en-us/power-apps/developer/model-driven-apps/clientapi/reference/xrm-webapi/updaterecord External Link: updateRecord (Client API reference)}
          */
         updateRecord(entityLogicalName: string, id: string, data: any): Async.PromiseLike<UpdateResponse>;
+
+        /**
+         * Returns a boolean value indicating whether an entity is offline enabled.
+         * @param entityLogicalName    Logical name of the entity. For example: "account".
+         * @returns true if the entity is offline enabled; otherwise false.
+         * @see {@link https://learn.microsoft.com/en-us/power-apps/developer/model-driven-apps/clientapi/reference/xrm-webapi/isavailableoffline External Link: isAvailableOffline (Client API reference)}
+         */
+        isAvailableOffline(entityLogicalName: string): boolean;
     }
 
     /**

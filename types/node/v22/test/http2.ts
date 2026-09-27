@@ -56,6 +56,8 @@ import { URL } from "node:url";
         maxFrameSize: 0,
         maxConcurrentStreams: 0,
         maxHeaderListSize: 0,
+        enableConnectProtocol: false,
+        customSettings: { 10: 10 },
     };
 }
 
@@ -67,11 +69,14 @@ import { URL } from "node:url";
     http2Session.on("close", () => {});
     http2Session.on("connect", (session: Http2Session, socket: Socket) => {});
     http2Session.on("error", (err: Error) => {});
-    http2Session.on("frameError", (frameType: number, errorCode: number, streamID: number) => {});
+    http2Session.on("frameError", (frameType: number, errorCode: number, id: number) => {});
     http2Session.on("goaway", (errorCode: number, lastStreamID: number, opaqueData?: Buffer) => {});
     http2Session.on("localSettings", (settings: Settings) => {});
     http2Session.on("remoteSettings", (settings: Settings) => {});
-    http2Session.on("stream", (stream: Http2Stream, headers: IncomingHttpHeaders, flags: number) => {});
+    http2Session.on(
+        "stream",
+        (stream: Http2Stream, headers: IncomingHttpHeaders, flags: number, rawHeaders: string[]) => {},
+    );
     http2Session.on("timeout", () => {});
     http2Session.on("ping", () => {});
 
@@ -142,7 +147,7 @@ import { URL } from "node:url";
 
     http2Stream.on("aborted", () => {});
     http2Stream.on("error", (err: Error) => {});
-    http2Stream.on("frameError", (frameType: number, errorCode: number, streamID: number) => {});
+    http2Stream.on("frameError", (frameType: number, errorCode: number, id: number) => {});
     http2Stream.on("streamClosed", (code: number) => {});
     http2Stream.on("timeout", () => {});
     http2Stream.on("trailers", (trailers: IncomingHttpHeaders, flags: number) => {});
@@ -187,9 +192,12 @@ import { URL } from "node:url";
     const clientHttp2Stream: ClientHttp2Stream = {} as any;
     clientHttp2Stream.on("headers", (headers: IncomingHttpHeaders, flags: number) => {});
     clientHttp2Stream.on("push", (headers: IncomingHttpHeaders, flags: number) => {});
-    clientHttp2Stream.on("response", (headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number) => {
-        const s: number = headers[":status"]!;
-    });
+    clientHttp2Stream.on(
+        "response",
+        (headers: IncomingHttpHeaders & IncomingHttpStatusHeader, flags: number, rawHeaders: string[]) => {
+            const s: number = headers[":status"]!;
+        },
+    );
 
     // ServerHttp2Stream
     const serverHttp2Stream: ServerHttp2Stream = {} as any;
@@ -210,6 +218,7 @@ import { URL } from "node:url";
     serverHttp2Stream.respond();
     serverHttp2Stream.respond(headers);
     serverHttp2Stream.respond(headers, options);
+    serverHttp2Stream.respond([":status", "400"]);
 
     const options2: ServerStreamFileResponseOptions = {
         statCheck: (stats: Stats, headers: OutgoingHttpHeaders, statOptions: StatOptions) => {},
@@ -241,10 +250,13 @@ import { URL } from "node:url";
     const s1: Server = http2Server;
     const s2: Server = http2SecureServer;
     [http2Server, http2SecureServer].forEach((server) => {
-        server.on("sessionError", (err: Error) => {});
+        server.on("sessionError", (err: Error, session: ServerHttp2Session) => {});
         server.on("session", (session: ServerHttp2Session) => {});
         server.on("checkContinue", (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => {});
-        server.on("stream", (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number) => {});
+        server.on(
+            "stream",
+            (stream: ServerHttp2Stream, headers: IncomingHttpHeaders, flags: number, rawHeaders: string[]) => {},
+        );
         server.on("request", (request: Http2ServerRequest, response: Http2ServerResponse) => {});
         server.on("timeout", () => {});
         server.setTimeout().setTimeout(5).setTimeout(5, () => {});
@@ -260,6 +272,8 @@ import { URL } from "node:url";
 {
     let settings: Settings = {};
     const serverOptions: ServerOptions = {
+        maxSessionRejectedStreams: 1,
+        maxSessionInvalidFrames: 1,
         maxDeflateDynamicTableSize: 0,
         maxSettings: 32,
         maxSessionMemory: 10,
@@ -343,6 +357,7 @@ import { URL } from "node:url";
         response.writeHead(200, outgoingHeaders);
         response.writeHead(200, "OK", outgoingHeaders);
         response.writeHead(200, "OK");
+        response.writeHead(200, "OK", ["Content-Type", "application/json"]);
         response.write("");
         response.write("", (err: Error) => {});
         response.write("", "utf8");
@@ -436,13 +451,13 @@ import { URL } from "node:url";
 // Http2ServerRequest, Http2ServerResponse,
 {
     class MyHttp2ServerRequest extends Http2ServerRequest {
-        foo: number;
+        foo!: number;
     }
 
     class MyHttp2ServerResponse<Request extends Http2ServerRequest = Http2ServerRequest>
         extends Http2ServerResponse<Request>
     {
-        bar: string;
+        bar!: string;
     }
 
     function reqListener(req: Http2ServerRequest, res: Http2ServerResponse): void {}

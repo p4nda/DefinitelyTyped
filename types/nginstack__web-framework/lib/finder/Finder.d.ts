@@ -7,6 +7,7 @@ declare class Finder {
     result: any[];
     dsResult: DataSet;
     private logger_;
+    private limit;
     private classDefManager_;
     getChildrenWithoutFind(startClass: any): string;
     sortClass(cd1: any, cd2: any): 1 | 0 | -1;

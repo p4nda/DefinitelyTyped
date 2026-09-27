@@ -7,6 +7,7 @@ import {
     ColumnDefinition,
     ColumnDefinitionSorterParams,
     DataTreeModule,
+    Filter,
     FilterModule,
     GroupComponent,
     InputParams,
@@ -58,6 +59,30 @@ table.setFilter([
         { field: "name", type: "=", value: "steve" }, // or a name of steve
     ],
 ]);
+
+// Test addFilter with standard field-based filter
+table.addFilter("name", "=", "John");
+table.addFilter("age", ">", 21, { separator: "," });
+
+// Test addFilter with custom function filter
+const customFilter = (data: any, filterParams: any): boolean => {
+    return data.age > filterParams.minAge && data.name.includes(filterParams.searchTerm);
+};
+table.addFilter(customFilter, { minAge: 18, searchTerm: "John" });
+
+// Test removeFilter with standard field-based filter
+table.removeFilter("name", "=", "John");
+
+// Test removeFilter with custom function filter (must use same function reference)
+table.removeFilter(customFilter, { minAge: 18, searchTerm: "John" });
+
+// Test dependencies option with external libraries
+table = new Tabulator("#test", {
+    dependencies: {
+        DateTime: {} as any, // Mock DateTime library
+        customLib: { version: "1.0" },
+    },
+});
 
 table
     .setPageToRow(12)
@@ -385,6 +410,7 @@ colDef.validator = {
 };
 colDef.validator = "float";
 colDef.validator = { type: "float", parameters: {} };
+colDef.validator = (cell, value) => true;
 
 let validators: Validator[] = [
     { type: "integer", parameters: {} },
@@ -613,6 +639,30 @@ table.download("pdf", "data.pdf", {
 table.download("xlsx", "AllData.xlsx");
 table.download("csv", "data.csv", { bom: true });
 table.download("csv", "data.csv", { delimiter: "." });
+table.download(
+    (rows, options, setFileContents) => {
+        const fileContents: string[] = [];
+        rows.forEach((row) => {
+            const item: any[] = [];
+            switch (row.type) {
+                case "header":
+                case "group":
+                case "calc":
+                case "row":
+                    row.columns.forEach((col) => {
+                        if (col) {
+                            item.push(col.value);
+                        }
+                        fileContents.push(item.join(options.delimiter));
+                    });
+                    break;
+            }
+        });
+        setFileContents(fileContents.join("\r\n"), "text/plain");
+    },
+    "data.txt",
+    { delimiter: "." },
+);
 
 // 4.4 updates
 table.moveColumn("name", "age", true);
@@ -849,10 +899,22 @@ table = new Tabulator("#example-table", {
                 return value >= params.legalAge;
             },
             accessorHtmlOutputParams: { legalAge: 18 },
+            headerFilter: "input",
+        },
+        {
+            title: "Name2",
+            field: "name2",
+            headerFilter: "list",
+            headerFilterParams: {
+                multiselect: true,
+                values: ["value1", "value2", "value3"],
+            },
         },
     ],
 });
 const filterVal = table.getHeaderFilterValue("name");
+table.setHeaderFilterValue("name", "value");
+table.setHeaderFilterValue("name2", ["value1", "value3"]);
 table.recalc();
 const columns = table.getColumns(true);
 columns.forEach(col => col.getDefinition());
@@ -1143,12 +1205,24 @@ table.import("json", ".json");
 // 5.2
 table = new Tabulator("#test", {
     popupContainer: true,
+    rowClickPopup: "I'm a row Popup",
+    rowContextPopup: "I'm a row right-click Popup",
+    groupClickPopup: "Im a group Popup",
+    groupContextPopup: "Im a group right-click Popup",
     // test editor of type 'list' supported.
     columns: [
         {
             field: "test_editor",
             title: "Test Editor",
             editor: "list",
+            clickPopup: "Hey, Im a Popup!",
+        },
+        {
+            field: "test_popup",
+            title: "Test Popup",
+            contextPopup: (event, cell, onRendered) => {
+                return String(cell.getValue());
+            },
         },
     ],
 });
@@ -1507,7 +1581,7 @@ table = new Tabulator("#test", {
     ],
     dataTreeChildColumnCalcs: true,
     placeholder() {
-        return this.getHeaderFilters().length ? "No Matching Data" : "No Data";
+        return this.getHeaderFilters().length ? "No Matching Data" : new HTMLDivElement();
     },
     placeholderHeaderFilter: "No Matching Data",
     persistence: {

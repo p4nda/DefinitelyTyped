@@ -15,6 +15,36 @@ const upload = multer({
 upload; // $ExpectType Multer
 assert.strictEqual(upload.constructor.name, "Multer");
 
+const upload_with_defParamCharset = multer({
+    dest: "uploads/",
+    fileFilter: (req, file, cb) => {
+        cb(null, false);
+        cb(null, true);
+        cb(new Error(`I don't have a clue!`));
+    },
+    defParamCharset: "utf8",
+});
+
+upload_with_defParamCharset; // $ExpectType Multer
+assert.strictEqual(upload_with_defParamCharset.constructor.name, "Multer");
+
+const upload_with_limits = multer({
+    dest: "uploads/",
+    limits: {
+        fieldNameSize: 100,
+        fieldSize: 1048576,
+        fields: 10,
+        fieldNestingDepth: 2,
+        fileSize: Infinity,
+        files: Infinity,
+        parts: Infinity,
+        headerPairs: 2000,
+    },
+});
+
+upload_with_limits; // $ExpectType Multer
+assert.strictEqual(upload_with_limits.constructor.name, "Multer");
+
 const app = express();
 
 app.post(

@@ -209,6 +209,7 @@ export interface config {
     pool?: PoolOpts<Connection> | undefined;
     arrayRowMode?: boolean | undefined;
     authentication?: tds.ConnectionAuthentication | undefined;
+    validateConnection?: "socket" | boolean | undefined;
     /**
      * Invoked before opening the connection. The parameter conn is the configured
      * tedious Connection. It can be used for attaching event handlers.
@@ -216,9 +217,31 @@ export interface config {
     beforeConnect?: ((conn: Connection) => void) | undefined;
 }
 
+export type MSSQL_ERROR_CODE =
+    | "ELOGIN"
+    | "ETIMEOUT"
+    | "EDRIVER"
+    | "EALREADYCONNECTED"
+    | "EALREADYCONNECTING"
+    | "ENOTOPEN"
+    | "EINSTLOOKUP"
+    | "ESOCKET"
+    | "ECONNCLOSED"
+    | "ENOTBEGUN"
+    | "EALREADYBEGUN"
+    | "EREQINPROG"
+    | "EABORT"
+    | "EREQUEST"
+    | "ECANCEL"
+    | "EARGS"
+    | "EINJECT"
+    | "ENOCONN"
+    | "EALREADYPREPARED"
+    | "ENOTPREPARED";
+
 export declare class MSSQLError extends Error {
-    constructor(message: Error | string, code?: string);
-    public code: string;
+    constructor(message: Error | string, code?: MSSQL_ERROR_CODE);
+    public code: MSSQL_ERROR_CODE;
     public name: string;
     public originalError?: Error | undefined;
 }
@@ -236,8 +259,7 @@ export declare class ConnectionPool extends events.EventEmitter {
     public static parseConnectionString(
         connectionString: string,
     ): config & { options: IOptions; pool: Partial<PoolOpts<Connection>> };
-    public constructor(config: config, callback?: (err?: any) => void);
-    public constructor(connectionString: string, callback?: (err?: any) => void);
+    public constructor(configOrConnectionString: config | string, callback?: (err?: any) => void);
     public query(command: string): Promise<IResult<any>>;
     public query(strings: TemplateStringsArray, ...interpolations: any[]): Promise<IResult<any>>;
     public query<Entity>(command: string): Promise<IResult<Entity>>;

@@ -1,6 +1,10 @@
 // eslint-disable-next-line @definitelytyped/no-relative-import-in-test
 import fp = require("./fp");
 import _ = require("lodash");
+import conforms = require("lodash/conforms");
+import stubArray = require("lodash/stubArray");
+import stubObject = require("lodash/stubObject");
+import stubString = require("lodash/stubString");
 
 import type {
     GetFieldType,
@@ -760,7 +764,7 @@ _.chain([1, 2, 3, 4]).unshift(5, 6); // $ExpectType CollectionChain<number>
     // $ExpectType AbcObject[]
     _.intersectionWith(...[list, list], (a, b) => {
         a; // $ExpectType AbcObject
-        b; // $ExpectType never || AbcObject
+        b; // $ExpectType AbcObject
         return true;
     });
 
@@ -1480,6 +1484,10 @@ _.chain([1, 2, 3, 4]).unshift(5, 6); // $ExpectType CollectionChain<number>
     _(list).unzip(); // $ExpectType Collection<AbcObject[]>
     _.chain(list).unzip(); // $ExpectType CollectionChain<AbcObject[]>
     fp.unzip(list); // $ExpectType AbcObject[][]
+
+    _.unzip([[1, 'a'], [3, 'b'], [5, 'c']]); // $ExpectType [number[], string[]]
+    _.unzip([['a', 1, true], ['b', 2, false]]); // $ExpectType [string[], number[], boolean[]]
+    _.unzip([[1, undefined], [2, 'a']]); // $ExpectType [number[], (string | undefined)[]]
 }
 
 // _.unzipWith
@@ -3960,6 +3968,7 @@ fp.now(); // $ExpectType number
     _({ foo: (v: string) => false }).conforms().value()({ foo: "foo" }); // $ExpectType boolean
     _.chain({ foo: (v: string) => false }).conforms().value()({ foo: "foo" }); // $ExpectType boolean
     fp.conforms({ foo: (v: string) => false })({ foo: "foo" }); // $ExpectType boolean
+    conforms({ foo: (v: string) => false })({ foo: "foo" }); // $ExpectType boolean
 }
 
 // _.conformsTo
@@ -4419,7 +4428,7 @@ fp.now(); // $ExpectType number
 
     {
         class CustomError extends Error {
-            custom: string;
+            custom!: string;
         }
 
         const value: number | CustomError = anything;
@@ -7830,4 +7839,11 @@ _.templateSettings; // $ExpectType TemplateSettings
     type B = GetFieldType<Exclude<Type, string>, 0>; // $ExpectType 'ArrVal' | 'ObjVal0' | undefined
     type C = GetFieldType<Type, 'A'>; // $ExpectType 'ObjValA' | undefined
     type D = GetFieldType<Type, 'length'>; // $ExpectType number | undefined
+}
+
+// Stub modules
+{
+    stubArray(); // $ExpectType any[]
+    stubObject(); // $ExpectType any
+    stubString(); // $ExpectType string
 }

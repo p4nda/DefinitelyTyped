@@ -167,6 +167,7 @@ export class Glyph {
     name: string | null;
     unicode?: number | undefined;
     unicodes: number[];
+    numberOfContours?: number | undefined;
     xMin?: number | undefined;
     xMax?: number | undefined;
     yMin?: number | undefined;
@@ -369,4 +370,4 @@ export function loadSync(
     },
 ): Font;
 
-export function parse(buffer: any): Font;
+export function parse(buffer: any, opt?: { lowMemory: boolean }): Font;

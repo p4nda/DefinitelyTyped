@@ -80,12 +80,12 @@ function testSandbox() {
         foo(arg1: string, arg2: number): number {
             return 1;
         }
-        bar: number;
+        bar!: number;
     };
     const PrivateFoo = class {
         private constructor() {}
         foo() {}
-        bar: number;
+        bar!: number;
         static create() {
             return new PrivateFoo();
         }
@@ -885,6 +885,18 @@ function testAddBehavior() {
 
 function testSetFormatter() {
     sinon.setFormatter((...args) => JSON.stringify(args));
+}
+
+function testRestoreObject() {
+    const obj = {
+        foo: () => {},
+    };
+    sinon.spy(obj, "foo");
+    const restored = sinon.restoreObject(obj); // $ExpectType { foo: () => void; }
+    restored.foo();
+
+    // @ts-expect-error
+    sinon.restoreObject(undefined);
 }
 
 async function testPromises() {

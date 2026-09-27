@@ -280,7 +280,8 @@ declare namespace googletag {
     function setConfig(config: config.PageSettingsConfig): void;
 
     /**
-     * Gets general configuration options for the page set by {@link setConfig}.
+     * Gets a frozen copy of the general configuration options for the page set by
+     * {@link setConfig}.
      *
      * Not all `setConfig()` properties are supported by this method. Supported
      * properties are:
@@ -296,11 +297,11 @@ declare namespace googletag {
      *   const config = googletag.getConfig(['adsenseAttributes', 'disableInitialLoad']);
      *
      * @param keys The keys of the configuration options to get.
-     * @return The configuration options for the slot.
+     * @return A frozen copy of the configuration options for the page.
      */
     function getConfig(
         keys: string | string[],
-    ): Pick<config.PageSettingsConfig, "adsenseAttributes" | "disableInitialLoad" | "targeting">;
+    ): Readonly<Pick<config.PageSettingsConfig, "adsenseAttributes" | "disableInitialLoad" | "targeting">>;
 
     /**
      * The command array accepts a sequence of functions and invokes them in
@@ -441,6 +442,33 @@ declare namespace googletag {
          *   });
          */
         trafficSource?: enums.TrafficSource;
+
+        /**
+         * The age-restricted treatment, indicating whether the ad request should be
+         * treated as child, teen, or unspecified.
+         *
+         * Consult your own legal counsel to determine the age treatment settings for
+         * your users based on your legal and regulatory requirements. For more
+         * information on this setting, review this [Help Center article](
+         * https://support.google.com/adsense/answer/9007197).
+         *
+         * By setting this property, you certify that this notification is accurate
+         * and you are authorized to act on behalf of the owner of the site. You
+         * understand that abuse of this setting may result in termination of your
+         * Google account.
+         *
+         * @example
+         *   // Enable teen privacy treatment.
+         *   googletag.pubads().setPrivacySettings({
+         *     tagForAgeTreatment: googletag.enums.TagForAgeTreatment.TEEN
+         *   });
+         *
+         *   // Clear age treatment configuration.
+         *   googletag.pubads().setPrivacySettings({
+         *     tagForAgeTreatment: googletag.enums.TagForAgeTreatment.UNSPECIFIED
+         *   });
+         */
+        tagForAgeTreatment?: enums.TagForAgeTreatment;
     }
 
     /**
@@ -456,10 +484,18 @@ declare namespace googletag {
          *
          * @example
          *   // Example with a single value for a key.
-         *   googletag.pubads().setTargeting('interests', 'sports');
+         *   googletag.setConfig({
+         *     targeting: {
+         *       interests: 'sports'
+         *     }
+         *   });
          *
          *   // Example with multiple values for a key inside in an array.
-         *   googletag.pubads().setTargeting('interests', ['sports', 'music']);
+         *   googletag.setConfig({
+         *     targeting: {
+         *       interests: ['sports', 'music']
+         *     }
+         *   });
          *
          * @see [Key-value targeting](https://developers.google.com/publisher-tag/guides/key-value-targeting)
          * @param key Targeting parameter key.
@@ -473,15 +509,25 @@ declare namespace googletag {
          * Clears custom targeting parameters for a specific key or for all keys.
          *
          * @example
-         *   googletag.pubads().setTargeting('interests', 'sports');
-         *   googletag.pubads().setTargeting('colors', 'blue');
-         *   googletag.pubads().setTargeting('fruits', 'apple');
+         *   googletag.setConfig({
+         *     targeting: {
+         *       interests: 'sports',
+         *       colors: 'blue',
+         *       fruits: 'apple'
+         *     }
+         *   });
          *
-         *   googletag.pubads().clearTargeting('interests');
+         *   googletag.setConfig({
+         *     targeting: {
+         *       interests: null
+         *     }
+         *   });
          *   // Targeting 'colors' and 'fruits' are still present, while 'interests'
          *   // was cleared.
          *
-         *   googletag.pubads().clearTargeting();
+         *   googletag.setConfig({
+         *     targeting: null
+         *   });
          *   // All targeting has been cleared.
          *
          * @see [Key-value targeting](https://developers.google.com/publisher-tag/guides/key-value-targeting)
@@ -497,12 +543,19 @@ declare namespace googletag {
          * set.
          *
          * @example
-         *   googletag.pubads().setTargeting('interests', 'sports');
+         *   googletag.setConfig({
+         *     targeting: {
+         *       interests: 'sports'
+         *     }
+         *   });
          *
-         *   googletag.pubads().getTargeting('interests');
+         *   const targetingConfig = googletag.getConfig('targeting').targeting;
+         *
+         *   // Get targeting for a specific key.
+         *   const targeting = targetingConfig?.['interests'] || [];
          *   // Returns ['sports'].
          *
-         *   googletag.pubads().getTargeting('age');
+         *   const ageTargeting = targetingConfig?.['age'] || [];
          *   // Returns [] (empty array).
          *
          * @param key The targeting key to look for.
@@ -517,10 +570,15 @@ declare namespace googletag {
          * been set.
          *
          * @example
-         *   googletag.pubads().setTargeting('interests', 'sports');
-         *   googletag.pubads().setTargeting('colors', 'blue');
+         *   googletag.setConfig({
+         *     targeting: {
+         *       interests: 'sports',
+         *       colors: 'blue'
+         *     }
+         *   });
          *
-         *   googletag.pubads().getTargetingKeys();
+         *   const targetingConfig = googletag.getConfig('targeting').targeting;
+         *   const keys = Object.keys(targetingConfig || {});
          *   // Returns ['interests', 'colors'].
          *
          * @return Array of targeting keys. Ordering is undefined.
@@ -533,7 +591,9 @@ declare namespace googletag {
          *
          * @example
          *   // Label = AirlineAd.
-         *   googletag.pubads().setCategoryExclusion('AirlineAd');
+         *   googletag.setConfig({
+         *     categoryExclusion: ['AirlineAd']
+         *   });
          *
          * @see [Custom labels to block ads](https://support.google.com/admanager/answer/3238504)
          * @param categoryExclusion The ad category exclusion label to add.
@@ -548,12 +608,16 @@ declare namespace googletag {
          *
          * @example
          *   // Set category exclusion to exclude ads with 'AirlineAd' labels.
-         *   googletag.pubads().setCategoryExclusion('AirlineAd');
+         *   googletag.setConfig({
+         *     categoryExclusion: ['AirlineAd']
+         *   });
          *
          *   // Make ad requests. No ad with 'AirlineAd' label will be returned.
          *
          *   // Clear category exclusions so all ads can be returned.
-         *   googletag.pubads().clearCategoryExclusions();
+         *   googletag.setConfig({
+         *     categoryExclusion: null
+         *   });
          *
          *   // Make ad requests. Any ad can be returned.
          *
@@ -611,7 +675,9 @@ declare namespace googletag {
          *
          * @example
          *   // Make ads centered.
-         *   googletag.pubads().setCentering(true);
+         *   googletag.setConfig({
+         *     centering: true
+         *   });
          *
          * @param centerAds `true` to center ads, `false` to left-align them.
          * @deprecated Use {@link googletag.config.PageSettingsConfig.centering | PageSettingsConfig.centering}
@@ -766,7 +832,9 @@ declare namespace googletag {
          *
          * @example
          *   // Postal code:
-         *   googletag.pubads().setLocation("10001,US")
+         *   googletag.setConfig({
+         *     location: '10001,US'
+         *   });
          *
          * @param address Freeform address.
          * @return The service object on which the method was called.
@@ -783,7 +851,7 @@ declare namespace googletag {
          *
          * @see [About publisher provided identifiers](https://support.google.com/admanager/answer/2880055)
          * @param ppid An alphanumeric ID provided by the publisher. Must be between
-         *     32 and 150 characters.
+         *     22 and 150 characters.
          * @return The service object on which the method was called.
          */
         setPublisherProvidedId(ppid: string): PubAdsService;
@@ -797,7 +865,11 @@ declare namespace googletag {
          * `display` or `refresh`.
          *
          * @example
-         *   googletag.pubads().set('adsense_background_color', '#FFFFFF');
+         *   googletag.setConfig({
+         *     adsenseAttributes: {
+         *       page_url: 'http://www.example.com'
+         *     }
+         *   });
          *
          * @see [AdSense Attributes](https://developers.google.com/publisher-tag/adsense_attributes)
          * @param key The name of the attribute.
@@ -812,9 +884,15 @@ declare namespace googletag {
          * key.
          *
          * @example
-         *   googletag.pubads().set('adsense_background_color', '#FFFFFF');
-         *   googletag.pubads().get('adsense_background_color');
-         *   // Returns '#FFFFFF'.
+         *   googletag.setConfig({
+         *     adsenseAttributes: {
+         *       page_url: 'http://www.example.com'
+         *     }
+         *   });
+         *
+         *   const adsenseConfig = googletag.getConfig('adsenseAttributes').adsenseAttributes;
+         *   const pageUrl = adsenseConfig?.page_url || null;
+         *   // Returns 'http://www.example.com'.
          *
          * @see [AdSense Attributes](https://developers.google.com/publisher-tag/adsense_attributes)
          * @param key Name of the attribute to look for.
@@ -828,10 +906,16 @@ declare namespace googletag {
          * Returns the attribute keys that have been set on this service.
          *
          * @example
-         *   googletag.pubads().set('adsense_background_color', '#FFFFFF');
-         *   googletag.pubads().set('adsense_border_color', '#AABBCC');
-         *   googletag.pubads().getAttributeKeys();
-         *   // Returns ['adsense_background_color', 'adsense_border_color'].
+         *   googletag.setConfig({
+         *     adsenseAttributes: {
+         *       page_url: 'http://www.example.com',
+         *       document_language: 'en'
+         *     }
+         *   });
+         *
+         *   const adsenseConfig = googletag.getConfig('adsenseAttributes').adsenseAttributes;
+         *   const adsenseAttributes = Object.keys(adsenseConfig || {});
+         *   // Returns ['page_url', 'document_language'].
          *
          * @return Array of attribute keys set on this service. Ordering is
          *     undefined.
@@ -841,7 +925,17 @@ declare namespace googletag {
 
         /**
          * Constructs and displays an ad slot with the given ad unit path and size.
-         * This method does not work with single request mode.
+         *
+         * This method is a shorthand equivalent to calling
+         * {@link googletag.defineSlot} followed immediately by
+         * {@link googletag.display}.
+         *
+         * The behavior of this method depends on whether
+         * {@link googletag.config.PageSettingsConfig.singleRequest | Single Request Architecture (SRA)}
+         * is enabled:
+         * * **SRA enabled:** All ad slots defined up to the point of this call will
+         * be batched and requested together.
+         * * **SRA disabled (default):** The ad slot will be requested individually.
          *
          * **Note:** When this method is called, a snapshot of the slot and page
          * state is created to ensure consistency when sending the ad request and
@@ -912,12 +1006,20 @@ declare namespace googletag {
          *   them being rendered directly in a publishers page.
          *
          * @example
-         *   googletag.pubads().setForceSafeFrame(true);
+         *   googletag.setConfig({
+         *     safeFrame: {
+         *       forceSafeFrame: true
+         *     }
+         *   });
          *
          *   // The following slot will be opted-out of the page-level force
          *   // SafeFrame instruction.
          *   googletag.defineSlot('/1234567/sports', [160, 600], 'div-1')!
-         *            .setForceSafeFrame(false)
+         *            .setConfig({
+         *              safeFrame: {
+         *                forceSafeFrame: false
+         *              }
+         *            })
          *            .addService(googletag.pubads());
          *
          *   // The following slot will have SafeFrame forced.
@@ -946,21 +1048,21 @@ declare namespace googletag {
          * preferences, if specified.
          *
          * @example
-         *   googletag.pubads().setForceSafeFrame(true);
+         *   googletag.setConfig({
+         *     safeFrame: {
+         *       forceSafeFrame: true,
+         *       allowOverlayExpansion: true,
+         *       allowPushExpansion: true,
+         *       sandbox: true
+         *     }
+         *   });
          *
-         *   const pageConfig = {
-         *     allowOverlayExpansion: true,
-         *     allowPushExpansion: true,
-         *     sandbox: true
-         *   };
-         *
-         *   const slotConfig = {allowOverlayExpansion: false};
-         *
-         *   googletag.pubads().setSafeFrameConfig(pageConfig);
-         *
-         *   // The following slot will not allow for expansion by overlay.
          *   googletag.defineSlot('/1234567/sports', [160, 600], 'div-1')!
-         *            .setSafeFrameConfig(slotConfig)
+         *            .setConfig({
+         *              safeFrame: {
+         *                allowOverlayExpansion: false
+         *              }
+         *            })
          *            .addService(googletag.pubads());
          *
          *   // The following slot will inherit the page level settings, and hence
@@ -988,13 +1090,15 @@ declare namespace googletag {
          * fetching margin.
          *
          * @example
-         *   googletag.pubads().enableLazyLoad({
-         *     // Fetch slots within 5 viewports.
-         *     fetchMarginPercent: 500,
-         *     // Render slots within 2 viewports.
-         *     renderMarginPercent: 200,
-         *     // Double the above values on mobile.
-         *     mobileScaling: 2.0
+         *   googletag.setConfig({
+         *     lazyLoad: {
+         *       // Fetch slots within 5 viewports.
+         *       fetchMarginPercent: 500,
+         *       // Render slots within 2 viewports.
+         *       renderMarginPercent: 200,
+         *       // Double the above values on mobile.
+         *       mobileScaling: 2.0
+         *     }
          *   });
          *
          * @see [Ads best practices: Prioritize &quot;important&quot; ad slots](https://developers.google.com/publisher-tag/guides/ad-best-practices#prioritize_important_ad_slots)
@@ -1256,7 +1360,11 @@ declare namespace googletag {
          * @example
          *   // Setting an attribute on a single ad slot.
          *   googletag.defineSlot('/1234567/sports', [160, 600], 'div')!
-         *            .set('adsense_background_color', '#FFFFFF')
+         *            .setConfig({
+         *              adsenseAttributes: {
+         *                page_url: 'http://www.example.com'
+         *              }
+         *            })
          *            .addService(googletag.pubads());
          *
          * @see [AdSense Attributes](https://developers.google.com/publisher-tag/adsense_attributes)
@@ -1274,11 +1382,16 @@ declare namespace googletag {
          *
          * @example
          *   const slot = googletag.defineSlot('/1234567/sports', [160, 600], 'div')!
-         *                         .set('adsense_background_color', '#FFFFFF')
+         *                         .setConfig({
+         *                           adsenseAttributes: {
+         *                             page_url: 'http://www.example.com'
+         *                           }
+         *                         })
          *                         .addService(googletag.pubads());
          *
-         *   slot.get('adsense_background_color');
-         *   // Returns '#FFFFFF'.
+         *   const adsenseConfig = slot.getConfig('adsenseAttributes').adsenseAttributes;
+         *   const pageUrl = adsenseConfig?.page_url || null;
+         *   // Returns 'http://www.example.com'.
          *
          * @see [AdSense Attributes](https://developers.google.com/publisher-tag/adsense_attributes)
          * @param key Name of the attribute to look for.
@@ -1295,12 +1408,17 @@ declare namespace googletag {
          *
          * @example
          *   const slot = googletag.defineSlot('/1234567/sports', [160, 600], 'div')!
-         *                         .set('adsense_background_color', '#FFFFFF')
-         *                         .set('adsense_border_color', '#AABBCC')
+         *                         .setConfig({
+         *                           adsenseAttributes: {
+         *                             page_url: 'http://www.example.com',
+         *                             document_language: 'en'
+         *                           }
+         *                         })
          *                         .addService(googletag.pubads());
          *
-         *   slot.getAttributeKeys();
-         *   // Returns ['adsense_background_color', 'adsense_border_color'].
+         *   const adsenseConfig = slot.getConfig('adsenseAttributes').adsenseAttributes;
+         *   const adsenseAttributes = Object.keys(adsenseConfig || {});
+         *   // Returns ['page_url', 'document_language'].
          *
          * @return Array of attribute keys. Ordering is undefined.
          * @deprecated Use {@link googletag.Slot.getConfig} instead.
@@ -1355,7 +1473,9 @@ declare namespace googletag {
          *
          * @example
          *   googletag.defineSlot('/1234567/sports', [160, 600], 'div')!
-         *            .setClickUrl('http://www.example.com?original_click_url=')
+         *            .setConfig({
+         *              clickUrl: 'http://www.example.com?original_click_url='
+         *            })
          *            .addService(googletag.pubads());
          *
          * @param value The click URL to set.
@@ -1368,9 +1488,11 @@ declare namespace googletag {
          * Sets a slot-level ad category exclusion label on this slot.
          *
          * @example
-         *   // Label = AirlineAd
+         *   // Label = AirlineAd.
          *   googletag.defineSlot('/1234567/sports', [160, 600], 'div')!
-         *            .setCategoryExclusion('AirlineAd')
+         *            .setConfig({
+         *              categoryExclusion: ['AirlineAd']
+         *            })
          *            .addService(googletag.pubads());
          *
          * @see [Custom labels to block ads](https://support.google.com/admanager/answer/3238504)
@@ -1386,14 +1508,18 @@ declare namespace googletag {
          * @example
          *   // Set category exclusion to exclude ads with 'AirlineAd' labels.
          *   const slot = googletag.defineSlot('/1234567/sports', [160, 600], 'div')!
-         *                         .setCategoryExclusion('AirlineAd')
+         *                         .setConfig({
+         *                           categoryExclusion: ['AirlineAd']
+         *                         })
          *                         .addService(googletag.pubads());
          *
          *   // Make an ad request. No ad with 'AirlineAd' label will be returned
          *   // for the slot.
          *
          *   // Clear category exclusions so all ads can be returned.
-         *   slot.clearCategoryExclusions();
+         *   slot.setConfig({
+         *     categoryExclusion: null
+         *   });
          *
          *   // Make an ad request. Any ad can be returned for the slot.
          *
@@ -1407,11 +1533,12 @@ declare namespace googletag {
          *
          * @example
          *   const slot = googletag.defineSlot('/1234567/sports', [160, 600], 'div')!
-         *                         .setCategoryExclusion('AirlineAd')
-         *                         .setCategoryExclusion('TrainAd')
+         *                         .setConfig({
+         *                           categoryExclusion: ['AirlineAd', 'TrainAd']
+         *                         })
          *                         .addService(googletag.pubads());
          *
-         *   slot.getCategoryExclusions();
+         *   const exclusions = slot.getConfig('categoryExclusion')?.categoryExclusion || [];
          *   // Returns ['AirlineAd', 'TrainAd'].
          *
          * @return The ad category exclusion labels for this slot, or an empty array
@@ -1427,14 +1554,22 @@ declare namespace googletag {
          * keys are defined in your Google Ad Manager account.
          *
          * @example
-         *   const slot = googletag.defineSlot('/1234567/sports', [160, 600], 'div')!
-         *                         .addService(googletag.pubads());
+         *   const slot = googletag.defineSlot('/1234567/sports', [160, 600], 'div')!;
+         *   slot.addService(googletag.pubads());
          *
          *   // Example with a single value for a key.
-         *   slot.setTargeting('allow_expandable', 'true');
+         *   slot.setConfig({
+         *     targeting: {
+         *       allow_expandable: 'true'
+         *     }
+         *   });
          *
          *   // Example with multiple values for a key inside in an array.
-         *   slot.setTargeting('interests', ['sports', 'music']);
+         *   slot.setConfig({
+         *     targeting: {
+         *       interests: ['sports', 'music']
+         *     }
+         *   });
          *
          * @see [Key-value targeting](https://developers.google.com/publisher-tag/guides/key-value-targeting)
          * @param key Targeting parameter key.
@@ -1450,16 +1585,26 @@ declare namespace googletag {
          *
          * @example
          *   const slot = googletag.defineSlot('/1234567/sports', [160, 600], 'div')!
-         *                         .setTargeting('allow_expandable', 'true')
-         *                         .setTargeting('interests', ['sports', 'music'])
-         *                         .setTargeting('color', 'red')
+         *                         .setConfig({
+         *                           targeting: {
+         *                             allow_expandable: 'true',
+         *                             interests: ['sports', 'music'],
+         *                             color: 'red'
+         *                           }
+         *                         })
          *                         .addService(googletag.pubads());
          *
-         *   slot.clearTargeting('color');
+         *   slot.setConfig({
+         *     targeting: {
+         *       color: null
+         *     }
+         *   });
          *   // Targeting 'allow_expandable' and 'interests' are still present,
          *   // while 'color' was cleared.
          *
-         *   slot.clearTargeting();
+         *   slot.setConfig({
+         *     targeting: null
+         *   });
          *   // All targeting has been cleared.
          *
          * @see [Key-value targeting](https://developers.google.com/publisher-tag/guides/key-value-targeting)
@@ -1476,13 +1621,20 @@ declare namespace googletag {
          *
          * @example
          *   const slot = googletag.defineSlot('/1234567/sports', [160, 600], 'div')!
-         *                         .setTargeting('allow_expandable', 'true')
+         *                         .setConfig({
+         *                           targeting: {
+         *                             allow_expandable: 'true'
+         *                           }
+         *                         })
          *                         .addService(googletag.pubads());
          *
-         *   slot.getTargeting('allow_expandable');
+         *   const targetingConfig = slot.getConfig('targeting').targeting;
+         *
+         *   // Get targeting for a specific key.
+         *   const targeting = targetingConfig?.['allow_expandable'] || [];
          *   // Returns ['true'].
          *
-         *   slot.getTargeting('age');
+         *   const ageTargeting = targetingConfig?.['age'] || [];
          *   // Returns [] (empty array).
          *
          * @param key The targeting key to look for.
@@ -1498,11 +1650,16 @@ declare namespace googletag {
          *
          * @example
          *   const slot = googletag.defineSlot('/1234567/sports', [160, 600], 'div')!
-         *                         .setTargeting('allow_expandable', 'true')
-         *                         .setTargeting('interests', ['sports', 'music'])
+         *                         .setConfig({
+         *                           targeting: {
+         *                             allow_expandable: 'true',
+         *                             interests: ['sports', 'music']
+         *                           }
+         *                         })
          *                         .addService(googletag.pubads());
          *
-         *   slot.getTargetingKeys();
+         *   const targetingConfig = slot.getConfig('targeting').targeting;
+         *   const keys = Object.keys(targetingConfig || {});
          *   // Returns ['interests', 'allow_expandable'].
          *
          * @return Array of targeting keys. Ordering is undefined.
@@ -1515,15 +1672,19 @@ declare namespace googletag {
          * ad in the slot. This overrides the service-level settings.
          *
          * @example
-         *   googletag.defineSlot('/1234567/sports', [160, 600], 'div-1')!
-         *            .setCollapseEmptyDiv(true, true)
-         *            .addService(googletag.pubads());
+         *   const slot1 = googletag.defineSlot('/1234567/sports', [160, 600], 'div-1')!
+         *                          .setConfig({
+         *                            collapseDiv: 'BEFORE_FETCH'
+         *                          })
+         *                          .addService(googletag.pubads());
          *   // The above will cause the div for this slot to be collapsed
          *   // when the page is loaded, before ads are requested.
          *
-         *   googletag.defineSlot('/1234567/sports', [160, 600], 'div-2')!
-         *            .setCollapseEmptyDiv(true)
-         *            .addService(googletag.pubads());
+         *   const slot2 = googletag.defineSlot('/1234567/sports', [160, 600], 'div-2')!
+         *                          .setConfig({
+         *                            collapseDiv: 'ON_NO_FILL'
+         *                          })
+         *                          .addService(googletag.pubads());
          *   // The above will cause the div for this slot to be collapsed
          *   // only after GPT detects that no ads are available for the slot.
          *
@@ -1675,11 +1836,13 @@ declare namespace googletag {
          * Sets general configuration options for this slot.
          *
          * @param slotConfig The configuration object.
+         * @return The slot object on which the method was called.
          */
-        setConfig(slotConfig: config.SlotSettingsConfig): void;
+        setConfig(slotConfig: config.SlotSettingsConfig): Slot;
 
         /**
-         * Gets general configuration options for the slot set by {@link setConfig}.
+         * Gets a frozen copy of the general configuration options for the slot set by
+         * {@link setConfig}.
          *
          * Not all `setConfig()` properties are supported by this method. Supported
          * properties are:
@@ -1697,29 +1860,37 @@ declare namespace googletag {
          *   const config = slot.getConfig(['adsenseAttributes', 'categoryExclusion']);
          *
          * @param keys The keys of the configuration options to get.
-         * @return The configuration options for the slot.
+         * @return A frozen copy of the configuration options for the slot.
          */
         getConfig(
             keys: string | string[],
-        ): Pick<config.SlotSettingsConfig, "categoryExclusion" | "targeting" | "adsenseAttributes">;
+        ): Readonly<Pick<config.SlotSettingsConfig, "categoryExclusion" | "targeting" | "adsenseAttributes">>;
     }
 
     /** Array of two numbers representing [width, height]. */
     type SingleSizeArray = [number, number];
 
     /**
+     * The size string where the ad container takes 100% width of its parent div and
+     * then resizes its height to fit the creative content. Similar to how regular
+     * block elements on a page behave. Used for native and banner ads (see
+     * [related article](https://support.google.com/admanager/answer/6366845)).
+     */
+    type FluidSize = "fluid";
+
+    /**
      * Named sizes that a slot can have. In most cases size is a fixed-size
      * rectangle but there are some cases when we need other kinds of size
      * specifications. Only the following are valid named sizes:
      *
-     * - **fluid**: the ad container takes 100% width of parent div and then
-     *   resizes its height to fit creative content. Similar to how regular block
-     *   elements on a page behave. Used for native ads (see
+     * - **fluid**: the ad container takes 100% width of its parent div and then
+     *   resizes its height to fit the creative content. Similar to how regular block
+     *   elements on a page behave. Used for native and banner ads (see
      *   [related article](https://support.google.com/admanager/answer/6366845)).
      *   Note that both `fluid` and `['fluid']` are acceptable forms to declare a
      *   slot size as fluid.
      */
-    type NamedSize = "fluid" | ["fluid"];
+    type NamedSize = FluidSize | [FluidSize];
 
     /**
      * A single valid size for a slot.
@@ -1844,6 +2015,83 @@ declare namespace googletag {
              * for production, non-test traffic.
              */
             adsense_test_mode?: "on" | null;
+        }
+
+        /**
+         * Auto refresh configuration settings.
+         */
+        interface AutoRefreshConfig {
+            /**
+             * Whether GPT will automatically refresh an actively viewed ad slot when the
+             * page is restored from the back/forward cache. Defaults to `true`.
+             *
+             * @example
+             *   // Set the auto refresh configuration, disabling auto refresh on
+             *   // back/forward cache restore.
+             *   googletag.setConfig({autoRefresh: {backForwardCache: false}});
+             *
+             *   // Clear the auto refresh configuration, restoring to default behavior.
+             *   googletag.setConfig({autoRefresh: null});
+             *
+             * @see [Back/forward cache](https://web.dev/articles/bfcache)
+             */
+            backForwardCache?: boolean;
+
+            /**
+             * Whether GPT will automatically refresh an ad slot if Chrome's Heavy Ad
+             * Intervention triggers on the slot's ad iframe. Defaults to `true`.
+             *
+             * @example
+             *   // Set the auto refresh configuration, disabling auto refresh on heavy
+             *   // ad intervention.
+             *   googletag.setConfig({autoRefresh: {heavyAds: false}});
+             *
+             *   // Clear the auto refresh configuration, restoring to default behavior.
+             *   googletag.setConfig({autoRefresh: null});
+             *
+             * @see [Understand Chrome's Heavy Ad Interventions](https://developer.chrome.com/docs/web-platform/heavy-ads-intervention)
+             */
+            heavyAds?: boolean;
+        }
+
+        /**
+         * Settings to configure the continue button behavior.
+         *
+         * @see {@link googletag.config.SlotSettingsConfig.continueButton | SlotSettingsConfig.continueButton}
+         */
+        interface ContinueButtonConfig {
+            /**
+             * The font family of the button text.
+             *
+             * Example: `'Arial'`
+             */
+            font?: string | null;
+
+            /**
+             * The text color of the button.
+             *
+             * Example: `'white'`, `'#B73B87'`
+             */
+            fontColor?: string | null;
+
+            /**
+             * The background color of the button.
+             *
+             * Example: `'blue'`, `'#94B1FF'`
+             */
+            backgroundColor?: string | null;
+
+            /**
+             * The ID of the HTML element on which to render/trigger the continue button.
+             */
+            targetId?: string | null;
+
+            /**
+             * The frequency capping interval in minutes.
+             *
+             * Must be an integer greater than or equal to 1.
+             */
+            freqCapIntervalMinutes?: number | null;
         }
 
         /**
@@ -2261,6 +2509,18 @@ declare namespace googletag {
              *   googletag.setConfig({adsenseAttributes: null});
              */
             adsenseAttributes?: AdSenseAttributesConfig | null;
+
+            /**
+             * Setting to configure automatic ad refresh behavior.
+             *
+             * @example
+             *   // Set the auto refresh configuration.
+             *   googletag.setConfig({autoRefresh: {heavyAds: false}});
+             *
+             *   // Clear the auto refresh configuration.
+             *   googletag.setConfig({autoRefresh: null});
+             */
+            autoRefresh?: AutoRefreshConfig | null;
         }
 
         /**
@@ -2450,11 +2710,6 @@ declare namespace googletag {
          *   ```
          */
         interface SlotSettingsConfig {
-            /**
-             * An array of component auctions to be included in an on-device ad auction.
-             */
-            componentAuction?: ComponentAuctionConfig[] | null;
-
             /**
              * Settings that configure interstitial ad slot behavior.
              *
@@ -2650,82 +2905,36 @@ declare namespace googletag {
              *   slot.setConfig({adsenseAttributes: null});
              */
             adsenseAttributes?: AdSenseAttributesConfig | null;
-        }
-
-        /**
-         * An object representing a single component auction in a on-device ad auction.
-         *
-         * @see [Protected Audience API Seller guide: run ad auctions](https://developer.chrome.com/docs/privacy-sandbox/fledge-api/ad-auction/)
-         */
-        interface ComponentAuctionConfig {
-            /**
-             * The configuration key associated with this component auction.
-             *
-             * This value must be non-empty and should be unique. If two
-             * `ComponentAuctionConfig` objects share the same configKey value,
-             * the last to be set will overwrite prior configurations.
-             */
-            configKey: string;
 
             /**
-             * An auction configuration object for this component auction.
+             * Settings to configure the continue button behavior for content pause ads.
              *
-             * If this value is set to `null`, any existing configuration for
-             * the specified `configKey` will be deleted.
+             * These settings allow customizing the appearance and behavior of the exit and
+             * continue reading interactions associated with content pause formats.
+             *
+             * Any continue button settings which are not specified when calling
+             * `setConfig()` will use a default value set by Google.
+             *
+             * To disable or clear all continue button settings, pass `null`.
              *
              * @example
+             *   const slot = googletag.defineSlot('/1234567/sports', [160, 600], 'div')!
+             *            .addService(googletag.pubads());
+             *   // Configure continue button settings.
+             *   slot.setConfig({
+             *     continueButton: {
+             *       font: 'Arial',
+             *       fontColor: 'white',
+             *       backgroundColor: 'blue',
+             *       targetId: 'target-div-id',
+             *       freqCapIntervalMinutes: 20
+             *     }
+             *   });
              *
-             * const componentAuctionConfig = {
-             *   // Seller URL should be https and the same as decisionLogicURL's origin
-             *   seller: 'https://testSeller.com',
-             *   decisionLogicURL: 'https://testSeller.com/ssp/decision-logic.js',
-             *   interestGroupBuyers: [
-             *     'https://example-buyer.com',
-             *   ],
-             *   auctionSignals: {auction_signals: 'auction_signals'},
-             *   sellerSignals: {seller_signals: 'seller_signals'},
-             *   perBuyerSignals: {
-             *     // listed on interestGroupBuyers
-             *     'https://example-buyer.com': {
-             *       per_buyer_signals: 'per_buyer_signals',
-             *     },
-             *   },
-             * };
-             *
-             * const auctionSlot = googletag.defineSlot('/1234567/example', [160, 600])!;
-             *
-             * // To add configKey to the component auction:
-             * auctionSlot.setConfig({
-             *   componentAuction: [{
-             *      configKey: 'https://testSeller.com',
-             *      auctionConfig: componentAuctionConfig
-             *   }]
-             * });
-             *
-             * // To remove configKey from the component auction:
-             * auctionSlot.setConfig({
-             *   componentAuction: [{
-             *      configKey: 'https://testSeller.com',
-             *      auctionConfig: null
-             *   }]
-             * });
-             *
-             * @see [Protected Audience API: Initiating an On-Device Auction](https://github.com/WICG/turtledove/blob/main/FLEDGE.md#21-initiating-an-on-device-auction)
+             *   // Clear continue button settings.
+             *   slot.setConfig({continueButton: null});
              */
-            auctionConfig: {
-                seller: string;
-                decisionLogicURL: string;
-                trustedScoringSignalsURL?: string;
-                interestGroupBuyers?: string[];
-                auctionSignals?: unknown;
-                sellerSignals?: unknown;
-                sellerTimeout?: number;
-                sellerExperimentGroupId?: number;
-                perBuyerSignals?: { [buyer: string]: unknown };
-                perBuyerTimeouts?: { [buyer: string]: number };
-                perBuyerGroupLimits?: { [buyer: string]: number };
-                perBuyerExperimentGroupIds?: { [buyer: string]: number };
-            } | null;
+            continueButton?: ContinueButtonConfig | null;
         }
 
         /**
@@ -2770,7 +2979,7 @@ declare namespace googletag {
              * interstitial ads. However, users who have not provided local storage
              * consent are still eligible to be served interstitial ads. Setting this
              * property to `true` opts out of the default behavior, and ensures
-             * interstial ads are only shown to users who have provided local storage
+             * interstitial ads are only shown to users who have provided local storage
              * consent.
              *
              * @example
@@ -2793,8 +3002,19 @@ declare namespace googletag {
 
         /**
          * Supported interstitial ad triggers.
+         *
+         * **Note**: Beginning June 15, 2026, the `backward` trigger will no longer be
+         * supported and enabling it will have no effect. See the
+         * [GPT release notes](https://developers.google.com/publisher-tag/release-notes#2026-05-18)
+         * for more information.
          */
-        type InterstitialTrigger = "unhideWindow" | "navBar";
+        type InterstitialTrigger =
+            | "unhideWindow"
+            | "navBar"
+            | "inactivity"
+            | "endOfArticle"
+            | "continueReading"
+            | /** @deprecated */ "backward";
 
         /**
          * Settings to configure video ad related settings.
@@ -2885,6 +3105,29 @@ declare namespace googletag {
             PURCHASED,
             /** Direct URL entry, site search, or app download. */
             ORGANIC,
+        }
+
+        /**
+         * Age treatment settings supported by GPT.
+         *
+         * @see {@link PrivacySettingsConfig.tagForAgeTreatment}
+         */
+        enum TagForAgeTreatment {
+            /**
+             * Default value. Indicates that no specific age restricted treatment signal
+             * applies to the ad request.
+             */
+            UNSPECIFIED,
+
+            /**
+             * Indicates that ad requests should receive CHILD age treatment.
+             */
+            CHILD,
+
+            /**
+             * Indicates that ad requests should receive TEEN age treatment.
+             */
+            TEEN,
         }
     }
 

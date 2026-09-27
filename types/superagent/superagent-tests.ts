@@ -1,9 +1,9 @@
 // via: http://visionmedia.github.io/superagent/
 import request = require("superagent");
-import * as fs from "fs";
-import assert = require("assert");
 import { Blob } from "buffer";
+import * as fs from "fs";
 import { Agent } from "https";
+import assert = require("assert");
 
 // Examples taken from https://github.com/visionmedia/superagent/blob/gh-pages/docs/index.md
 // and https://github.com/visionmedia/superagent/blob/master/Readme.md
@@ -206,6 +206,7 @@ request.get("http://example.com/search").retry(2, callback).end(callback);
 
 // Attaching files
 const blob = new Blob([]);
+const globalBlob = new globalThis.Blob([]);
 request
     .post("/upload")
     .attach("avatar", "path/to/tobi.png", "user.png")
@@ -213,6 +214,7 @@ request
     .attach("file", "path/to/jane.png")
     .attach("fileWithOptions", "path/to/file.png", { filename: "filename", contentType: "contentType" })
     .attach("blob", blob)
+    .attach("globalBlob", globalBlob)
     .end(callback);
 
 // Field values
@@ -373,3 +375,13 @@ request("POST", "/").http2().end(callback);
 agent.get("/").http2().end(callback);
 
 void testDefaultOptions();
+
+// generic body
+interface RequestBody {
+    a: boolean;
+    b: number;
+}
+request.post("/").send("generic");
+request.post("/").send<string>("generic");
+request.post("/").send({ a: true, b: 42 });
+request.post("/").send<RequestBody>({ a: true, b: 42 });

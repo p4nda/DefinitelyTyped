@@ -1,4 +1,5 @@
 export let APP_BAR: number;
+export let DATA_EXPORT: number;
 export let DEFAULT_PROCESSES: number;
 export let DOCUMENTATION: number;
 export let ENVIRONMENT: number;
@@ -7,6 +8,7 @@ export let HIGHCHARTS: number;
 export let LIBRARIES: number;
 export let LOGIN: number;
 export let PENDING_TASKS: number;
+export let REPORTS: number;
 export let SEARCH: number;
 export let SECURITY: number;
 export let SESSION: number;

@@ -28,7 +28,15 @@ const trace2 = {
     ],
     type: "scatter",
 } as ScatterData;
-const data = [trace1, trace2];
+const trace3 = {
+    x0: 1999,
+    dx: 1,
+    y0: 0,
+    dy: 5,
+    z: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]],
+    type: "heatmap",
+} as PlotData;
+const data = [trace1, trace2, trace3];
 const tickangle: "auto" = "auto";
 const layout = {
     title: {
@@ -40,6 +48,7 @@ const layout = {
         showgrid: false,
         zeroline: false,
         tickangle,
+        scaleanchor: false,
     },
     yaxis: {
         title: "Percent",
@@ -504,6 +513,17 @@ const layout = {
             labels: ["Eve", "Cain", "Seth", "Enos", "Noam", "Abel", "Awan", "Enoch", "Azura"],
             parents: ["", "Eve", "Eve", "Seth", "Seth", "Eve", "Eve", "Awan", "Eve"],
             maxdepth: 1,
+            fill: "none",
+            fillcolor: "#000000",
+            fillpattern: {
+                shape: ["+", "-"],
+                fillmode: "replace",
+                bgcolor: ["#ffffff"],
+                fgcolor: ["#ff0000"],
+                fgopacity: 0.5,
+                size: 1,
+                solidity: [0, 0.5],
+            },
         },
     ];
 

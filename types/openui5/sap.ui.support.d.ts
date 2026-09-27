@@ -1,4 +1,4 @@
-// For Library Version: 1.143.0
+// For Library Version: 1.152.0
 
 declare module "sap/ui/support/library" {
   /**
@@ -166,7 +166,7 @@ declare module "sap/ui/support/library" {
     /**
      * Preset to find usages of deprecated controls, properties, aggregations and others.
      *
-     * @experimental As of version 1.120.
+     * @since 1.120
      */
     Deprecations = "undefined",
   }
@@ -321,6 +321,8 @@ declare module "sap/ui/support/RuleAnalyzer" {
      * Adds new temporary rule when in silent mode
      *
      * @since 1.60
+     * @deprecated As of version 1.150. Temporary rules are deprecated. Please use library rulesets instead.
+     * See {@link topic:b5a51358b3574aea9143fa50ae4e0e2a Creating a Ruleset for a Library}.
      *
      * @returns Rule creation status. Possible values are "success" or description of why adding failed.
      */

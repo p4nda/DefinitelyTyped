@@ -250,9 +250,14 @@ declare namespace Office {
      */
     const devicePermission: DevicePermission;
     /**
+     * Provides options to manage the user interface of an Office Add-in while the add-in is running.
+     */
+    const extensionLifeCycle: ExtensionLifeCycle;
+    /**
      * Represents the ribbon associated with the Office application.
      */
     const ribbon: Ribbon;
+
     /**
      * Occurs when the runtime environment is loaded and the add-in is ready to start interacting with the application and hosted document.
      *
@@ -288,9 +293,10 @@ declare namespace Office {
      */
     function initialize(reason: InitializationReason): void;
     /**
-     * **WARNING**: This API returns inaccurate values when used on desktop applications. Use `Office.context.requirements.isSetSupported` instead.
-     * 
      * Checks if the specified requirement set is supported by the Office application.
+     *
+     * @deprecated This API returns inaccurate values when used on desktop applications. Use `Office.context.requirements.isSetSupported` instead.
+     * 
      * @param name - Set name; e.g., "MatrixBindings".
      * @param minVersion - The minimum required version; e.g., "1.4".
      */
@@ -428,50 +434,50 @@ declare namespace Office {
         /**
          * Return or set data as text (string). Data is returned or set as a one-dimensional run of characters.
          */
-        Text,
+        Text = "text",
         /**
          * Return or set data as tabular data with no headers. Data is returned or set as an array of arrays containing one-dimensional runs of
          * characters. For example, three rows of  string values in two columns would be: [["R1C1", "R1C2"], ["R2C1", "R2C2"], ["R3C1", "R3C2"]].
          *
          * **Note**: Only applies to data in Excel and Word.
          */
-        Matrix,
+        Matrix = "matrix",
         /**
          * Return or set data as tabular data with optional headers. Data is returned or set as an array of arrays with optional headers.
          *
          * **Note**: Only applies to data in Excel and Word.
          */
-        Table,
+        Table = "table",
         /**
          * Return or set data as HTML.
          *
          * **Note**: Only applies to data in add-ins for Word and Outlook add-ins for Outlook (compose mode).
          */
-        Html,
+        Html = "html",
         /**
          * Return or set data as Office Open XML.
          *
          * **Note**: Only applies to data in Word.
          */
-        Ooxml,
+        Ooxml = "ooxml",
         /**
          * Return a JSON object that contains an array of the IDs, titles, and indexes of the selected slides. For example,
          * `{"slides":[{"id":257,"title":"Slide 2","index":2},{"id":256,"title":"Slide 1","index":1}]}` for a selection of two slides.
          *
-         * **Note**: Only applies to data in PowerPoint when calling the {@link Office.Document | Document}.getSelectedData method to get the current
+         * **Note**: Only applies to data in PowerPoint when calling the {@link Office.Document | Document}.getSelectedDataAsync method to get the current
          * slide or selected range of slides.
          */
-        SlideRange,
+        SlideRange = "slideRange",
         /**
          * Data is returned or set as an image stream.
          * **Note**: Only applies to data in Excel, Word, and PowerPoint.
          */
-        Image,
+        Image = "image",
         /**
          * Data is returned or set as XML data containing an SVG image.
          * **Note**: Only applies to data in Excel, Word, and PowerPoint.
          */
-        XmlSvg
+        XmlSvg = "xmlSvg"
     }
     /**
      * Specifies the type of the XML node.
@@ -601,7 +607,7 @@ declare namespace Office {
         /**
          * Occurs when data within the binding is changed in Excel or Word.
          * 
-         * To add an event handler for the BindingDataChanged event of a binding, use the addHandlerAsync method of the Binding object.
+         * To add an event handler for the `BindingDataChanged` event of a binding, use the `addHandlerAsync` method of the `Binding` object.
          * The event handler receives an argument of type {@link Office.BindingDataChangedEventArgs}.
          */
         BindingDataChanged,
@@ -904,7 +910,7 @@ declare namespace Office {
          */
         Project,
         /**
-         * The Office application is Microsoft Access.
+         * The Office application is Microsoft Access. Warning: Microsoft Access is no longer supported.
          * 
          * @deprecated Microsoft Access is no longer supported.
          */
@@ -3206,7 +3212,7 @@ declare namespace Office {
          * @param shortcuts An object of custom shortcuts with keys being the IDs of the actions and values being the shortcut combinations. For example, `{"SetItalic": "Ctrl+1", "SetBold": "Ctrl+2"}`.
          * To learn how to specify a valid action ID and a key combination, see {@link https://learn.microsoft.com/office/dev/add-ins/design/keyboard-shortcuts | Add custom keyboard shortcuts to your Office Add-ins}. (Note that a key combination can be `null`, in which case, the action keeps the key combination specified in the JSON file.)
          * @returns A promise that resolves when every custom shortcut assignment in `shortcuts` has been registered. Even if there is a conflict with existing shortcuts, the customized shortcut will be registered.
-         * Otherwise, the promise will be rejected with error code and error message. An "InvalidOperation" error code is returned if any action ID in `shortcuts` does not exist, or if shortcut combination is invalid.
+         * Otherwise, the promise will be rejected with an error code and error message. An `OfficeExtension.ErrorCodes.invalidArgument` error code is returned if any action ID in `shortcuts` doesn't exist, or if shortcut combination is invalid.
          */
         replaceShortcuts(shortcuts: {[actionId: string]: string}): Promise<void>;
         /**
@@ -3221,7 +3227,7 @@ declare namespace Office {
          *
          * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/shared-runtime-requirement-sets | SharedRuntime 1.1}
          *
-         * @returns A promise that resolves to an object of shortcuts, with keys being the IDs of the actions and values being the shortcut combinations. For example, `{"SetItalic": "Ctrl+1", "SetBold": "Ctrl+2", "SetUnderline": null}`.
+         * @returns A promise that resolves to an object of shortcuts, with keys being the IDs of the actions (as defined in a manifest) and values being the shortcut combinations. For example, `{"SetItalic": "Ctrl+1", "SetBold": "Ctrl+2", "SetUnderline": null}`.
          */
         getShortcuts(): Promise<{[actionId: string]: string|null}>;
         /**
@@ -3323,7 +3329,7 @@ declare namespace Office {
         /**
          * Shows the task pane associated with the add-in.
          * @returns A promise that is resolved when the UI is shown.
-         * 
+         *
          * @remarks
          * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/shared-runtime-requirement-sets | SharedRuntime 1.1}
          */
@@ -3672,7 +3678,7 @@ declare namespace Office {
          *
          * **Hosts**: Excel, OneNote, Outlook, PowerPoint, Word
          * 
-         * **Requirement set**: NestedAppAuth 1.1
+         * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/nested-app-auth-requirement-sets | NestedAppAuth 1.1}
          * 
          * @returns Promise to the AuthContext object.
          */
@@ -3734,7 +3740,11 @@ declare namespace Office {
         forMSGraphAccess?: boolean;
     }
     /**
-     * Represents the user information which can be passed to msal.js.
+     * Represents the user information which can be passed to the Microsoft Authentication Library for JavaScript (MSAL.js).
+     * 
+     * @remarks
+     * 
+     * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/nested-app-auth-requirement-sets | NestedAppAuth 1.1}
      */
     interface AuthContext {
         /**
@@ -4626,12 +4636,6 @@ declare namespace Office {
      */
     interface Context {
         /**
-         * Provides information and access to the signed-in user.
-         *
-         * @beta
-         */
-        auth: Auth;
-        /**
          * True, if the current platform allows the add-in to display a UI for selling or upgrading; otherwise returns False.
          *
          * @remarks
@@ -4742,10 +4746,17 @@ declare namespace Office {
          * - `item`: Provides methods and properties for accessing a message or appointment in an Outlook add-in.
          *
          * - `userProfile`: Provides information about the user in an Outlook add-in.
+         *
+         * To learn more about the `Mailbox` object, see {@link https://learn.microsoft.com/office/dev/add-ins/outlook/apis#mailbox-object | Outlook add-in APIs}.
          */
         mailbox: Office.Mailbox;
         /**
          * Provides access to the properties for Office theme colors.
+         *
+         * @remarks
+         *
+         * **Important**: In Outlook, `officeTheme` is supported starting in {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-14 | Mailbox requirement set 1.14}.
+         * It isn't supported in Outlook add-ins that implement {@link https://learn.microsoft.com/office/dev/add-ins/develop/event-based-activation | event-based activation}.
          */
         officeTheme: OfficeTheme;
         /**
@@ -4783,6 +4794,8 @@ declare namespace Office {
          * that add-in when it is running from any client application used to access that mailbox.
          *
          * @remarks
+         *
+         * [Api set: Mailbox 1.1]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **restricted**
          *
@@ -4866,6 +4879,11 @@ declare namespace Office {
         platform: Office.PlatformType;
         /**
          * Gets the version of Office on which the add-in is running.
+         *
+         * @remarks
+         * In Office on Windows, the value returned by the `version` property uses the format 16.0.\<build\>.\<revision\>.
+         * To compare a version shown as Version xxxx (Build xxxxx.xxxxx) with the `version` value, use the full build number (\<build\>.\<revision\>).
+         * For example, in Version 2603 (Build 19822.20000), use 19822.20000 for comparison.
          */
         version: string;
     }
@@ -4943,9 +4961,19 @@ declare namespace Office {
          */
         id: string;
         /**
-         * Indicates whether the control should be enabled or disabled. The default is true.
+         * Indicates whether the control should be enabled or disabled. The default is `true`.
          */
         enabled?: boolean;
+        /**
+         * Specifies whether the control is shown or hidden on a custom tab. The default is `true`.
+         *
+         * @remarks
+         *
+          * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/ribbon-api-requirement-sets | RibbonApi 1.3}
+          *
+          * **Important**: The visibility of buttons and menu controls can be configured, but the visibility of individual items within a menu can't be configured.
+         */
+        visible?: boolean;
     }
     /**
      * Represents an XML node in a tree in a document.
@@ -5925,25 +5953,19 @@ declare namespace Office {
          */
         getFilePropertiesAsync(callback?: (result: AsyncResult<Office.FileProperties>) => void): void;
         /**
-         * Reads the data contained in the current selection in the document.
+         * Reads the data contained in the current selection in the document using the `Text` coercion type.
          *
          * @remarks
          *
          * **Requirement sets**:
          *
-         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#htmlcoercion | HtmlCoercion} (when using `Office.CoercionType.Html`)
-         *
-         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#matrixcoercion | MatrixCoercion} (when using `Office.CoercionType.Matrix`)
-         *
-         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#ooxmlcoercion | OoxmlCoercion} (when using `Office.CoercionType.Ooxml`)
-         *
          * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#selection | Selection}
          *
-         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#tablecoercion | TableCoercion} (when using `Office.CoercionType.Table`)
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#textcoercion | TextCoercion}
          *
-         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#textcoercion | TextCoercion} (when using `Office.CoercionType.Text`)
+         * **Supported applications**: Excel, PowerPoint, Project, Word
          *
-         * In the callback function that is passed to the getSelectedDataAsync method, you can use the properties of the AsyncResult object to return
+         * In the `callback` function that's passed to the `getSelectedDataAsync` method, you can use the properties of the `AsyncResult` object to return
          * the following information.
          *
          * <table>
@@ -5953,7 +5975,7 @@ declare namespace Office {
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.value</code></td>
-         *     <td>Always returns <code>undefined</code> because there's no object or data to retrieve.</td>
+         *     <td>Access the selected data as a string. If the selection doesn't contain text, returns an empty string.</td>
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.status</code></td>
@@ -5961,61 +5983,153 @@ declare namespace Office {
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.error</code></td>
-         *     <td>Access an Error object that provides error information if the operation failed.</td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.asyncContext</code></td>
-         *     <td>Define an item of any type that's returned in the AsyncResult object without being altered.</td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
          *   </tr>
          * </table>
          *
-         * The possible values for the {@link Office.CoercionType} parameter vary by the Office application.
+         * @param coercionType Must be `Office.CoercionType.Text`.
+         *
+         * @param options Provides options for customizing what data is returned and how it's formatted.
+         *
+         * @param callback Optional. A function that's invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
+         *                  The `value` property of the result is a string containing the selected text.
+         */
+        getSelectedDataAsync(coercionType: Office.CoercionType.Text, options?: GetSelectedDataOptions, callback?: (result: AsyncResult<string>) => void): void;
+        /**
+         * Reads the data contained in the current selection in the document using the `Table` coercion type.
+         *
+         * @remarks
+         *
+         * **Requirement sets**:
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#selection | Selection}
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#tablecoercion | TableCoercion}
+         *
+         * **Supported applications**: Excel, Word
+         *
+         * In the `callback` function that's passed to the `getSelectedDataAsync` method, you can use the properties of the `AsyncResult` object to return
+         * the following information.
          *
          * <table>
          *   <tr>
-         *     <th><code>CoercionType</code></th>
-         *     <th>Supported applications</th>
+         *     <th>Property</th>
+         *     <th>Use</th>
          *   </tr>
          *   <tr>
-         *     <td><code>Office.CoercionType.Html</code></td>
-         *     <td><ul><li>Word</li></ul></td>
+         *     <td><code>AsyncResult.value</code></td>
+         *     <td>Access the selected data as a {@link Office.TableData} object. Returns `null` if no table is selected.</td>
          *   </tr>
          *   <tr>
-         *     <td><code>Office.CoercionType.Matrix</code> (array of arrays)</td>
-         *     <td><ul><li>Excel</li><li>Word</li></ul></td>
+         *     <td><code>AsyncResult.status</code></td>
+         *     <td>Determine the success or failure of the operation.</td>
          *   </tr>
          *   <tr>
-         *     <td><code>Office.CoercionType.Ooxml</code> (Office Open XML)</td>
-         *     <td><ul><li>Word</li></ul></td>
+         *     <td><code>AsyncResult.error</code></td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
          *   </tr>
          *   <tr>
-         *     <td><code>Office.CoercionType.SlideRange</code></td>
-         *     <td><ul><li>PowerPoint</li></ul></td>
-         *   </tr>
-         *   <tr>
-         *     <td><code>Office.CoercionType.Table</code> (TableData object)</td>
-         *     <td><ul><li>Excel</li><li>Word</li></ul></td>
-         *   </tr>
-         *   <tr>
-         *     <td><code>Office.CoercionType.Text</code> (string)</td>
-         *     <td><ul><li>Excel</li><li>PowerPoint</li><li>Project</li><li>Word</li></ul></td>
-         *   </tr>
-         *   <tr>
-         *     <td><code>Office.CoercionType.XmlSvg</code></td>
-         *     <td><ul><li>Excel on Windows and on Mac</li></ul></td>
+         *     <td><code>AsyncResult.asyncContext</code></td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
          *   </tr>
          * </table>
          *
-         * @param coercionType The type of data structure to return. See the Remarks section for each application's supported coercion types.
-         *
-         * @param options Provides options for customizing what data is returned and how it is formatted.
-         *
-         * @param callback Optional. A function that is invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
-         *                  The `value` property of the result is the data in the current selection.
-         *                  This is returned in the data structure or format you specified with the coercionType parameter.
-         *                  (See Remarks for more information about data coercion.)
+         * @param coercionType Must be `Office.CoercionType.Table`.
+         * @param options Provides options for customizing what data is returned and how it's formatted.
+         * @param callback Optional. A function that's invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
+         *                  The `value` property of the result is a {@link Office.TableData} object containing the data in the current selection.
          */
-        getSelectedDataAsync<T>(coercionType: Office.CoercionType, options?: GetSelectedDataOptions, callback?: (result: AsyncResult<T>) => void): void;
+        getSelectedDataAsync(coercionType: Office.CoercionType.Table, options?: GetSelectedDataOptions, callback?: (result: AsyncResult<TableData>) => void): void;
+        /**
+         * Reads the data contained in the current selection in the document using the `Matrix` coercion type.
+         *
+         * @remarks
+         *
+         * **Requirement sets**:
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#selection | Selection}
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#matrixcoercion | MatrixCoercion}
+         *
+         * **Supported applications**: Excel, Word
+         *
+         * In the `callback` function that's passed to the `getSelectedDataAsync` method, you can use the properties of the `AsyncResult` object to return
+         * the following information.
+         *
+         * <table>
+         *   <tr>
+         *     <th>Property</th>
+         *     <th>Use</th>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.value</code></td>
+         *     <td>Access the selected data as an array of arrays. Returns an empty array if no data is selected.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.status</code></td>
+         *     <td>Determine the success or failure of the operation.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.error</code></td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.asyncContext</code></td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
+         *   </tr>
+         * </table>
+         *
+         * @param coercionType Must be `Office.CoercionType.Matrix`.
+         * @param options Provides options for customizing what data is returned and how it's formatted.
+         * @param callback Optional. A function that's invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
+         *                  The `value` property of the result is an array of arrays containing the data in the current selection.
+         */
+        getSelectedDataAsync(coercionType: Office.CoercionType.Matrix, options?: GetSelectedDataOptions, callback?: (result: AsyncResult<any[][]>) => void): void;
+        /**
+         * Reads the data contained in the current selection in the document using the `SlideRange` coercion type.
+         *
+         * @remarks
+         *
+         * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#selection | Selection}
+         *
+         * **Supported application**: PowerPoint
+         *
+         * In the `callback` function that's passed to the `getSelectedDataAsync` method, you can use the properties of the `AsyncResult` object to return
+         * the following information.
+         *
+         * <table>
+         *   <tr>
+         *     <th>Property</th>
+         *     <th>Use</th>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.value</code></td>
+         *     <td>Access the selected slides as a {@link Office.SlideRange} object containing the IDs, titles, and indexes of the selected slides.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.status</code></td>
+         *     <td>Determine the success or failure of the operation.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.error</code></td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.asyncContext</code></td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
+         *   </tr>
+         * </table>
+         *
+         * @param coercionType Must be `Office.CoercionType.SlideRange`.
+         * @param options Provides options for customizing what data is returned and how it's formatted.
+         * @param callback Optional. A function that's invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
+         *                  The `value` property of the result is a {@link Office.SlideRange} object containing the selected slides.
+         */
+        getSelectedDataAsync(coercionType: Office.CoercionType.SlideRange, options?: GetSelectedDataOptions, callback?: (result: AsyncResult<SlideRange>) => void): void;
         /**
          * Reads the data contained in the current selection in the document.
          *
@@ -6035,7 +6149,44 @@ declare namespace Office {
          *
          * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#textcoercion | TextCoercion} (when using `Office.CoercionType.Text`)
          *
-         * In the callback function that is passed to the getSelectedDataAsync method, you can use the properties of the AsyncResult object to return
+         * The possible values for the {@link Office.CoercionType} parameter vary by the Office application.
+         *
+         * <table>
+         *   <tr>
+         *     <th><code>CoercionType</code></th>
+         *     <th>Supported applications</th>
+         *   </tr>
+         *   <tr>
+         *     <td><code>Office.CoercionType.Html</code></td>
+         *     <td><ul><li>Word</li></ul></td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>Office.CoercionType.Matrix</code> (array of arrays)</td>
+         *     <td><ul><li>Excel</li><li>Word</li></ul></td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>Office.CoercionType.Ooxml</code> (Office Open XML)</td>
+         *     <td><ul><li>Word</li></ul></td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>Office.CoercionType.SlideRange</code></td>
+         *     <td><ul><li>PowerPoint</li></ul></td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>Office.CoercionType.Table</code> (TableData object)</td>
+         *     <td><ul><li>Excel</li><li>Word</li></ul></td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>Office.CoercionType.Text</code> (string)</td>
+         *     <td><ul><li>Excel</li><li>PowerPoint</li><li>Project</li><li>Word</li></ul></td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>Office.CoercionType.XmlSvg</code></td>
+         *     <td><ul><li>Excel on Windows and on Mac</li></ul></td>
+         *   </tr>
+         * </table>
+         *
+         * In the `callback` function that's passed to the `getSelectedDataAsync` method, you can use the properties of the `AsyncResult` object to return
          * the following information.
          *
          * <table>
@@ -6045,7 +6196,7 @@ declare namespace Office {
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.value</code></td>
-         *     <td>Always returns <code>undefined</code> because there's no object or data to retrieve.</td>
+         *     <td>Access the selected data. The type depends on the <code>coercionType</code> parameter specified in the call.</td>
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.status</code></td>
@@ -6053,13 +6204,215 @@ declare namespace Office {
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.error</code></td>
-         *     <td>Access an Error object that provides error information if the operation failed.</td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.asyncContext</code></td>
-         *     <td>Define an item of any type that's returned in the AsyncResult object without being altered.</td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
          *   </tr>
          * </table>
+         *
+         * For other coercion types or when the coercion type isn't known at compile time, use the generic version of this method
+         * and specify the type parameter explicitly.
+         *
+         * @param coercionType The type of data structure to return. See the Remarks section for each application's supported coercion types.
+         * @param options Provides options for customizing what data is returned and how it's formatted.
+         * @param callback Optional. A function that's invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
+         *                  The `value` property of the result is the data in the current selection.
+         *                  This is returned in the data structure or format you specified with the `coercionType` parameter.
+         *                  (See Remarks for more information about data coercion.)
+         */
+        getSelectedDataAsync<T>(coercionType: Office.CoercionType, options?: GetSelectedDataOptions, callback?: (result: AsyncResult<T>) => void): void;
+        /**
+         * Reads the data contained in the current selection in the document using the `Text` coercion type.
+         *
+         * @remarks
+         *
+         * **Requirement sets**:
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#selection | Selection}
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#textcoercion | TextCoercion}
+         *
+         * **Supported applications**: Excel, PowerPoint, Project, Word
+         *
+         * In the `callback` function that's passed to the `getSelectedDataAsync` method, you can use the properties of the `AsyncResult` object to return
+         * the following information.
+         *
+         * <table>
+         *   <tr>
+         *     <th>Property</th>
+         *     <th>Use</th>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.value</code></td>
+         *     <td>Access the selected data as a string. If the selection does not contain text, returns an empty string.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.status</code></td>
+         *     <td>Determine the success or failure of the operation.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.error</code></td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.asyncContext</code></td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
+         *   </tr>
+         * </table>
+         *
+         * @param coercionType Must be `Office.CoercionType.Text`.
+         * @param callback Optional. A function that's invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
+         *                  The `value` property of the result is a string containing the selected text.
+         */
+        getSelectedDataAsync(coercionType: Office.CoercionType.Text, callback?: (result: AsyncResult<string>) => void): void;
+        /**
+         * Reads the data contained in the current selection in the document using the `Table` coercion type.
+         *
+         * @remarks
+         *
+         * **Requirement sets**:
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#selection | Selection}
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#tablecoercion | TableCoercion}
+         *
+         * **Supported applications**: Excel, Word
+         *
+         * In the `callback` function that's passed to the `getSelectedDataAsync` method, you can use the properties of the `AsyncResult` object to return
+         * the following information.
+         *
+         * <table>
+         *   <tr>
+         *     <th>Property</th>
+         *     <th>Use</th>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.value</code></td>
+         *     <td>Access the selected data as a {@link Office.TableData} object. Returns `null` if no table is selected.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.status</code></td>
+         *     <td>Determine the success or failure of the operation.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.error</code></td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.asyncContext</code></td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
+         *   </tr>
+         * </table>
+         *
+         * @param coercionType Must be `Office.CoercionType.Table`.
+         * @param callback Optional. A function that's invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
+         *                  The `value` property of the result is a {@link Office.TableData} object containing the data in the current selection.
+         */
+        getSelectedDataAsync(coercionType: Office.CoercionType.Table, callback?: (result: AsyncResult<TableData>) => void): void;
+        /**
+         * Reads the data contained in the current selection in the document using the `Matrix` coercion type.
+         *
+         * @remarks
+         *
+         * **Requirement sets**:
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#selection | Selection}
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#matrixcoercion | MatrixCoercion}
+         *
+         * **Supported applications**: Excel, Word
+         *
+         * In the `callback` function that's passed to the `getSelectedDataAsync` method, you can use the properties of the `AsyncResult` object to return
+         * the following information.
+         *
+         * <table>
+         *   <tr>
+         *     <th>Property</th>
+         *     <th>Use</th>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.value</code></td>
+         *     <td>Access the selected data as an array of arrays. Returns an empty array if no data is selected.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.status</code></td>
+         *     <td>Determine the success or failure of the operation.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.error</code></td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.asyncContext</code></td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
+         *   </tr>
+         * </table>
+         *
+         * @param coercionType Must be `Office.CoercionType.Matrix`.
+         * @param callback Optional. A function that's invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
+         *                  The `value` property of the result is an array of arrays containing the data in the current selection.
+         */
+        getSelectedDataAsync(coercionType: Office.CoercionType.Matrix, callback?: (result: AsyncResult<any[][]>) => void): void;
+        /**
+         * Reads the data contained in the current selection in the document using the `SlideRange` coercion type.
+         *
+         * @remarks
+         *
+         * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#selection | Selection}
+         *
+         * **Supported application**: PowerPoint
+         *
+         * In the `callback` function that's passed to the `getSelectedDataAsync` method, you can use the properties of the `AsyncResult` object to return
+         * the following information.
+         *
+         * <table>
+         *   <tr>
+         *     <th>Property</th>
+         *     <th>Use</th>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.value</code></td>
+         *     <td>Access the selected slides as a {@link Office.SlideRange} object containing the IDs, titles, and indexes of the selected slides.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.status</code></td>
+         *     <td>Determine the success or failure of the operation.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.error</code></td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.asyncContext</code></td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
+         *   </tr>
+         * </table>
+         *
+         * @param coercionType Must be `Office.CoercionType.SlideRange`.
+         * @param callback Optional. A function that's invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
+         *                  The `value` property of the result is a {@link Office.SlideRange} object containing the selected slides.
+         */
+        getSelectedDataAsync(coercionType: Office.CoercionType.SlideRange, callback?: (result: AsyncResult<SlideRange>) => void): void;
+        /**
+         * Reads the data contained in the current selection in the document.
+         *
+         * @remarks
+         *
+         * **Requirement sets**:
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#htmlcoercion | HtmlCoercion} (when using `Office.CoercionType.Html`)
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#matrixcoercion | MatrixCoercion} (when using `Office.CoercionType.Matrix`)
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#ooxmlcoercion | OoxmlCoercion} (when using `Office.CoercionType.Ooxml`)
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#selection | Selection}
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#tablecoercion | TableCoercion} (when using `Office.CoercionType.Table`)
+         *
+         * - {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#textcoercion | TextCoercion} (when using `Office.CoercionType.Text`)
          *
          * The possible values for the {@link Office.CoercionType} parameter vary by the Office application.
          *
@@ -6098,10 +6451,39 @@ declare namespace Office {
          *   </tr>
          * </table>
          *
+         * In the `callback` function that's passed to the `getSelectedDataAsync` method, you can use the properties of the `AsyncResult` object to return
+         * the following information.
+         *
+         * <table>
+         *   <tr>
+         *     <th>Property</th>
+         *     <th>Use</th>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.value</code></td>
+         *     <td>Access the selected data. The type depends on the `coercionType` parameter specified in the call.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.status</code></td>
+         *     <td>Determine the success or failure of the operation.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.error</code></td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
+         *   </tr>
+         *   <tr>
+         *     <td><code>AsyncResult.asyncContext</code></td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
+         *   </tr>
+         * </table>
+         *
+         * For other coercion types or when the coercion type is not known at compile time, use the generic version of this method
+         * and specify the type parameter explicitly.
+         *
          * @param coercionType The type of data structure to return. See the Remarks section for each application's supported coercion types.
-         * @param callback Optional. A function that is invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
+         * @param callback Optional. A function that's invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
          *                  The `value` property of the result is the data in the current selection.
-         *                  This is returned in the data structure or format you specified with the coercionType parameter.
+         *                  This is returned in the data structure or format you specified with the `coercionType` parameter.
          *                  (See Remarks for more information about data coercion.)
          */
         getSelectedDataAsync<T>(coercionType: Office.CoercionType, callback?: (result: AsyncResult<T>) => void): void;
@@ -6227,7 +6609,7 @@ declare namespace Office {
          *   <tr>
          *     <td></td>
          *     <td></td>
-         *     <td>If </code>data</code> is HTML, the specified HTML is inserted. (**Important**: If any of the HTML you insert is invalid, Word won't raise an error. Word will insert as much of the HTML as it can and omits any invalid data).</td>
+         *     <td>If <code>data</code> is HTML, the specified HTML is inserted. (**Important**: If any of the HTML you insert is invalid, Word won't raise an error. Word will insert as much of the HTML as it can and omits any invalid data).</td>
          *   </tr>
          *   <tr>
          *     <td></td>
@@ -6410,7 +6792,7 @@ declare namespace Office {
          *   </tr>
          *   <tr>
          *     <td>Word</td>
-         *     <td>If there's no selection and the insertion point is at a valid location, the specified `data` is inserted at the insertion point</td>
+         *     <td>If there's no selection and the insertion point is at a valid location, the specified <code>data</code> is inserted at the insertion point</td>
          *     <td>If <code>data</code> is a string, the specified text is inserted.</td>
          *   </tr>
          *   <tr>
@@ -6596,7 +6978,7 @@ declare namespace Office {
         getResourceFieldAsync(resourceId: string, fieldId: number, options?: Office.AsyncContextOptions, callback?: (result: AsyncResult<string>) => void): void;
         /**
          * Project documents only. Get resource field for provided resource ID. (e.g., ResourceName)
-         * @param resourceId Either a string or value of the Resource ID.
+         * @param resourceId Either a string or value of the resource ID.
          * @param fieldId Resource Fields.
          * @param callback Optional. A function that is invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
          *                  The `value` property of the result is the GUID of the resource as a string.
@@ -6627,7 +7009,7 @@ declare namespace Office {
          */
         getSelectedTaskAsync(options?: Office.AsyncContextOptions, callback?: (result: AsyncResult<string>) => void): void;
         /**
-         * Project documents only. Get the current selected Task's Id.
+         * Project documents only. Get the current selected Task's ID.
          * @param callback Optional. A function that is invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
          *                  The `value` property of the result is the GUID of the resource as a string.
          *
@@ -6659,7 +7041,7 @@ declare namespace Office {
          * @param callback Optional. A function that is invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
          *                  The `value` property of the result contains the following properties:
          *                  `taskName` - The name of the task.
-         *                  `wssTaskId` - The ID of the task in the synchronized SharePoint task list. If the project is not synchronized with a SharePoint task list, the value is 0.
+         *                  `wssTaskId` - The ID of the task in the synchronized SharePoint task list. If the project isn't synchronized with a SharePoint task list, the value is 0.
          *                  `resourceNames` - The comma-separated list of the names of resources that are assigned to the task.
          *
          */
@@ -6695,7 +7077,7 @@ declare namespace Office {
          */
         getTaskFieldAsync(taskId: string, fieldId: number, callback?: (result: AsyncResult<any>) => void): void;
         /**
-         * Project documents only. Get the WSS Url and list name for the Tasks List, the MPP is synced too.
+         * Project documents only. Get the WSS URL and list name for the Tasks List, the MPP is synced too.
          * @param options Provides an option for preserving context data of any type, unchanged, for use in a callback.
          * @param callback Optional. A function that is invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
          *                  The `value` property of the result contains the following properties:
@@ -6819,7 +7201,7 @@ declare namespace Office {
          *
          * **Important**: This API works only in Project on Windows desktop.
          *
-         * @param resourceId Either a string or value of the Resource ID.
+         * @param resourceId Either a string or value of the resource ID.
          * @param fieldId Resource Fields.
          * @param fieldValue Value of the target field.
          * @param callback Optional. A function that is invoked when the callback returns, whose only parameter is of type {@link Office.AsyncResult}.
@@ -7059,7 +7441,7 @@ declare namespace Office {
      */
     interface GetFileOptions {
         /**
-         * The size of the slices in bytes. The maximum (and the default) is 4194304 (4MB).
+         * The size of the slices in bytes. The maximum (and the default) is 4194304 (4 MB).
          */
         sliceSize?: number
         /**
@@ -7131,6 +7513,14 @@ declare namespace Office {
           * When the `Group` object is part of an {@link Office.RibbonUpdaterData} object passed to the `requestUpdate` method of {@link Office.Ribbon}, the `controls` properties of the various {@link Office.Group} objects specify which controls have their enabled status changed; the `controls` property of the `Group` object's parent `Tab` object is ignored. 
           */
          controls?: Control[];
+         /**
+          * Specifies whether the group of controls is shown or hidden on a custom tab.
+          *
+          * @remarks
+          *
+          * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/ribbon-api-requirement-sets | RibbonApi 1.3}
+          */
+         visible?: boolean;
     }
     /**
      * Represents a binding in two dimensions of rows and columns.
@@ -7264,7 +7654,7 @@ declare namespace Office {
      * </table>
      *
      * **Important**: In Outlook, the Office theme API is supported starting in
-     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/requirement-set-1.14/outlook-requirement-set-1.14 | Mailbox requirement set 1.14}.
+     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-14 | Mailbox requirement set 1.14}.
      * It isn't supported in Outlook add-ins that implement {@link https://learn.microsoft.com/office/dev/add-ins/develop/event-based-activation | event-based activation}.
      */
     interface OfficeTheme {
@@ -7547,29 +7937,29 @@ declare namespace Office {
      *
      * **Applications**: Excel, PowerPoint, Word
      *
-     * The settings created by using the methods of the Settings object are saved per add-in and per document.
+     * The settings created by using the methods of the `Settings` object are saved per add-in and per document.
      * That is, they are available only to the add-in that created them, and only from the document in which they are saved.
      *
      * The name of a setting is a string, while the value can be a string, number, boolean, null, object, or array.
      *
-     * The Settings object is automatically loaded as part of the Document object, and is available by calling the settings property of that object
+     * The `Settings` object is automatically loaded as part of the `Document` object, and is available by calling the settings property of that object
      * when the add-in is activated.
      *
-     * The developer is responsible for calling the saveAsync method after adding or deleting settings to save the settings in the document.
+     * The developer is responsible for calling the `saveAsync` method after adding or deleting settings to save the settings in the document.
      */
     interface Settings {
         /**
-         * Adds an event handler for the settingsChanged event.
+         * Adds an event handler for the `settingsChanged` event.
          *
-         * **Important**: Your add-in's code can register a handler for the settingsChanged event when the add-in is running with any Excel client, but
+         * **Important**: Your add-in's code can register a handler for the `settingsChanged` event when the add-in is running with any Excel client, but
          * the event will fire only when the add-in is loaded with a spreadsheet that is opened in Excel on the web, and more than one user is editing the
-         * spreadsheet (coauthoring). Therefore, effectively the settingsChanged event is supported only in Excel on the web in coauthoring scenarios.
+         * spreadsheet (coauthoring). Therefore, effectively the `settingsChanged` event is supported only in Excel on the web in coauthoring scenarios.
          *
          * @remarks
          *
          * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#methods-that-arent-part-of-a-requirement-set | Not in a set}
          *
-         * You can add multiple event handlers for the specified eventType as long as the name of each event handler function is unique.
+         * You can add multiple event handlers for the specified `eventType` as long as the name of each event handler function is unique.
          *
          * @param eventType Specifies the type of event to add. Required.
          * @param handler The event handler function to add, whose only parameter is of type {@link Office.SettingsChangedEventArgs}. Required.
@@ -7591,27 +7981,27 @@ declare namespace Office {
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.error</code></td>
-         *     <td>Access an Error object that provides error information if the operation failed.</td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.asyncContext</code></td>
-         *     <td>Define an item of any type that's returned in the AsyncResult object without being altered.</td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
          *   </tr>
          * </table>
          */
         addHandlerAsync(eventType: Office.EventType, handler: any, options?: Office.AsyncContextOptions, callback?: (result: AsyncResult<void>) => void): void;
         /**
-         * Adds an event handler for the settingsChanged event.
+         * Adds an event handler for the `settingsChanged` event.
          *
-         * **Important**: Your add-in's code can register a handler for the settingsChanged event when the add-in is running with any Excel client, but
+         * **Important**: Your add-in's code can register a handler for the `settingsChanged` event when the add-in is running with any Excel client, but
          * the event will fire only when the add-in is loaded with a spreadsheet that is opened in Excel on the web, and more than one user is editing the
-         * spreadsheet (coauthoring). Therefore, effectively the settingsChanged event is supported only in Excel on the web in coauthoring scenarios.
+         * spreadsheet (coauthoring). Therefore, effectively the `settingsChanged` event is supported only in Excel on the web in coauthoring scenarios.
          *
          * @remarks
          *
          * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#methods-that-arent-part-of-a-requirement-set | Not in a set}
          *
-         * You can add multiple event handlers for the specified eventType as long as the name of each event handler function is unique.
+         * You can add multiple event handlers for the specified `eventType` as long as the name of each event handler function is unique.
          *
          * @param eventType Specifies the type of event to add. Required.
          * @param handler The event handler function to add, whose only parameter is of type {@link Office.SettingsChangedEventArgs}. Required.
@@ -7632,11 +8022,11 @@ declare namespace Office {
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.error</code></td>
-         *     <td>Access an Error object that provides error information if the operation failed.</td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.asyncContext</code></td>
-         *     <td>Define an item of any type that's returned in the AsyncResult object without being altered.</td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
          *   </tr>
          * </table>
          */
@@ -7662,10 +8052,10 @@ declare namespace Office {
          * This method is useful in Excel, Word, and PowerPoint coauthoring scenarios when multiple instances of the same add-in are working against
          * the same document. Because each add-in is working against an in-memory copy of the settings loaded from the document at the time the user
          * opened it, the settings values used by each user can get out of sync. This can happen whenever an instance of the add-in calls the
-         * Settings.saveAsync method to persist all of that user's settings to the document. Calling the refreshAsync method from the event handler
-         * for the settingsChanged event of the add-in will refresh the settings values for all users.
+         * `Settings.saveAsync` method to persist all of that user's settings to the document. Calling the `refreshAsync` method from the event handler
+         * for the `settingsChanged` event of the add-in will refresh the settings values for all users.
          *
-         * In the callback function passed to the refreshAsync method, you can use the properties of the AsyncResult object to return the following
+         * In the callback function passed to the `refreshAsync` method, you can use the properties of the `AsyncResult` object to return the following
          * information.
          *
          * <table>
@@ -7675,7 +8065,7 @@ declare namespace Office {
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.value</code></td>
-         *     <td>Access a Settings object with the refreshed values.</td>
+         *     <td>Access a <code>Settings</code> object with the refreshed values.</td>
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.status</code></td>
@@ -7683,11 +8073,11 @@ declare namespace Office {
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.error</code></td>
-         *     <td>Access an Error object that provides error information if the operation failed.</td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.asyncContext</code></td>
-         *     <td>Define an item of any type that's returned in the AsyncResult object without being altered.</td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
          *   </tr>
          * </table>
          *
@@ -7698,33 +8088,33 @@ declare namespace Office {
         /**
          * Removes the specified setting.
          *
-         * **Important**: Be aware that the Settings.remove method affects only the in-memory copy of the settings property bag. To persist the removal of
-         * the specified setting in the document, at some point after calling the Settings.remove method and before the add-in is closed, you must
-         * call the Settings.saveAsync method.
+         * **Important**: Be aware that the `Settings.remove` method affects only the in-memory copy of the settings property bag. To persist the removal of
+         * the specified setting in the document, at some point after calling the `Settings.remove` method and before the add-in is closed, you must
+         * call the `Settings.saveAsync` method.
          *
          * @remarks
          *
          * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#settings | Settings}
          *
-         * null is a valid value for a setting. Therefore, assigning null to the setting will not remove it from the settings property bag.
+         * `null` is a valid value for a setting. Therefore, assigning `null` to the setting will not remove it from the settings property bag.
          *
          * @param settingName The case-sensitive name of the setting to remove.
          */
         remove(name: string): void;
         /**
-         * Removes an event handler for the settingsChanged event.
+         * Removes an event handler for the `settingsChanged` event.
          *
          * @remarks
          *
          * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#methods-that-arent-part-of-a-requirement-set | Not in a set}
          *
-         * If the optional handler parameter is omitted when calling the removeHandlerAsync method, all event handlers for the specified eventType
+         * If the optional handler parameter is omitted when calling the `removeHandlerAsync` method, all event handlers for the specified `eventType`
          * will be removed.
          *
-         * When the function you passed to the callback parameter executes, it receives an AsyncResult object that you can access from the callback
+         * When the function you passed to the callback parameter executes, it receives an `AsyncResult` object that you can access from the callback
          * function's only parameter.
          *
-         * In the callback function passed to the removeHandlerAsync method, you can use the properties of the AsyncResult object to return the
+         * In the callback function passed to the `removeHandlerAsync` method, you can use the properties of the `AsyncResult` object to return the
          * following information.
          *
          * <table>
@@ -7742,11 +8132,11 @@ declare namespace Office {
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.error</code></td>
-         *     <td>Access an Error object that provides error information if the operation failed.</td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.asyncContext</code></td>
-         *     <td>Define an item of any type that's returned in the AsyncResult object without being altered.</td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
          *   </tr>
          * </table>
          *
@@ -7756,19 +8146,19 @@ declare namespace Office {
          */
         removeHandlerAsync(eventType: Office.EventType, options?: RemoveHandlerOptions, callback?: (result: AsyncResult<void>) => void): void;
         /**
-         * Removes an event handler for the settingsChanged event.
+         * Removes an event handler for the `settingsChanged` event.
          *
          * @remarks
          *
          * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#methods-that-arent-part-of-a-requirement-set | Not in a set}
          *
-         * If the optional handler parameter is omitted when calling the removeHandlerAsync method, all event handlers for the specified eventType
+         * If the optional handler parameter is omitted when calling the `removeHandlerAsync` method, all event handlers for the specified `eventType`
          * will be removed.
          *
-         * When the function you passed to the callback parameter executes, it receives an AsyncResult object that you can access from the callback
+         * When the function you passed to the callback parameter executes, it receives an `AsyncResult` object that you can access from the callback
          * function's only parameter.
          *
-         * In the callback function passed to the removeHandlerAsync method, you can use the properties of the AsyncResult object to return the
+         * In the callback function passed to the `removeHandlerAsync` method, you can use the properties of the `AsyncResult` object to return the
          * following information.
          *
          * <table>
@@ -7786,11 +8176,11 @@ declare namespace Office {
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.error</code></td>
-         *     <td>Access an Error object that provides error information if the operation failed.</td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.asyncContext</code></td>
-         *     <td>Define an item of any type that's returned in the AsyncResult object without being altered.</td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
          *   </tr>
          * </table>
          *
@@ -7806,11 +8196,11 @@ declare namespace Office {
          * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#settings | Settings}
          *
          * Any settings previously saved by an add-in are loaded when it is initialized, so during the lifetime of the session you can just use the
-         * set and get methods to work with the in-memory copy of the settings property bag. When you want to persist the settings so that they are
-         * available the next time the add-in is used, use the saveAsync method.
+         * `set` and `get` methods to work with the in-memory copy of the settings property bag. When you want to persist the settings so that they are
+         * available the next time the add-in is used, use the `saveAsync` method.
          *
-         * **Note**: The saveAsync method persists the in-memory settings property bag into the document file. However, the changes to the document file
-         * itself are saved only when the user (or AutoRecover setting) saves the document to the file system. The refreshAsync method is only useful
+         * **Note**: The `saveAsync` method persists the in-memory settings property bag into the document file. However, the changes to the document file
+         * itself are saved only when the user (or AutoRecover setting) saves the document to the file system. The `refreshAsync` method is only useful
          * in coauthoring scenarios when other instances of the same add-in might change the settings and those changes should be made available to
          * all instances.
          *
@@ -7829,11 +8219,11 @@ declare namespace Office {
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.error</code></td>
-         *     <td>Access an Error object that provides error information if the operation failed.</td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.asyncContext</code></td>
-         *     <td>Define an item of any type that's returned in the AsyncResult object without being altered.</td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
          *   </tr>
          * </table>
          *
@@ -7849,11 +8239,11 @@ declare namespace Office {
          * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#settings | Settings}
          *
          * Any settings previously saved by an add-in are loaded when it is initialized, so during the lifetime of the session you can just use the
-         * set and get methods to work with the in-memory copy of the settings property bag. When you want to persist the settings so that they are
-         * available the next time the add-in is used, use the saveAsync method.
+         * `set` and `get` methods to work with the in-memory copy of the settings property bag. When you want to persist the settings so that they are
+         * available the next time the add-in is used, use the `saveAsync` method.
          *
-         * **Note**: The saveAsync method persists the in-memory settings property bag into the document file. However, the changes to the document file
-         * itself are saved only when the user (or AutoRecover setting) saves the document to the file system. The refreshAsync method is only useful
+         * **Note**: The `saveAsync` method persists the in-memory settings property bag into the document file. However, the changes to the document file
+         * itself are saved only when the user (or AutoRecover setting) saves the document to the file system. The `refreshAsync` method is only useful
          * in coauthoring scenarios when other instances of the same add-in might change the settings and those changes should be made available to
          * all instances.
          *
@@ -7872,11 +8262,11 @@ declare namespace Office {
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.error</code></td>
-         *     <td>Access an Error object that provides error information if the operation failed.</td>
+         *     <td>Access an <code>Error</code> object that provides error information if the operation failed.</td>
          *   </tr>
          *   <tr>
          *     <td><code>AsyncResult.asyncContext</code></td>
-         *     <td>Define an item of any type that's returned in the AsyncResult object without being altered.</td>
+         *     <td>Define an item of any type that's returned in the <code>AsyncResult</code> object without being altered.</td>
          *   </tr>
          * </table>
          *
@@ -7886,17 +8276,17 @@ declare namespace Office {
         /**
          * Sets or creates the specified setting.
          *
-         * **Important**: Be aware that the Settings.set method affects only the in-memory copy of the settings property bag.
+         * **Important**: Be aware that the `Settings.set` method affects only the in-memory copy of the settings property bag.
          * To make sure that additions or changes to settings will be available to your add-in the next time the document is opened, at some point
-         * after calling the Settings.set method and before the add-in is closed, you must call the Settings.saveAsync method to persist settings in
+         * after calling the `Settings.set` method and before the add-in is closed, you must call the `Settings.saveAsync` method to persist settings in
          * the document.
          *
          * @remarks
          *
          * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/office-add-in-requirement-sets#settings | Settings}
          *
-         * The set method creates a new setting of the specified name if it does not already exist, or sets an existing setting of the specified name
-         * in the in-memory copy of the settings property bag. After you call the Settings.saveAsync method, the value is stored in the document as
+         * The `set` method creates a new setting of the specified name if it does not already exist, or sets an existing setting of the specified name
+         * in the in-memory copy of the settings property bag. After you call the `Settings.saveAsync` method, the value is stored in the document as
          * the serialized JSON representation of its data type.
          *
          * @param settingName The case-sensitive name of the setting to set or create.
@@ -8594,6 +8984,36 @@ declare namespace Office {
         rows: any[][];
     }
     /**
+     * Represents a single slide in a PowerPoint presentation. 
+     * This interface is used as part of the {@link Office.SlideRange} object returned by
+     * {@link Office.Document | Office.Document.getSelectedDataAsync} when called with {@link Office.CoercionType.SlideRange}.
+     */
+    interface Slide {
+        /**
+         * Gets the unique ID of the slide.
+         */
+        id: number;
+        /**
+         * Gets the title of the slide.
+         */
+        title: string;
+        /**
+         * Gets the 1-based index of the slide within the presentation.
+         */
+        index: number;
+    }
+    /**
+     * Represents the selected slides in a PowerPoint presentation.
+     * This object is returned when calling {@link Office.Document | Office.Document.getSelectedDataAsync} with {@link Office.CoercionType.SlideRange} in PowerPoint.
+     *
+     */
+    interface SlideRange {
+        /**
+         * Gets an array of the selected slides.
+         */
+        slides: Slide[];
+    }
+    /**
      * Provides methods to manage the task pane of an add-in.
      *
      * @remarks
@@ -8608,19 +9028,31 @@ declare namespace Office {
          *
          * **Requirement set**: {@link https://learn.microsoft.com/javascript/api/requirement-sets/common/task-pane-api-requirement-sets | TaskPaneApi 1.1}
          *
-         * **Important**: The default width of the task pane of an add-in varies depending on the platform.
+         * **Important**: The minimum and maximum width constraints vary by platform.
+         *
+         * - **Web (Excel)**: Between 350 and 500 px (inclusive)
+         *
+         * - **Web (Word)**: Between 330 and 500 px (inclusive)
+         *
+         * - **Windows**: Between 86 px and 50% of the client window
+         *
+         * - **Mac**: Between 270 px and 50% of the client window
+         * 
+         * The default width of the task pane of an add-in varies depending on the platform.
          *
          * - **Web (Excel)**: 350 px
          *
          * - **Web (Word)**: 330 px
          *
-         * - **Windows, Mac**: 51 px
+         * - **Windows**: 320 px
+         *
+         * - **Mac**: 270 px
          *
          * If you pass a width beyond the minimum and maximum constraints, the task pane isn't resized and no error is shown.
          *
-         * @param width The width of a task pane in pixels. The minimum and maximum constraints vary by platform. In Excel on the web, the width must be between
-         *              350 and 500 px (inclusive). In Word on the web, the width must be between 330 and 500 px (inclusive). In Office on Windows and on Mac, the width
-         *              must be between 51 px and 50% of the client window.
+         * The `setWidth` method isn't supported in PowerPoint on the web.
+         *
+         * @param width The width of a task pane in pixels.
          */
         setWidth(width: number): void;
     }
@@ -8821,7 +9253,7 @@ declare namespace Office {
          *
          * @remarks
          *
-         * **Applications**: Excel, Outlook (Minimum requirement set: Mailbox 1.5), PowerPoint, Word
+         * **Applications**: Excel, Outlook (Minimum requirement set: Mailbox 1.5), PowerPoint
          *
          * **Requirement sets**:
          *
@@ -8891,6 +9323,18 @@ declare namespace Office {
          * "extensions.runtimes.code" object.
          */
         javascriptRuntimeUrl: string;
+    }
+    /**
+     * Provides options related to the `onReady` event.
+     * 
+     * @beta
+     */
+    interface OnReadyOptions {
+        /**
+         * Enables the behavior that allows the `onReady` promise to be rejected if failures are encountered.
+         * If not passed, then the `onReady` promise won't reject.
+         */
+        setRejectionEnabled?: () => void;
     }
     /**
      * Message used in the `onVisibilityModeChanged` invocation.
@@ -10406,7 +10850,7 @@ declare namespace Office {
          * Specifies the status of Exchange Web Services (EWS) callback tokens or REST API tokens in an organization.
          *
          * @remarks
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
          *
@@ -10414,8 +10858,6 @@ declare namespace Office {
          * If an Outlook add-in requires delegated user access or user identity, we recommend using MSAL (Microsoft Authentication Library) and nested app authentication (NAA).
          * Exchange user identity tokens are still supported for Exchange on-premises. For more information, see
          * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/faq-nested-app-auth-outlook-legacy-tokens | Nested app authentication FAQ}.
-         *
-         * @beta
          */
         enum TokenStatus {
             /**
@@ -10472,11 +10914,57 @@ declare namespace Office {
         coercionType?: Office.CoercionType | string;
     }
     /**
+     * Represents access controls that specify whether the decrypted contents of a message can be copied and pasted, printed, or saved.
+     *
+     * @remarks
+     * [Api set: Mailbox preview]
+     *
+     * @beta
+     */
+    interface AccessControls {
+        /**
+         * If true, specifies that the decrypted contents of a message can be copied and pasted.
+         *
+         * @remarks
+         * [Api set: Mailbox preview]
+         *
+         * **Important**:
+         *
+         * - In Outlook on the web, setting the `allowCopyPaste` property to `false` also prevents users from capturing their screen
+         * in the form of screenshots or recordings. The screen capture policy remains in effect until the user reloads the Outlook browser tab.
+         *
+         * - In Outlook on the web and the new Outlook on Windows, setting the `allowCopyPaste` property to `true` allows the user to copy content by
+         * selecting **Copy** from the context menu or pressing `Ctrl+C`. However, if another access control is set to `false`, the context menu becomes unavailable.
+         * The user must use `Ctrl+C` instead.
+         *
+         * @beta
+         */
+        allowCopyPaste?: boolean;
+        /**
+         * If true, specifies that the decrypted contents of a message can be printed.
+         *
+         * @remarks
+         * [Api set: Mailbox preview]
+         *
+         * @beta
+         */
+        allowPrint?: boolean;
+        /**
+         * If true, specifies that the decrypted contents of a message can be saved.
+         *
+         * @remarks
+         * [Api set: Mailbox preview]
+         *
+         * @beta
+         */
+        allowSave?: boolean;
+    }
+    /**
      * The subclass of {@link Office.Item | Item} dealing with appointments.
      *
      * **Important**: This is an internal Outlook object, not directly exposed through existing interfaces.
-     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to the
-     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item | Object Model} page.
+     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to
+     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model | Outlook Item object model}.
      *
      * Child interfaces:
      *
@@ -10490,8 +10978,8 @@ declare namespace Office {
      * The appointment organizer mode of {@link Office.Item | Office.context.mailbox.item}.
      *
      * **Important**: This is an internal Outlook object, not directly exposed through existing interfaces.
-     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to the
-     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item | Object Model} page.
+     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to
+     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model | Outlook Item object model}.
      *
      * Parent interfaces:
      *
@@ -10706,7 +11194,7 @@ declare namespace Office {
          * **Important**: To use the sensitivity label feature in your add-in, you must have a Microsoft 365 E5 subscription.
          *
          * To learn more about how to manage sensitivity labels in your add-in, see
-         * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+         * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
          */
         sensitivityLabel: SensitivityLabel;
         /**
@@ -10735,7 +11223,8 @@ declare namespace Office {
         /**
          * Manages the {@link Office.SessionData | SessionData} of an item in Compose mode.
          *
-         * **Important**: The entire SessionData object is limited to 50,000 characters per add-in.
+         * **Important**: In Outlook clients that support Mailbox 1.15 or earlier, the entire SessionData object for each mail item is limited to 50,000 characters per add-in.
+         * In clients that support Mailbox 1.16 or later, the character limit per add-in is 2,621,440 characters.
          *
          * @remarks
          * [Api set: Mailbox 1.11]
@@ -10908,7 +11397,7 @@ declare namespace Office {
          *
          * - `NumberOfAttachmentsExceeded`: The message or appointment has too many attachments.
          *
-         * @param base64File - The Base64-encoded content of an image or file to be added to an email or event. The maximum length of the encoded string is 27,892,122 characters (about 25 MB).
+         * @param base64File - The Base64-encoded content of an image or file to be added to an email or event. The maximum length of the encoded string is 34,865,152 characters. This corresponds to a maximum attachment size of 25 MB before Base64 encoding.
          * @param attachmentName - The name of the attachment that is shown while the attachment is uploading. The maximum length is 255 characters.
          * @param options - An object literal that contains one or more of the following properties:-
          *        `asyncContext`: Developers can provide any object they wish to access in the callback function.
@@ -10955,7 +11444,7 @@ declare namespace Office {
          *
          * - `NumberOfAttachmentsExceeded`: The message or appointment has too many attachments.
          *
-         * @param base64File - The Base64-encoded content of an image or file to be added to an email or event. The maximum length of the encoded string is 27,892,122 characters (about 25 MB).
+         * @param base64File - The Base64-encoded content of an image or file to be added to an email or event. The maximum length of the encoded string is 34,865,152 characters. This corresponds to a maximum attachment size of 25 MB before Base64 encoding.
          * @param attachmentName - The name of the attachment that is shown while the attachment is uploading. The maximum length is 255 characters.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter
          *                             of type `Office.AsyncResult`.
@@ -10965,10 +11454,7 @@ declare namespace Office {
          */
         addFileAttachmentFromBase64Async(base64File: string, attachmentName: string, callback?: (asyncResult: Office.AsyncResult<string>) => void): void;
         /**
-         * Adds an event handler for a supported event. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Adds an event handler for a supported event. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -10976,6 +11462,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Appointment Organizer
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should invoke the handler.
          * @param handler - The function to handle the event. The function must accept a single parameter, which is an object literal.
@@ -10987,10 +11475,7 @@ declare namespace Office {
          */
         addHandlerAsync(eventType: Office.EventType | string, handler: any, options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
-         * Adds an event handler for a supported event. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Adds an event handler for a supported event. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -10998,6 +11483,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Appointment Organizer
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should invoke the handler.
          * @param handler - The function to handle the event. The function must accept a single parameter, which is an object literal.
@@ -11216,14 +11703,19 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Appointment Organizer
          *
-         * **Important**: In Outlook on the web and the new Outlook on Windows, users can select the **Upload and share** option to upload an attachment to OneDrive and
+         * **Important**:
+         *
+         * - In Outlook on the web and the new Outlook on Windows, users can select the **Upload and share** option to upload an attachment to OneDrive and
          * include a link to the file in the mail item. However, since only a link is included, `getAttachmentsAsync` doesn't return this attachment.
+         *
+         * - For attachments of type `Office.MailboxEnums.AttachmentType.Item`, the size and serialized content returned by `getAttachmentsAsync` might differ between calls
+         * made from an `OnMessageSend` or `OnAppointmentSend` event handler. To reliably detect attachment changes, handle the `OnMessageAttachmentsChanged` or `OnAppointmentAttachmentsChanged` event instead.
          *
          * @param options - An object literal that contains one or more of the following properties:-
          *        `asyncContext`: Developers can provide any object they wish to access in the callback function.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter of
          *                 type `Office.AsyncResult`. If the call fails, the `asyncResult.error` property will contain an error code with the reason for
-         *                 the failure.
+         *                 the failure. If the call succeeds, an array of `AttachmentDetailsCompose` objects is returned in the `asyncResult.value` property.
          */
         getAttachmentsAsync(options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<AttachmentDetailsCompose[]>) => void): void;
         /**
@@ -11236,12 +11728,17 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Appointment Organizer
          *
-         * **Important**: In Outlook on the web and the new Outlook on Windows, users can select the **Upload and share** option to upload an attachment to OneDrive and
+         * **Important**:
+         *
+         * - In Outlook on the web and the new Outlook on Windows, users can select the **Upload and share** option to upload an attachment to OneDrive and
          * include a link to the file in the mail item. However, since only a link is included, `getAttachmentsAsync` doesn't return this attachment.
+         *
+         * - For attachments of type `Office.MailboxEnums.AttachmentType.Item`, the size and serialized content returned by `getAttachmentsAsync` might differ between calls
+         * made from an `OnMessageSend` or `OnAppointmentSend` event handler. To reliably detect attachment changes, handle the `OnMessageAttachmentsChanged` or `OnAppointmentAttachmentsChanged` event instead.
          *
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter of
          *                 type `Office.AsyncResult`. If the call fails, the `asyncResult.error` property will contain an error code with the reason for
-         *                 the failure.
+         *                 the failure. If the call succeeds, an array of `AttachmentDetailsCompose` objects is returned in the `asyncResult.value` property.
          */
         getAttachmentsAsync(callback?: (asyncResult: Office.AsyncResult<AttachmentDetailsCompose[]>) => void): void;
         /**
@@ -11515,7 +12012,7 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Appointment Organizer
          *
-         * *Important**: The `removeAttachmentAsync` method doesn't remove inline attachments from a mail item.
+         * **Important**: The `removeAttachmentAsync` method doesn't remove inline attachments from a mail item.
          * To remove an inline attachment, first get the item's body, then remove any references of the attachment from its contents.
          * Use the {@link https://learn.microsoft.com/javascript/api/outlook/office.body | Office.Body} APIs to get and set the body of an item.
          *
@@ -11549,7 +12046,7 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Appointment Organizer
          *
-         * *Important**: The `removeAttachmentAsync` method doesn't remove inline attachments from a mail item.
+         * **Important**: The `removeAttachmentAsync` method doesn't remove inline attachments from a mail item.
          * To remove an inline attachment, first get the item's body, then remove any references of the attachment from its contents.
          * Use the {@link https://learn.microsoft.com/javascript/api/outlook/office.body | Office.Body} APIs to get and set the body of an item.
          *
@@ -11565,10 +12062,7 @@ declare namespace Office {
          */
         removeAttachmentAsync(attachmentId: string, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
-         * Removes the event handlers for a supported event type. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Removes the event handlers for a supported event type. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -11576,6 +12070,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Appointment Organizer
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should revoke the handler.
          * @param options - An object literal that contains one or more of the following properties:-
@@ -11585,10 +12081,7 @@ declare namespace Office {
          */
         removeHandlerAsync(eventType: Office.EventType | string, options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
-         * Removes the event handlers for a supported event type. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Removes the event handlers for a supported event type. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -11596,6 +12089,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Appointment Organizer
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should revoke the handler.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter,
@@ -11818,187 +12313,120 @@ declare namespace Office {
         setSelectedDataAsync(data: string, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
     }
     /**
-     * The `AppointmentForm` object is used to access the currently selected appointment.
+     * Represents the details of the form for creating a new appointment.
      *
      * @remarks
      *
-     * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **restricted**
+     * [Api set: Mailbox 1.1]
      *
-     * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+     * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+     *
+     * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
      */
     interface AppointmentForm {
         /**
-         * Gets an object that provides methods for manipulating the body of an item.
+         * Sets the body of the appointment.
          *
          * @remarks
+         *
          * [Api set: Mailbox 1.1]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
-         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          */
-        body: Body | string;
+        body?: string;
         /**
-         * Gets or sets the date and time that the appointment is to end.
-         *
-         * The `end` property is expressed as a Coordinated Universal Time (UTC) date and time value. You can use the `convertToLocalClientTime` method to
-         * convert the `end` property value to the client's local date and time.
-         *
-         * *Read mode*
-         *
-         * The `end` property returns a `Date` object.
-         *
-         * *Compose mode*
-         *
-         * The `end` property returns a `Time` object.
-         *
-         * When you use the `Time.setAsync` method to set the end time, you should use the `convertToUtcClientTime` method to convert the local time on
-         * the client to UTC for the server.
+         * Sets the date and time that the appointment is to end.
          *
          * @remarks
          *
+        * [Api set: Mailbox 1.1]
+         *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
-         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          */
-        end: Time | Date;
+        end?: Date | number;
         /**
-        * Gets or sets the location of an appointment.
-        *
-        * *Read mode*
-        *
-        * The `location` property returns a string that contains the location of the appointment.
-        *
-        * *Compose mode*
-        *
-        * The `location` property returns a `Location` object that provides methods that are used to get and set the location of the appointment.
+        * Sets the location of the appointment.
         *
         * @remarks
         *
+        * [Api set: Mailbox 1.1]
+        *
         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
         *
-        * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+        * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
         */
-       location: Location | string;
+       location?: string;
        /**
-        * Provides access to the optional attendees of an event. The type of object and level of access depend on the mode of the current item.
-        *
-        * *Read mode*
-        *
-        * The `optionalAttendees` property returns an array that contains an {@link Office.EmailAddressDetails | EmailAddressDetails} object for
-        * each optional attendee to the meeting. Collection size limits:
-        *
-        * - Web browser, new Mac UI, Android: No limit
-        *
-        * - Windows (new and classic): 500 members
-        *
-        * - Windows (classic - in preview starting in Version 2511 (Build 19426.20000)): 1,000 members
-        *
-        * - Classic Mac UI: 100 members
-        *
-        * *Compose mode*
-        *
-        * The `optionalAttendees` property returns a `Recipients` object that provides methods to get or update the
-        * optional attendees for a meeting. However, depending on the client/platform (i.e., Windows, Mac, etc.), limits may apply on how many
-        * recipients you can get or update. See the {@link Office.Recipients | Recipients} object for more details.
+        * Sets the optional attendees of the appointment.
         *
         * @remarks
         *
+        * [Api set: Mailbox 1.1]
+        *
         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
         *
-        * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+        * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
         */
-       optionalAttendees: Recipients[] | EmailAddressDetails[];
+       optionalAttendees?: string[] | EmailAddressDetails[];
        /**
-        * Provides access to the resources of an event. Returns an array of strings containing the resources required for the appointment.
+        * Sets the resources of the appointment.
         *
         * @remarks
         *
+        * [Api set: Mailbox 1.1]
+        *
         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
         *
-        * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+        * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
         */
-       resources: string[];
+       resources?: string[];
        /**
-        * Provides access to the required attendees of an event. The type of object and level of access depend on the mode of the current item.
-        *
-        * *Read mode*
-        *
-        * The `requiredAttendees` property returns an array that contains an {@link Office.EmailAddressDetails | EmailAddressDetails} object for
-        * each required attendee to the meeting. Collection size limits:
-        *
-        * - Web browser, new Mac UI, Android: No limit
-        *
-        * - Windows: 500 members
-        *
-        * - Windows (classic - in preview starting in Version 2511 (Build 19426.20000)): 1,000 members
-        *
-        * - Classic Mac UI: 100 members
-        *
-        * *Compose mode*
-        *
-        * The `requiredAttendees` property returns a `Recipients` object that provides methods to get or update the
-        * required attendees for a meeting. However, depending on the client/platform (i.e., Windows, Mac, etc.), limits may apply on how many
-        * recipients you can get or update. See the {@link Office.Recipients | Recipients} object for more details.
+        * Sets the required attendees of the appointment.
         *
         * @remarks
         *
+        * [Api set: Mailbox 1.1]
+        *
         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
         *
-        * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+        * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
         */
-       requiredAttendees: Recipients[] | EmailAddressDetails[];
+       requiredAttendees?: string[] | EmailAddressDetails[];
        /**
-        * Gets or sets the date and time that the appointment is to begin.
-        *
-        * The `start` property is expressed as a Coordinated Universal Time (UTC) date and time value. You can use the `convertToLocalClientTime` method
-        * to convert the value to the client's local date and time.
-        *
-        * *Read mode*
-        *
-        * The `start` property returns a `Date` object.
-        *
-        * *Compose mode*
-        *
-        * The `start` property returns a `Time` object.
-        *
-        * When you use the `Time.setAsync` method to set the start time, you should use the `convertToUtcClientTime` method to convert the local time on
-        * the client to UTC for the server.
+        * Sets the date and time that the appointment is to begin.
         *
         * @remarks
         *
+        * [Api set: Mailbox 1.1]
+        *
         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
         *
-        * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+        * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
         */
-       start: Time | Date;
+       start?: Date | number;
        /**
-        * Gets or sets the description that appears in the subject field of an item.
-        *
-        * The `subject` property gets or sets the entire subject of the item, as sent by the email server.
-        *
-        * *Read mode*
-        *
-        * The `subject` property returns a string. Use the `normalizedSubject` property to get the subject minus any leading prefixes such as RE: and FW:.
-        *
-        * *Compose mode*
-        *
-        * The `subject` property returns a `Subject` object that provides methods to get and set the subject.
+        * Sets the description that appears in the Title field of the appointment.
         *
         * @remarks
         *
+        * [Api set: Mailbox 1.1]
+        *
         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
         *
-        * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+        * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
         */
-       subject: Subject | string;
+       subject?: string;
     }
     /**
      * The appointment attendee mode of {@link Office.Item | Office.context.mailbox.item}.
      *
      * **Important**: This is an internal Outlook object, not directly exposed through existing interfaces.
-     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to the
-     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item | Object Model} page.
+     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to
+     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model | Outlook Item object model}.
      *
      * Parent interfaces:
      *
@@ -12219,13 +12647,13 @@ declare namespace Office {
          * The `optionalAttendees` property returns an array that contains an {@link Office.EmailAddressDetails | EmailAddressDetails} object for
          * each optional attendee to the meeting. The maximum number of attendees returned varies per Outlook client.
          *
-         * - Windows (new and classic): 500 attendees
+         * - Windows (classic - Mailbox 1.15 and earlier): 500 attendees
          *
-         * - Windows (classic - in preview starting in Version 2511 (Build 19426.20000)): 1,000 attendees
+         * - Web, Windows (new, classic - Mailbox 1.16 and later): 1,000 recipients
          *
          * - Android, classic Mac UI, iOS: 100 attendees
          *
-         * - New Mac UI, web browser: No limit
+         * - New Mac UI: No limit
          *
          * @remarks
          *
@@ -12269,13 +12697,13 @@ declare namespace Office {
          * The `requiredAttendees` property returns an array that contains an {@link Office.EmailAddressDetails | EmailAddressDetails} object for
          * each required attendee to the meeting. The maximum number of attendees returned varies per Outlook client.
          *
-         * - Windows (new and classic): 500 attendees
+         * - Windows (classic - Mailbox 1.15 and earlier): 500 attendees
          *
-         * - Windows (classic - in preview starting in Version 2511 (Build 19426.20000)): 1,000 recipients
+         * - Web, Windows (new, classic - Mailbox 1.16 and later): 1,000 recipients
          *
          * - Android, classic Mac UI, iOS: 100 attendees
          *
-         * - New Mac UI, web browser: No limit
+         * - New Mac UI: No limit
          *
          * @remarks
          *
@@ -12351,10 +12779,7 @@ declare namespace Office {
          */
         sensitivity: MailboxEnums.AppointmentSensitivityType;
         /**
-         * Adds an event handler for a supported event. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Adds an event handler for a supported event. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -12362,6 +12787,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Appointment Attendee
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should invoke the handler.
          * @param handler - The function to handle the event. The function must accept a single parameter, which is an object literal.
@@ -12373,10 +12800,7 @@ declare namespace Office {
          */
         addHandlerAsync(eventType: Office.EventType | string, handler: any, options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
-         * Adds an event handler for a supported event. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Adds an event handler for a supported event. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -12384,6 +12808,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Appointment Attendee
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should invoke the handler.
          * @param handler - The function to handle the event. The function must accept a single parameter, which is an object literal.
@@ -12936,10 +13362,7 @@ declare namespace Office {
          */
         loadCustomPropertiesAsync(callback: (asyncResult: Office.AsyncResult<CustomProperties>) => void, userContext?: any): void;
         /**
-         * Removes the event handlers for a supported event type. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Removes the event handlers for a supported event type. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -12947,6 +13370,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Appointment Attendee
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should revoke the handler.
          * @param options - An object literal that contains one or more of the following properties:-
@@ -12956,10 +13381,7 @@ declare namespace Office {
          */
         removeHandlerAsync(eventType: Office.EventType | string, options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
-         * Removes the event handlers for a supported event type. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Removes the event handlers for a supported event type. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -12967,6 +13389,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Appointment Attendee
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should revoke the handler.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter,
@@ -13073,30 +13497,55 @@ declare namespace Office {
          * Gets the content identifier of an inline attachment.
          *
          * @remarks
+         * [Api set: Mailbox 1.16]
          *
-         * **Important**:
-         *
-         * - The `contentId` property is only supported in Outlook on the web and Outlook on Windows (new and classic (preview)).
-         * To preview the `contentId` property in classic Outlook on Windows, your Outlook client must run Version 2510 (Build 19312.20000)
-         * or later and must be on the Beta Channel. For more information, see {@link https://aka.ms/Msft365InsiderProgram | Microsoft 365 Insider Program}.
-         *
-         * - Starting November 15, 2025, changes to how inline images are represented in the HTML body of Outlook emails in
-         * Outlook on the web and the new Outlook on Windows will begin rolling out to production users.
+         * **Important**: Changes to how inline images are represented in the HTML body of Outlook emails in
+         * Outlook on the web and the new Outlook on Windows released on November 15, 2025.
          * Previously, the attachment ID of the image appeared in the `src` attribute of the applicable `<img>` element.
-         * After the change, the image will be represented by a content ID (`cid`) in the `src` attribute instead.
-         * As a result, you'll need to update your add-in's parsing logic if you parse the attachment ID from the HTML editor or
-         * get the Base64 value of the image from the URL in the `src` attribute. For more information, see
+         * Now, the image is represented by a content ID (`cid`) in the `src` attribute instead.
+         * If you parse the attachment ID from the HTML editor or get the Base64-encoded value of the image from the URL in the
+         * `src` attribute, you must update your add-in's parsing logic. For more information, see
          * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-inline-images-in-outlook | Changes to inline image representation in Outlook on the web and new Outlook for Windows}.
          */
         contentId: string;
         /**
-         * Gets the index of the attachment.
+         * Gets the identifier of an attachment. The value varies depending on the Outlook client.
+         *
+         * - In Outlook on the web and the new Outlook on Windows, the identifier is the Exchange Web Services (EWS) ID.
+         * For inline attachments, the initial identifier is a temporary attachment ID, prefixed with `addinId`, while the attachment is uploaded to the server.
+         * Once the upload completes, the attachment receives an EWS ID. For details, see the notes in the Remarks section.
+         *
+         * - In Outlook on Windows (classic) and on Mac, the identifier for inline and non-inline attachments is the index of the attachment.
+         *
+         * @remarks
+         *
+         * **Important**: Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in messages in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID. The temporary attachment ID is only supported for the duration of the current compose session.
+         * For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
          */
         id: string;
         /**
          * Gets a value that indicates whether the attachment appears as an image in the body of the item instead of in the attachment list.
          */
         isInline: boolean;
+        /**
+         * In Outlook on the web and the new Outlook on Windows, indicates whether an inline attachment in a message has been uploaded to the server and assigned an Exchange Web Services (EWS) ID.
+         *
+         * @remarks
+         *
+         * **Important**:
+         *
+         * - Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID in the `id` property and their `isServiceAccessible` property is set to `true`.
+         * The temporary attachment ID is only supported for the duration of the current compose session. For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
+         *
+         * - In Outlook on Windows (classic) and on Mac, the `isServiceAccessible` property always returns `false` since the attachment ID is the index of the attachment.
+         */
+        isServiceAccessible: boolean;
         /**
          * Gets the name of the attachment.
          *
@@ -13144,6 +13593,21 @@ declare namespace Office {
          * Gets a value that indicates the attachment's type.
          */
         attachmentType: MailboxEnums.AttachmentType | string;
+        /**
+         * Gets the content identifier of an inline attachment.
+         *
+         * @remarks
+         * [Api set: Mailbox 1.16]
+         *
+         * **Important**: Changes to how inline images are represented in the HTML body of Outlook emails in
+         * Outlook on the web and the new Outlook on Windows released on November 15, 2025.
+         * Previously, the attachment ID of the image appeared in the `src` attribute of the applicable `<img>` element.
+         * Now, the image is represented by a content ID (`cid`) in the `src` attribute instead.
+         * If you parse the attachment ID from the HTML editor or get the Base64-encoded value of the image from the URL in the
+         * `src` attribute, you must update your add-in's parsing logic. For more information, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-inline-images-in-outlook | Changes to inline image representation in Outlook on the web and new Outlook for Windows}.
+         */
+        contentId: string;
         /**
          * Gets the MIME content type of the attachment.
          *
@@ -13473,8 +13937,8 @@ declare namespace Office {
          * make it render efficiently with its rendering engine. This means that the value returned from a subsequent call to the `Body.getAsync` method
          * (introduced in Mailbox 1.3) won't necessarily contain the exact value that was passed in the previous `prependAsync` call.
          *
-         * - When including links in HTML markup, you can disable online link preview by setting the `id` attribute on the anchor (\<a\>) to "LPNoLP"
-         * (see the **Examples** section for a sample).
+         * - When including links in HTML markup, you can disable online link preview by setting the `id` attribute on the anchor (\<a\>) to "LPNoLP".
+         * For example, `'<a id="LPNoLP" href="http://www.contoso.com">Click here!</a>'`.
          *
          * - In Outlook on Android and on iOS, this method isn't supported in the Message Compose mode. Only the Appointment Organizer mode is
          * supported. For more information on supported APIs in Outlook mobile, see
@@ -13523,8 +13987,8 @@ declare namespace Office {
          * make it render efficiently with its rendering engine. This means that the value returned from a subsequent call to the `Body.getAsync` method
          * (introduced in Mailbox 1.3) won't necessarily contain the exact value that was passed in the previous `prependAsync` call.
          *
-         * - When including links in HTML markup, you can disable online link preview by setting the `id` attribute on the anchor (\<a\>) to "LPNoLP"
-         * (see the **Examples** section for a sample).
+         * - When including links in HTML markup, you can disable online link preview by setting the `id` attribute on the anchor (\<a\>) to "LPNoLP".
+         * For example, `'<a id="LPNoLP" href="http://www.contoso.com">Click here!</a>'`.
          *
          * - In Outlook on Android and on iOS, this method isn't supported in the Message Compose mode. Only the Appointment Organizer mode is
          * supported. For more information on supported APIs in Outlook mobile, see
@@ -13663,8 +14127,8 @@ declare namespace Office {
          * be the exact same value that was previously passed in the `Body.setAsync` method. The client may modify the value passed to `setAsync` to make it
          * render efficiently with its rendering engine.
          *
-         * - When including links in HTML markup, you can disable online link preview by setting the `id` attribute on the anchor (\<a\>) to "LPNoLP"
-         * (see the **Examples** section for a sample).
+         * - When including links in HTML markup, you can disable online link preview by setting the `id` attribute on the anchor (\<a\>) to "LPNoLP".
+         * For example, `'<a id="LPNoLP" href="http://www.contoso.com">Click here!</a>'`.
          *
          * - In Outlook on Windows (classic) and on Mac, the add-in user isn't able to revert this action with the **Undo** command.
          *
@@ -13733,8 +14197,8 @@ declare namespace Office {
          * be the exact same value that was previously passed in the `Body.setAsync` method. The client may modify the value passed to `setAsync` to make it
          * render efficiently with its rendering engine.
          *
-         * - When including links in HTML markup, you can disable online link preview by setting the `id` attribute on the anchor (\<a\>) to "LPNoLP"
-         * (see the **Examples** section for a sample).
+         * - When including links in HTML markup, you can disable online link preview by setting the `id` attribute on the anchor (\<a\>) to "LPNoLP".
+         * For example, `'<a id="LPNoLP" href="http://www.contoso.com">Click here!</a>'`.
          *
          * - In Outlook on Windows (classic) and on Mac, the add-in user isn't able to revert this action with the **Undo** command.
          *
@@ -13791,8 +14255,8 @@ declare namespace Office {
          *
          * **Important**:
          *
-         * - When including links in HTML markup, you can disable online link preview by setting the `id` attribute on the anchor (\<a\>) to "LPNoLP"
-         * (see the **Examples** section for a sample).
+         * - When including links in HTML markup, you can disable online link preview by setting the `id` attribute on the anchor (\<a\>) to "LPNoLP".
+         * For example, `'<a id="LPNoLP" href="http://www.contoso.com">Click here!</a>'`.
          *
          * - SVG files aren't supported. Use JPG or PNG files instead.
          *
@@ -13833,8 +14297,8 @@ declare namespace Office {
          *
          * **Important**:
          *
-         * - When including links in HTML markup, you can disable online link preview by setting the `id` attribute on the anchor (\<a\>) to "LPNoLP"
-         * (see the **Examples** section for a sample).
+         * - When including links in HTML markup, you can disable online link preview by setting the `id` attribute on the anchor (\<a\>) to "LPNoLP".
+         * For example, `'<a id="LPNoLP" href="http://www.contoso.com">Click here!</a>'`.
          *
          * - SVG files aren't supported. Use JPG or PNG files instead.
          *
@@ -14242,6 +14706,8 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
          *
+         * **Important**: In classic Outlook on Windows, custom properties saved to a mail item in read mode remain accessible while the item is being forwarded.
+         *
          * @param name - The name of the custom property to be returned.
          */
         get(name: string): any;
@@ -14262,6 +14728,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+         *
+         * **Important**: In classic Outlook on Windows, custom properties saved to a mail item in read mode remain accessible while the item is being forwarded.
          */
         getAll(): any;
         /**
@@ -14361,15 +14829,13 @@ declare namespace Office {
      *
      * @remarks
      *
-     * [Api set: Mailbox preview]
+     * [Api set: Mailbox 1.16]
      *
      * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
      *
      * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
      *
      * To learn how to develop an encryption add-in in Outlook, see {@link https://learn.microsoft.com/office/dev/add-ins/outlook/encryption-decryption | Create an encryption Outlook add-in}.
-     *
-     * @beta
      */
     interface DecryptedMessageAttachment {
         /**
@@ -14377,13 +14843,16 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
          *
-         * @beta
+         * **Important**: Attachments of type `MailboxEnums.AttachmentType.Item` aren't currently supported in production. However, you can preview support for the `MailboxEnums.AttachmentType.Item` type
+         * in Outlook on the web and on Windows (new and classic). For classic Outlook on Windows, you must install Version 2606 (Build 20114.15110) or later. Then, join the
+         * {@link https://techcommunity.microsoft.com/kb/microsoft-365-insider-kb/join-the-microsoft-365-insider-program-on-windows/4401748 | Microsoft 365 Insider program} and select the
+         * **Beta Channel** option to access Office beta builds.
          */
         attachmentType: MailboxEnums.AttachmentType;
         /**
@@ -14391,15 +14860,13 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
          *
          * **Important**: The `content` property isn't supported by attachments of type `MailboxEnums.AttachmentType.Cloud`. 
-         *
-         * @beta
          */
         content: string;
         /**
@@ -14409,7 +14876,7 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
          *
@@ -14419,8 +14886,6 @@ declare namespace Office {
          * specified in the `src` attribute of the `<img>` element (for example, `<img width=96 height=96 id="Picture_1" src="cid:image001.png@01DC1E6F.FC7C7410">`).
          * To easily identify and provide these inline attachments during decryption, we recommend saving the content IDs of inline attachments to the message header during encryption.
          * Call `Office.context.mailbox.item.getAttachmentsAsync` to get the content ID of an inline attachment. Then, call `Office.context.mailbox.item.internetHeaders.setAsync` to save the ID to the header of the message.
-         *
-         * @beta
          */
         contentId?: string;
         /**
@@ -14429,13 +14894,11 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
-         *
-         * @beta
          */
         isInline?: boolean;
         /**
@@ -14443,13 +14906,11 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
-         *
-         * @beta
          */
         name: string;
         /**
@@ -14458,13 +14919,11 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
-         *
-         * @beta
          */
         path?: string;
     }
@@ -14473,15 +14932,13 @@ declare namespace Office {
      *
      * @remarks
      *
-     * [Api set: Mailbox preview]
+     * [Api set: Mailbox 1.16]
      *
      * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
      *
      * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
      *
      * To learn how to develop an encryption add-in in Outlook, see {@link https://learn.microsoft.com/office/dev/add-ins/outlook/encryption-decryption | Create an encryption Outlook add-in}.
-     *
-     * @beta
      */
     interface DecryptedMessageBody {
         /**
@@ -14490,13 +14947,11 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
-         *
-         * @beta
          */
         coercionType: Office.CoercionType;
         /**
@@ -14504,13 +14959,11 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
-         *
-         * @beta
          */
         content: string;
     }
@@ -14645,22 +15098,16 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
          *
-         * **Important**:
-         *
-         * - The `ews` property is available for preview in Outlook on the web and on Windows (new and classic (Version 2510, Build 19328.20000 and later)).
-         *
-         * - Legacy Exchange Online user identity tokens and callback tokens are no longer supported and are turned off across all Microsoft 365 tenants.
+         * **Important**: Legacy Exchange Online user identity tokens and callback tokens are no longer supported and are turned off across all Microsoft 365 tenants.
          * If an Outlook add-in requires delegated user access or user identity, we recommend using MSAL (Microsoft Authentication Library) and nested app authentication (NAA).
          * Exchange user identity tokens are still supported for Exchange on-premises. For more information, see
          * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/faq-nested-app-auth-outlook-legacy-tokens | Nested app authentication FAQ}.
-         *
-         * @beta
          */
         ews: Ews;
         /**
@@ -14975,6 +15422,24 @@ declare namespace Office {
          */
         pageY: number;
         /**
+         * Gets the x-coordinate of the mouse pointer that represents the horizontal position in pixels.
+         * The position is relative to the left edge of the add-in's task pane.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.5]
+         */
+        taskPaneX: number;
+        /**
+         * Gets the y-coordinate of the mouse pointer that represents the vertical position in pixels.
+         * The position is relative to the top edge of the add-in's task pane.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.5]
+         */
+        taskPaneY: number;
+        /**
          * Gets the type of drag-and-drop event. The `dragover` event occurs when messages or file attachments are dragged over an add-in's task pane.
          *
          * @remarks
@@ -15020,6 +15485,24 @@ declare namespace Office {
          * [Api set: Mailbox 1.5]
          */
         pageY: number;
+        /**
+         * Gets the x-coordinate of the mouse pointer that represents the horizontal position in pixels.
+         * The position is relative to the left edge of the add-in's task pane.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.5]
+         */
+        taskPaneX: number;
+        /**
+         * Gets the y-coordinate of the mouse pointer that represents the vertical position in pixels.
+         * The position is relative to the top edge of the add-in's task pane.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.5]
+         */
+        taskPaneY: number;
         /**
          * Gets the type of drag-and-drop event. The `drop` event occurs when messages or file attachments are dropped into an add-in's task pane.
          *
@@ -15429,7 +15912,7 @@ declare namespace Office {
      *
      * @remarks
      *
-     * [Api set: Mailbox preview]
+     * [Api set: Mailbox 1.16]
      *
      * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
      *
@@ -15439,8 +15922,6 @@ declare namespace Office {
      * If an Outlook add-in requires delegated user access or user identity, we recommend using MSAL (Microsoft Authentication Library) and nested app authentication (NAA).
      * Exchange user identity tokens are still supported for Exchange on-premises. For more information, see
      * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/faq-nested-app-auth-outlook-legacy-tokens | Nested app authentication FAQ}.
-     *
-     * @beta
      */
     interface Ews {
         /**
@@ -15448,15 +15929,13 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
          *
          * **Important**:
-         *
-         * - The `getTokenStatusAsync` method is available for preview in Outlook on the web and on Windows (new and classic (Version 2510, Build 19328.20000 and later)).
          *
          * - The `getTokenStatusAsync` method isn't supported if you load an add-in in an Outlook.com or Gmail mailbox.
          *
@@ -15468,8 +15947,6 @@ declare namespace Office {
          *                   The `asyncResult.value` property returns the token status, which can be `Office.MailboxEnums.TokenStatus.Enabled`, `Office.MailboxEnums.TokenStatus.Disabled`, or
          *                   `Office.MailboxEnums.TokenStatus.Removed`. A `Office.MailboxEnums.TokenStatus.Removed` status indicates that the mailbox is hosted in an Exchange Online environment
          *                   where legacy Exchange tokens are turned off and are no longer supported.
-         *
-         * @beta
          */
         getTokenStatusAsync(options: Office.AsyncContextOptions & { isRest?: boolean }, callback: (asyncResult: Office.AsyncResult<MailboxEnums.TokenStatus>) => void): void;
         /**
@@ -15477,15 +15954,13 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
          *
          * **Important**:
-         *
-         * - The `getTokenStatusAsync` method is available for preview in Outlook on the web and on Windows (new and classic (Version 2510, Build 19328.20000 and later)).
          *
          * - The `getTokenStatusAsync` method isn't supported if you load an add-in in an Outlook.com or Gmail mailbox.
          *
@@ -15495,8 +15970,6 @@ declare namespace Office {
          *                   The `asyncResult.value` property returns the token status, which can be `Office.MailboxEnums.TokenStatus.Enabled`, `Office.MailboxEnums.TokenStatus.Disabled`, or
          *                   `Office.MailboxEnums.TokenStatus.Removed`. A `Office.MailboxEnums.TokenStatus.Removed` status indicates that the mailbox is hosted in an Exchange Online environment
          *                   where legacy Exchange tokens are turned off and are no longer supported.
-         *
-         * @beta
          */
         getTokenStatusAsync(callback: (asyncResult: Office.AsyncResult<MailboxEnums.TokenStatus>) => void): void;
     }
@@ -15864,9 +16337,6 @@ declare namespace Office {
      * The item namespace is used to access the currently selected message, meeting request, or appointment.
      * You can determine the type of the item by using the `itemType` property.
      *
-     * To see the full member list, refer to the
-     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item | Object Model} page.
-     *
      * If you want to see IntelliSense for only a specific type or mode, cast this item to one of the following:
      *
      * - {@link Office.AppointmentCompose | AppointmentCompose}
@@ -15889,8 +16359,8 @@ declare namespace Office {
      * The compose mode of {@link Office.Item | Office.context.mailbox.item}.
      *
      * **Important**: This is an internal Outlook object, not directly exposed through existing interfaces.
-     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to the
-     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item | Object Model} page.
+     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to
+     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model | Outlook Item object model}.
      *
      * Child interfaces:
      *
@@ -15904,8 +16374,8 @@ declare namespace Office {
      * The read mode of {@link Office.Item | Office.context.mailbox.item}.
      *
      * **Important**: This is an internal Outlook object, not directly exposed through existing interfaces.
-     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to the
-     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item | Object Model} page.
+     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to
+     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model | Outlook Item object model}.
      *
      * Child interfaces:
      *
@@ -16116,7 +16586,7 @@ declare namespace Office {
          * - Only the `getAsync` method of the SensitivityLabel object is supported.
          *
          * To learn more about how to manage sensitivity labels in your add-in, see
-         * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+         * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
          */
         sensitivityLabel: SensitivityLabel;
         /**
@@ -16189,6 +16659,12 @@ declare namespace Office {
          * - The `getAttachmentContentAsync` method gets the attachment with the specified identifier from the item. As a best practice, you should get
          * the attachment's identifier from a `getAttachmentsAsync` call, then in the same session, use that identifier to retrieve the attachment.
          *
+         * - Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in messages in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID. The temporary attachment ID is only supported for the duration of the current compose session.
+         * For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
+         *
          * - In Outlook on the web and the {@link https://support.microsoft.com/office/656bb8d9-5a60-49b2-a98b-ba7822bc7627 | new Outlook on Windows},
          * `getAttachmentContentAsync` doesn't support attachments that were added using the **Upload and share** option.
          *
@@ -16203,7 +16679,8 @@ declare namespace Office {
          *
          * - `InvalidAttachmentId`: The attachment identifier does not exist.
          *
-         * @param attachmentId - The identifier of the attachment you want to get.
+         * @param attachmentId - The identifier of the attachment you want to get. In Outlook on the web and the new Outlook on Windows, the temporary attachment ID that's
+         *                       locally generated for inline images that haven't been uploaded to the server yet are supported for the duration of the current compose session.
          * @param options - An object literal that contains one or more of the following properties:-
          *        `asyncContext`: Developers can provide any object they wish to access in the callback function.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter,
@@ -16226,6 +16703,12 @@ declare namespace Office {
          * - The `getAttachmentContentAsync` method gets the attachment with the specified identifier from the item. As a best practice, you should get
          * the attachment's identifier from a `getAttachmentsAsync` call, then in the same session, use that identifier to retrieve the attachment.
          *
+         * - Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in messages in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID. The temporary attachment ID is only supported for the duration of the current compose session.
+         * For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
+         *
          * - In Outlook on the web and the {@link https://support.microsoft.com/office/656bb8d9-5a60-49b2-a98b-ba7822bc7627 | new Outlook on Windows},
          * `getAttachmentContentAsync` doesn't support attachments that were added using the **Upload and share** option.
          *
@@ -16240,7 +16723,8 @@ declare namespace Office {
          *
          * - `InvalidAttachmentId`: The attachment identifier does not exist.
          *
-         * @param attachmentId - The identifier of the attachment you want to get.
+         * @param attachmentId - The identifier of the attachment you want to get. In Outlook on the web and the new Outlook on Windows, the temporary attachment ID that's
+         *                       locally generated for inline images that haven't been uploaded to the server yet are supported for the duration of the current compose session.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter,
          *                `asyncResult`, which is an `Office.AsyncResult` object. If the call fails, the `asyncResult.error` property will contain
          *                an error code with the reason for the failure.
@@ -16256,14 +16740,22 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Compose
          *
-         * **Important**: In Outlook on the web and the new Outlook on Windows, users can select the **Upload and share** option to upload an attachment to OneDrive and
+         * **Important**:
+         *
+         * - Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in messages in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID. The temporary attachment ID is only supported for the duration of the current compose session.
+         * For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
+         *
+         * - In Outlook on the web and the new Outlook on Windows, users can select the **Upload and share** option to upload an attachment to OneDrive and
          * include a link to the file in the mail item. However, since only a link is included, `getAttachmentsAsync` doesn't return this attachment.
          *
          * @param options - An object literal that contains one or more of the following properties:-
          *        `asyncContext`: Developers can provide any object they wish to access in the callback function.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter of
          *                 type `Office.AsyncResult`. If the call fails, the `asyncResult.error` property will contain an error code with the reason for
-         *                 the failure.
+         *                 the failure. If the call succeeds, an array of `AttachmentDetailsCompose` objects is returned in the `asyncResult.value` property.
          */
         getAttachmentsAsync(options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<AttachmentDetailsCompose[]>) => void): void;
         /**
@@ -16276,12 +16768,20 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Compose
          *
-         * **Important**: In Outlook on the web and the new Outlook on Windows, users can select the **Upload and share** option to upload an attachment to OneDrive and
+         * **Important**:
+         *
+         * - Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in messages in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID. The temporary attachment ID is only supported for the duration of the current compose session.
+         * For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
+         *
+         * - In Outlook on the web and the new Outlook on Windows, users can select the **Upload and share** option to upload an attachment to OneDrive and
          * include a link to the file in the mail item. However, since only a link is included, `getAttachmentsAsync` doesn't return this attachment.
          *
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter of
          *                 type `Office.AsyncResult`. If the call fails, the `asyncResult.error` property will contain an error code with the reason for
-         *                 the failure.
+         *                 the failure. If the call succeeds, an array of `AttachmentDetailsCompose` objects is returned in the `asyncResult.value` property.
          */
         getAttachmentsAsync(callback?: (asyncResult: Office.AsyncResult<AttachmentDetailsCompose[]>) => void): void;
         /**
@@ -16993,8 +17493,10 @@ declare namespace Office {
          *
          * **Important**: 
          *
-         * - The `from` and `sender` properties represent the same person unless the message is sent by a delegate.
-         * In that case, the `from` property represents the delegator, and the `sender` property represents the delegate.
+         * - The `from` and `sender` properties represent the same person unless the message is sent by a delegate with **Send on behalf** permissions.
+         * In this case, the `from` property returns the email address of the mailbox owner or shared mailbox, and the `sender` property returns the address of the delegate.
+         * If the delegate has both **Send on behalf** and **Send as** permissions, the **Send as** permission applies. For information about mailbox delegation, see
+         * {@link https://learn.microsoft.com/exchange/recipients-in-exchange-online/manage-permissions-for-recipients | Manage permissions for recipients in Exchange Online}.
          *
          * - The `recipientType` property of the `EmailAddressDetails` object in the `from` property is undefined.
          */
@@ -17009,8 +17511,13 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
          *
          * **Important**: In the **Sent Items** folder, the `internetMessageId` may not be available yet on recently sent items. In that case,
-         * consider using {@link https://learn.microsoft.com/office/dev/add-ins/outlook/web-services | Exchange Web Services} to get this
-         * {@link https://learn.microsoft.com/exchange/client-developer/web-service-reference/internetmessageid | property from the server}.
+         * consider using one of the following options depending on your Exchange environment.
+         *
+         * - For Exchange Online, use {@link https://learn.microsoft.com/office/dev/add-ins/outlook/microsoft-graph | Microsoft Graph} to get the
+         * {@link https://learn.microsoft.com/graph/api/resources/message | internetMessageId} property.
+         *
+         * - For Exchange Server (on-premises), use {@link https://learn.microsoft.com/office/dev/add-ins/outlook/web-services | Exchange Web Services} to get the
+         * {@link https://learn.microsoft.com/exchange/client-developer/web-service-reference/internetmessageid | InternetMessageId} property from the server.
          */
         internetMessageId: string;
         /**
@@ -17198,8 +17705,10 @@ declare namespace Office {
          *
          * **Important**:
          *
-         * - The `from` and `sender` properties represent the same person unless the message is sent by a delegate.
-         * In that case, the `from` property represents the delegator, and the `sender` property represents the delegate.
+         * - The `from` and `sender` properties represent the same person unless the message is sent by a delegate with **Send on behalf** permissions.
+         * In this case, the `from` property returns the email address of the mailbox owner or shared mailbox, and the `sender` property returns the address of the delegate.
+         * If the delegate has both **Send on behalf** and **Send as** permissions, the **Send as** permission applies. For information about mailbox delegation, see
+         * {@link https://learn.microsoft.com/exchange/recipients-in-exchange-online/manage-permissions-for-recipients | Manage permissions for recipients in Exchange Online}.
          *
          * - The `recipientType` property of the `EmailAddressDetails` object in the `sender` property is undefined.
          */
@@ -17964,24 +18473,7 @@ declare namespace Office {
         /**
          * Provides diagnostic information to an Outlook add-in.
          *
-         * Contains the following members.
-         *
-         *  - `hostName` (string): A string that represents the name of the Office application.
-         * It should be one of the following values: `Outlook`, `newOutlookWindows`, `OutlookWebApp`, `OutlookIOS`, or `OutlookAndroid`.
-         * **Note**: The "Outlook" value is returned for Outlook on Windows (classic) and on Mac.
-         *
-         *  - `hostVersion` (string): A string that represents the version of either the Office application or the Exchange Server (e.g., "15.0.468.0").
-         * If the mail add-in is running in Outlook on Windows (classic), on Mac, or on mobile devices, the `hostVersion` property returns the version of the
-         * Outlook client. In Outlook on the web and {@link https://support.microsoft.com/office/656bb8d9-5a60-49b2-a98b-ba7822bc7627 | new Outlook on Windows},
-         * the property returns the version of the Exchange Server.
-         *
-         *  - `OWAView` (`MailboxEnums.OWAView` or string): An enum (or string literal) that represents the current view of Outlook on the web.
-         * If the application is not Outlook on the web, then accessing this property results in undefined.
-         * Outlook on the web has three views (`OneColumn` - displayed when the screen is narrow, `TwoColumns` - displayed when the screen is wider,
-         * and `ThreeColumns` - displayed when the screen is wide) that correspond to the width of the screen and the window, and the number of columns
-         * that can be displayed.
-         *
-         * More information is under {@link Office.Diagnostics}.
+         * For information about the diagnostic properties you can access, see {@link Office.Diagnostics}.
          *
          * @remarks
          *
@@ -18081,10 +18573,7 @@ declare namespace Office {
         userProfile: UserProfile;
 
         /**
-         * Adds an event handler for a supported event. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Mailbox object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox#events | events section}.
+         * Adds an event handler for a supported event. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.5]
@@ -18092,6 +18581,17 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+         *
+         * **Important**: The following events are supported on the `Mailbox` object.
+         *
+         * <table>
+         *  <tr><th>Event</th><th>Description</th><th>Minimum requirement set</th></tr>
+         *  <tr><td><code>DragAndDropEvent</code></td><td>A message or file attachment in the Outlook client window is dragged then dropped into the task pane of an add-in.
+         *   This event is only supported in Outlook on the web and the new Outlook on Windows.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-5">1.5</a></td></tr>
+         *  <tr><td><code>ItemChanged</code></td><td>A different Outlook item is selected for viewing while the task pane is pinned.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-5">1.5</a></td></tr>
+         *  <tr><td><code>OfficeThemeChanged</code></td><td>The OfficeTheme is changed in Outlook.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-14">1.14</a></td></tr>
+         *  <tr><td><code>SelectedItemsChanged</code></td><td>One or more messages are selected or deselected.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-13">1.13</a></td></tr>
+         * </table>
          *
          * @param eventType - The event that should invoke the handler.
          * @param handler - The function to handle the event. The function must accept a single parameter, which is an object literal.
@@ -18102,10 +18602,7 @@ declare namespace Office {
          */
         addHandlerAsync(eventType: Office.EventType | string, handler: any, options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
-         * Adds an event handler for a supported event. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Mailbox object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox#events | events section}.
+         * Adds an event handler for a supported event. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.5]
@@ -18113,6 +18610,17 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+         *
+         * **Important**: The following events are supported on the `Mailbox` object.
+         *
+         * <table>
+         *  <tr><th>Event</th><th>Description</th><th>Minimum requirement set</th></tr>
+         *  <tr><td><code>DragAndDropEvent</code></td><td>A message or file attachment in the Outlook client window is dragged then dropped into the task pane of an add-in.
+         *   This event is only supported in Outlook on the web and the new Outlook on Windows.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-5">1.5</a></td></tr>
+         *  <tr><td><code>ItemChanged</code></td><td>A different Outlook item is selected for viewing while the task pane is pinned.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-5">1.5</a></td></tr>
+         *  <tr><td><code>OfficeThemeChanged</code></td><td>The OfficeTheme is changed in Outlook.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-14">1.14</a></td></tr>
+         *  <tr><td><code>SelectedItemsChanged</code></td><td>One or more messages are selected or deselected.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-13">1.13</a></td></tr>
+         * </table>
          *
          * @param eventType - The event that should invoke the handler.
          * @param handler - The function to handle the event. The function must accept a single parameter, which is an object literal.
@@ -18500,39 +19008,9 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          *
-         * @param parameters - A dictionary containing all values to be filled in for the user in the new form. All parameters are optional.
-         *
-         *        `toRecipients`: An array of strings containing the email addresses or an array containing an {@link Office.EmailAddressDetails | EmailAddressDetails} object
-         *        for each of the recipients on the **To** line. The array is limited to a maximum of 100 entries.
-         *
-         *        `ccRecipients`: An array of strings containing the email addresses or an array containing an {@link Office.EmailAddressDetails | EmailAddressDetails} object
-         *        for each of the recipients on the **Cc** line. The array is limited to a maximum of 100 entries.
-         *
-         *        `bccRecipients`: An array of strings containing the email addresses or an array containing an {@link Office.EmailAddressDetails | EmailAddressDetails} object
-         *        for each of the recipients on the **Bcc** line. The array is limited to a maximum of 100 entries.
-         *
-         *        `subject`: A string containing the subject of the message. The string is limited to a maximum of 255 characters.
-         *
-         *        `htmlBody`: The HTML body of the message. The body content is limited to a maximum size of 32 KB.
-         *
-         *        `attachments`: An array of JSON objects that are either file or Exchange item attachments.
-         *
-         *        `attachments.type`: Indicates the type of attachment. Must be `Office.MailboxEnums.AttachmentType.File` for a file attachment or
-         *        `Office.MailboxEnums.AttachmentType.Item` for an Exchange item attachment.
-         *
-         *        `attachments.name`: A string that contains the name of the attachment, up to 255 characters in length.
-         *
-         *        `attachments.url`: Only used if the attachment type is set to `file`. The URI of the location for the file. **Important**: This link must be
-         *        publicly accessible, without need for authentication by Exchange Online servers. However, with on-premises Exchange, the link can
-         *        be accessible on a private network as long as it doesn't need further authentication.
-         *
-         *        `attachments.isInline`: Only used if the attachment type is set to `file`. If true, indicates that the attachment will be shown inline as an image
-         *        in the message body and won't be displayed in the attachment list.
-         *
-         *        `attachments.itemId`: Only used if the attachment type is set to `item`. The EWS item ID of the existing e-mail you want to attach to the new message.
-         *        This is a string up to 100 characters.
+         * @param parameters - A `MessageForm` object containing the content to be added to the new message form. All properties are optional.
          */
-        displayNewMessageForm(parameters: any): void;
+        displayNewMessageForm(parameters: MessageForm): void;
         /**
          * Displays a form for creating a new message.
          *
@@ -18548,43 +19026,13 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          *
-         * @param parameters - A dictionary containing all values to be filled in for the user in the new form. All parameters are optional.
-         *
-         *        `toRecipients`: An array of strings containing the email addresses or an array containing an {@link Office.EmailAddressDetails | EmailAddressDetails} object
-         *        for each of the recipients on the **To** line. The array is limited to a maximum of 100 entries.
-         *
-         *        `ccRecipients`: An array of strings containing the email addresses or an array containing an {@link Office.EmailAddressDetails | EmailAddressDetails} object
-         *        for each of the recipients on the **Cc** line. The array is limited to a maximum of 100 entries.
-         *
-         *        `bccRecipients`: An array of strings containing the email addresses or an array containing an {@link Office.EmailAddressDetails | EmailAddressDetails} object
-         *        for each of the recipients on the **Bcc** line. The array is limited to a maximum of 100 entries.
-         *
-         *        `subject`: A string containing the subject of the message. The string is limited to a maximum of 255 characters.
-         *
-         *        `htmlBody`: The HTML body of the message. The body content is limited to a maximum size of 32 KB.
-         *
-         *        `attachments`: An array of JSON objects that are either file or Exchange item attachments.
-         *
-         *        `attachments.type`: Indicates the type of attachment. Must be `Office.MailboxEnums.AttachmentType.File` for a file attachment or
-         *        `Office.MailboxEnums.AttachmentType.Item` for an Exchange item attachment.
-         *
-         *        `attachments.name`: A string that contains the name of the attachment, up to 255 characters in length.
-         *
-         *        `attachments.url`: Only used if the attachment type is set to `file`. The URI of the location for the file. **Important**: This link must be
-         *        publicly accessible, without need for authentication by Exchange Online servers. However, with on-premises Exchange, the link can
-         *        be accessible on a private network as long as it doesn't need further authentication.
-         *
-         *        `attachments.isInline`: Only used if the attachment type is set to `file`. If true, indicates that the attachment will be shown inline as an image
-         *        in the message body and won't be displayed in the attachment list.
-         *
-         *        `attachments.itemId`: Only used if the attachment type is set to `item`. The EWS item ID of the existing e-mail you want to attach to the new message.
-         *        This is a string up to 100 characters.
+         * @param parameters - A `MessageForm` object containing the content to be added to the new message form. All properties are optional.
          * @param options - An object literal that contains one or more of the following properties:-
          *        `asyncContext`: Developers can provide any object they wish to access in the callback function.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter,
          *                `asyncResult`, which is an `Office.AsyncResult` object.
          */
-        displayNewMessageFormAsync(parameters: any, options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
+        displayNewMessageFormAsync(parameters: MessageForm, options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
          * Displays a form for creating a new message.
          *
@@ -18600,41 +19048,11 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          *
-         * @param parameters - A dictionary containing all values to be filled in for the user in the new form. All parameters are optional.
-         *
-         *        `toRecipients`: An array of strings containing the email addresses or an array containing an {@link Office.EmailAddressDetails | EmailAddressDetails} object
-         *        for each of the recipients on the **To** line. The array is limited to a maximum of 100 entries.
-         *
-         *        `ccRecipients`: An array of strings containing the email addresses or an array containing an {@link Office.EmailAddressDetails | EmailAddressDetails} object
-         *        for each of the recipients on the **Cc** line. The array is limited to a maximum of 100 entries.
-         *
-         *        `bccRecipients`: An array of strings containing the email addresses or an array containing an {@link Office.EmailAddressDetails | EmailAddressDetails} object
-         *        for each of the recipients on the **Bcc** line. The array is limited to a maximum of 100 entries.
-         *
-         *        `subject`: A string containing the subject of the message. The string is limited to a maximum of 255 characters.
-         *
-         *        `htmlBody`: The HTML body of the message. The body content is limited to a maximum size of 32 KB.
-         *
-         *        `attachments`: An array of JSON objects that are either file or Exchange item attachments.
-         *
-         *        `attachments.type`: Indicates the type of attachment. Must be `Office.MailboxEnums.AttachmentType.File` for a file attachment or
-         *        `Office.MailboxEnums.AttachmentType.Item` for an Exchange item attachment.
-         *
-         *        `attachments.name`: A string that contains the name of the attachment, up to 255 characters in length.
-         *
-         *        `attachments.url`: Only used if the attachment type is set to `file`. The URI of the location for the file. **Important**: This link must be
-         *        publicly accessible, without need for authentication by Exchange Online servers. However, with on-premises Exchange, the link can
-         *        be accessible on a private network as long as it doesn't need further authentication.
-         *
-         *        `attachments.isInline`: Only used if the attachment type is set to `file`. If true, indicates that the attachment will be shown inline as an image
-         *        in the message body and won't be displayed in the attachment list.
-         *
-         *        `attachments.itemId`: Only used if the attachment type is set to `item`. The EWS item ID of the existing e-mail you want to attach to the new message.
-         *        This is a string up to 100 characters.
+         * @param parameters - A `MessageForm` object containing the content to be added to the new message form. All properties are optional.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter,
          *                `asyncResult`, which is an `Office.AsyncResult` object.
          */
-        displayNewMessageFormAsync(parameters: any, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
+        displayNewMessageFormAsync(parameters: MessageForm, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
          * Gets a string that contains a token used to call REST APIs or Exchange Web Services (EWS).
          *
@@ -19086,10 +19504,7 @@ declare namespace Office {
          */
         makeEwsRequestAsync(data: any, callback: (asyncResult: Office.AsyncResult<string>) => void, userContext?: any): void;
         /**
-         * Removes the event handlers for a supported event type. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Mailbox object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox#events | events section}.
+         * Removes the event handlers for a supported event type. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.5]
@@ -19097,6 +19512,17 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+         *
+         * **Important**: The following events are supported on the `Mailbox` object.
+         *
+         * <table>
+         *  <tr><th>Event</th><th>Description</th><th>Minimum requirement set</th></tr>
+         *  <tr><td><code>DragAndDropEvent</code></td><td>A message or file attachment in the Outlook client window is dragged then dropped into the task pane of an add-in.
+         *   This event is only supported in Outlook on the web and the new Outlook on Windows.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-5">1.5</a></td></tr>
+         *  <tr><td><code>ItemChanged</code></td><td>A different Outlook item is selected for viewing while the task pane is pinned.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-5">1.5</a></td></tr>
+         *  <tr><td><code>OfficeThemeChanged</code></td><td>The OfficeTheme is changed in Outlook.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-14">1.14</a></td></tr>
+         *  <tr><td><code>SelectedItemsChanged</code></td><td>One or more messages are selected or deselected.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-13">1.13</a></td></tr>
+         * </table>
          *
          * @param eventType - The event that should revoke the handler.
          * @param options - Provides an option for preserving context data of any type, unchanged, for use in a callback.
@@ -19105,10 +19531,7 @@ declare namespace Office {
          */
         removeHandlerAsync(eventType: Office.EventType | string, options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
-         * Removes the event handlers for a supported event type. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Mailbox object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox#events | events section}.
+         * Removes the event handlers for a supported event type. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.5]
@@ -19116,6 +19539,17 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+         *
+         * **Important**: The following events are supported on the `Mailbox` object.
+         *
+         * <table>
+         *  <tr><th>Event</th><th>Description</th><th>Minimum requirement set</th></tr>
+         *  <tr><td><code>DragAndDropEvent</code></td><td>A message or file attachment in the Outlook client window is dragged then dropped into the task pane of an add-in.
+         *   This event is only supported in Outlook on the web and the new Outlook on Windows.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-5">1.5</a></td></tr>
+         *  <tr><td><code>ItemChanged</code></td><td>A different Outlook item is selected for viewing while the task pane is pinned.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-5">1.5</a></td></tr>
+         *  <tr><td><code>OfficeThemeChanged</code></td><td>The OfficeTheme is changed in Outlook.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-14">1.14</a></td></tr>
+         *  <tr><td><code>SelectedItemsChanged</code></td><td>One or more messages are selected or deselected.</td><td><a href="https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-requirement-set-1-13">1.13</a></td></tr>
+         * </table>
          *
          * @param eventType - The event that should revoke the handler.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter of
@@ -19128,7 +19562,7 @@ declare namespace Office {
      * {@link https://learn.microsoft.com/office/dev/add-ins/develop/event-based-activation | event-based activation}, including
      * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/onmessagesend-onappointmentsend-events | Smart Alerts}, the
      * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/spam-reporting | integrated spam-reporting feature}, or
-     * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/encryption-decryption | decryption} (preview).
+     * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/encryption-decryption | decryption}.
      * It allows the add-in to signify to the Outlook client that it has completed processing an event.
      *
      * @remarks
@@ -19142,6 +19576,8 @@ declare namespace Office {
      *
      * - Support for the integrated spam-reporting feature was introduced in Mailbox 1.14.
      *
+     * - Support for the decryption feature was introduced in Mailbox 1.16.
+     *
      * - For information about the Event object used by the {@link https://learn.microsoft.com/office/dev/add-ins/design/add-in-commands | function command button},
      * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-on-send-addins | on-send add-in},
      * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/online-meeting | online-meeting provider add-in}, and
@@ -19150,7 +19586,7 @@ declare namespace Office {
      */
     interface MailboxEvent {
         /**
-         * Indicates that the event-based, spam-reporting, or decryption (preview) add-in has completed processing an event.
+         * Indicates that the event-based, spam-reporting, or decryption add-in has completed processing an event.
          *
          * @remarks
          * [Api set: Mailbox 1.10]
@@ -19164,6 +19600,8 @@ declare namespace Office {
          * - Support for the integrated spam-reporting feature was introduced in Mailbox 1.14.
          *
          * - Support to assign a `SmartAlertsEventCompletedOptions` object to the `options` parameter was introduced in Mailbox 1.12.
+         *
+         * - Support for the decryption feature was introduced in Mailbox 1.16.
          *
          * @param options - Optional. An object that specifies the behavior of an event-based, spam-reporting, or decryption add-in when it completes processing an event.
          */
@@ -19394,8 +19832,8 @@ declare namespace Office {
      * A subclass of {@link Office.Item | Item} for messages.
      *
      * **Important**: This is an internal Outlook object, not directly exposed through existing interfaces.
-     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to the
-     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item | Object Model} page.
+     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to
+     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model | Outlook Item object model}.
      *
      * Child interfaces:
      *
@@ -19411,8 +19849,8 @@ declare namespace Office {
      * **Important**:
      *
      * - This is an internal Outlook object, not directly exposed through existing interfaces.
-     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to the
-     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item | Object Model} page.
+     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to
+     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model | Outlook Item object model}.
      *
      * - When calling `Office.context.mailbox.item` on a message, note that the Reading Pane in the Outlook client must be turned on.
      * For guidance on how to configure the Reading Pane, see
@@ -19602,7 +20040,7 @@ declare namespace Office {
          * **Important**: To use the sensitivity label feature in your add-in, you must have a Microsoft 365 E5 subscription.
          *
          * To learn more about how to manage sensitivity labels in your add-in, see
-         * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+         * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
          */
         sensitivityLabel: SensitivityLabel;
         /**
@@ -19631,7 +20069,8 @@ declare namespace Office {
         /**
          * Manages the {@link Office.SessionData | SessionData} of an item in Compose mode.
          *
-         * **Important**: The entire SessionData object is limited to 50,000 characters per add-in.
+         * **Important**: In Outlook clients that support Mailbox 1.15 or earlier, the entire SessionData object for each mail item is limited to 50,000 characters per add-in.
+         * In clients that support Mailbox 1.16 or later, the character limit per add-in is 2,621,440 characters.
          *
          * @remarks
          * [Api set: Mailbox 1.11]
@@ -19687,6 +20126,12 @@ declare namespace Office {
          * - This method isn't supported in Outlook on iOS or Android. For more information on supported APIs in Outlook mobile, see
          * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-mobile-apis | Outlook JavaScript APIs supported in Outlook on mobile devices}.
          *
+         * - Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID in the `id` property and their `isServiceAccessible` property is set to `true`.
+         * The temporary attachment ID is only supported for the duration of the current compose session. For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
+         *
          * - Bitmap (BMP) images aren't supported if they're added as inline attachments.
          *
          * - In recent builds of classic Outlook on Windows, a bug was introduced that incorrectly appends an `Authorization: Bearer` header to
@@ -19713,9 +20158,10 @@ declare namespace Office {
          *        `asyncContext`: Developers can provide any object they wish to access in the callback function.
          *        `isInline`: If true, indicates that the attachment will be shown inline as an image in the message body and won't be displayed in the attachment list.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter of
-         *                 type `Office.AsyncResult`. On success, the attachment identifier will be provided in the `asyncResult.value` property.
-         *                 If uploading the attachment fails, the `asyncResult` object will contain an `Error` object that provides a description of
-         *                 the error.
+         *                 type `Office.AsyncResult`. On success, the attachment identifier is provided in the `asyncResult.value` property. The identifier varies depending on the Outlook client.
+         *                 In Outlook on the web and the new Outlook on Windows, the Exchange Web Services (EWS) ID is returned. If `isInline` is set to `true`, a temporary attachment ID prefixed with
+         *                 `addinId` is initially returned while the attachment is uploaded to the server. Once the upload completes, the attachment is then assigned an EWS ID. For details, see the notes in the Remarks section.
+         *                 In Outlook on Windows (classic) and on Mac, the index of the attachment is returned for inline and non-inline attachments. If uploading the attachment fails, a description of the error is provided in `asyncResult.error`.
          */
         addFileAttachmentAsync(uri: string, attachmentName: string, options: Office.AsyncContextOptions & { isInline: boolean }, callback?: (asyncResult: Office.AsyncResult<string>) => void): void;
         /**
@@ -19734,6 +20180,12 @@ declare namespace Office {
          *
          * - This method isn't supported in Outlook on iOS or Android. For more information on supported APIs in Outlook mobile, see
          * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-mobile-apis | Outlook JavaScript APIs supported in Outlook on mobile devices}.
+         *
+         * - Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID in the `id` property and their `isServiceAccessible` property is set to `true`.
+         * The temporary attachment ID is only supported for the duration of the current compose session. For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
          *
          * - Bitmap (BMP) images aren't supported if they're added as inline attachments.
          *
@@ -19758,9 +20210,10 @@ declare namespace Office {
          * @param uri - The URI that provides the location of the file to attach to the message or appointment. The maximum length is 2048 characters.
          * @param attachmentName - The name of the attachment that is shown while the attachment is uploading. The maximum length is 255 characters.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter of
-         *                 type `Office.AsyncResult`. On success, the attachment identifier will be provided in the `asyncResult.value` property.
-         *                 If uploading the attachment fails, the `asyncResult` object will contain an `Error` object that provides a description of
-         *                 the error.
+         *                 type `Office.AsyncResult`. On success, the attachment identifier is provided in the `asyncResult.value` property. The identifier varies depending on the Outlook client.
+         *                 In Outlook on the web and the new Outlook on Windows, the Exchange Web Services (EWS) ID is returned. If `isInline` is set to `true`, a temporary attachment ID prefixed with
+         *                 `addinId` is initially returned while the attachment is uploaded to the server. Once the upload completes, the attachment is then assigned an EWS ID. For details, see the notes in the Remarks section.
+         *                 In Outlook on Windows (classic) and on Mac, the index of the attachment is returned for inline and non-inline attachments. If uploading the attachment fails, a description of the error is provided in `asyncResult.error`.
          */
         addFileAttachmentAsync(uri: string, attachmentName: string, callback?: (asyncResult: Office.AsyncResult<string>) => void): void;
         /**
@@ -19783,6 +20236,12 @@ declare namespace Office {
          * - Adding an inline Base64 file to a message in compose mode is supported in Outlook on Android and on iOS. For more information on supported APIs in
          * Outlook mobile, see {@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-mobile-apis | Outlook JavaScript APIs supported in Outlook on mobile devices}.
          *
+         * - Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in messages in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID. The temporary attachment ID is only supported for the duration of the current compose session.
+         * For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
+         *
          * - If you're using a data URL API (for example, `readAsDataURL`), you need to strip out the data URL prefix, then send the rest of the string to this API.
          * For example, if the full string is represented by `data:image/svg+xml;base64,<rest of Base64 string>`, remove `data:image/svg+xml;base64,`.
          *
@@ -19801,14 +20260,16 @@ declare namespace Office {
          *
          * - `NumberOfAttachmentsExceeded`: The message or appointment has too many attachments.
          *
-         * @param base64File - The Base64-encoded content of an image or file to be added to an email or event. The maximum length of the encoded string is 27,892,122 characters (about 25 MB).
+         * @param base64File - The Base64-encoded content of an image or file to be added to an email or event. The maximum length of the encoded string is 34,865,152 characters. This corresponds to a maximum attachment size of 25 MB before Base64 encoding.
          * @param attachmentName - The name of the attachment that is shown while the attachment is uploading. The maximum length is 255 characters.
          * @param options - An object literal that contains one or more of the following properties:-
          *        `asyncContext`: Developers can provide any object they wish to access in the callback function.
          *        `isInline`: If true, indicates that the attachment will be shown inline as an image in the message body and won't be displayed in the attachment list.
-         * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter of
-         *                             type Office.AsyncResult. On success, the attachment identifier will be provided in the `asyncResult.value` property.
-         *                  If uploading the attachment fails, the `asyncResult` object will contain an `Error` object that provides a description of the error.
+         * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter of type `Office.AsyncResult`.
+         *                 On success, the attachment identifier is provided in the `asyncResult.value` property. The identifier varies depending on the Outlook client.
+         *                 In Outlook on the web and the new Outlook on Windows, the Exchange Web Services (EWS) ID is returned. If `isInline` is set to `true`, a temporary attachment ID prefixed with
+         *                 `addinId` is initially returned while the attachment is uploaded to the server. Once the upload completes, the attachment is then assigned an EWS ID. For details, see the notes in the Remarks section.
+         *                 In Outlook on Windows (classic) and on Mac, the index of the attachment is returned for inline and non-inline attachments. If uploading the attachment fails, a description of the error is provided in `asyncResult.error`.
          */
         addFileAttachmentFromBase64Async(base64File: string, attachmentName: string, options: Office.AsyncContextOptions & { isInline: boolean }, callback?: (asyncResult: Office.AsyncResult<string>) => void): void;
         /**
@@ -19831,6 +20292,12 @@ declare namespace Office {
          * - Adding an inline Base64 file to a message in compose mode is supported in Outlook on Android and on iOS. For more information on supported APIs in
          * Outlook mobile, see {@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-mobile-apis | Outlook JavaScript APIs supported in Outlook on mobile devices}.
          *
+         * - Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in messages in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID. The temporary attachment ID is only supported for the duration of the current compose session.
+         * For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
+         *
          * - If you're using a data URL API (for example, `readAsDataURL`), you need to strip out the data URL prefix, then send the rest of the string to this API.
          * For example, if the full string is represented by `data:image/svg+xml;base64,<rest of Base64 string>`, remove `data:image/svg+xml;base64,`.
          *
@@ -19849,18 +20316,17 @@ declare namespace Office {
          *
          * - `NumberOfAttachmentsExceeded`: The message or appointment has too many attachments.
          *
-         * @param base64File - The Base64-encoded content of an image or file to be added to an email or event. The maximum length of the encoded string is 27,892,122 characters (about 25 MB).
+         * @param base64File - The Base64-encoded content of an image or file to be added to an email or event. The maximum length of the encoded string is 34,865,152 characters. This corresponds to a maximum attachment size of 25 MB before Base64 encoding.
          * @param attachmentName - The name of the attachment that is shown while the attachment is uploading. The maximum length is 255 characters.
-         * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter of
-         *                             type Office.AsyncResult. On success, the attachment identifier will be provided in the `asyncResult.value` property.
-         *                  If uploading the attachment fails, the `asyncResult` object will contain an `Error` object that provides a description of the error.
+         * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter of type `Office.AsyncResult`.
+         *                 On success, the attachment identifier is provided in the `asyncResult.value` property. The identifier varies depending on the Outlook client.
+         *                 In Outlook on the web and the new Outlook on Windows, the Exchange Web Services (EWS) ID is returned. If `isInline` is set to `true`, a temporary attachment ID prefixed with
+         *                 `addinId` is initially returned while the attachment is uploaded to the server. Once the upload completes, the attachment is then assigned an EWS ID. For details, see the notes in the Remarks section.
+         *                 In Outlook on Windows (classic) and on Mac, the index of the attachment is returned for inline and non-inline attachments. If uploading the attachment fails, a description of the error is provided in `asyncResult.error`.
          */
         addFileAttachmentFromBase64Async(base64File: string, attachmentName: string, callback?: (asyncResult: Office.AsyncResult<string>) => void): void;
         /**
-         * Adds an event handler for a supported event. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Adds an event handler for a supported event. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -19868,6 +20334,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Compose
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should invoke the handler.
          * @param handler - The function to handle the event. The function must accept a single parameter, which is an object literal.
@@ -19879,10 +20347,7 @@ declare namespace Office {
          */
         addHandlerAsync(eventType: Office.EventType | string, handler: any, options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
-         * Adds an event handler for a supported event. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Adds an event handler for a supported event. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -19890,6 +20355,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Compose
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should invoke the handler.
          * @param handler - The function to handle the event. The function must accept a single parameter, which is an object literal.
@@ -20138,6 +20605,12 @@ declare namespace Office {
          * - The `getAttachmentContentAsync` method gets the attachment with the specified identifier from the item. As a best practice, you should get
          * the attachment's identifier from a `getAttachmentsAsync` call, then in the same session, use that identifier to retrieve the attachment.
          *
+         * - Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in messages in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID. The temporary attachment ID is only supported for the duration of the current compose session.
+         * For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
+         *
          * - In Outlook on the web and the {@link https://support.microsoft.com/office/656bb8d9-5a60-49b2-a98b-ba7822bc7627 | new Outlook on Windows},
          * `getAttachmentContentAsync` doesn't support attachments that were added using the **Upload and share** option.
          *
@@ -20152,7 +20625,8 @@ declare namespace Office {
          *
          * - `InvalidAttachmentId`: The attachment identifier does not exist.
          *
-         * @param attachmentId - The identifier of the attachment you want to get.
+         * @param attachmentId - The identifier of the attachment you want to get. In Outlook on the web and the new Outlook on Windows, the temporary attachment ID that's
+         *                       locally generated for inline images that haven't been uploaded to the server yet are supported for the duration of the current compose session.
          * @param options - An object literal that contains one or more of the following properties:-
          *        `asyncContext`: Developers can provide any object they wish to access in the callback function.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter,
@@ -20175,6 +20649,12 @@ declare namespace Office {
          * - The `getAttachmentContentAsync` method gets the attachment with the specified identifier from the item. As a best practice, you should get
          * the attachment's identifier from a `getAttachmentsAsync` call, then in the same session, use that identifier to retrieve the attachment.
          *
+         * - Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in messages in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID. The temporary attachment ID is only supported for the duration of the current compose session.
+         * For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
+         *
          * - In Outlook on the web and the {@link https://support.microsoft.com/office/656bb8d9-5a60-49b2-a98b-ba7822bc7627 | new Outlook on Windows},
          * `getAttachmentContentAsync` doesn't support attachments that were added using the **Upload and share** option.
          *
@@ -20189,7 +20669,8 @@ declare namespace Office {
          *
          * - `InvalidAttachmentId`: The attachment identifier does not exist.
          *
-         * @param attachmentId - The identifier of the attachment you want to get.
+         * @param attachmentId - The identifier of the attachment you want to get. In Outlook on the web and the new Outlook on Windows, the temporary attachment ID that's
+         *                       locally generated for inline images that haven't been uploaded to the server yet are supported for the duration of the current compose session.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter,
          *                `asyncResult`, which is an `Office.AsyncResult` object. If the call fails, the `asyncResult.error` property will contain
          *                an error code with the reason for the failure.
@@ -20205,14 +20686,25 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Compose
          *
-         * **Important**: In Outlook on the web and the new Outlook on Windows, users can select the **Upload and share** option to upload an attachment to OneDrive and
+         * **Important**:
+         *
+         * - Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in messages in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID. The temporary attachment ID is only supported for the duration of the current compose session.
+         * For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
+         *
+         * - In Outlook on the web and the new Outlook on Windows, users can select the **Upload and share** option to upload an attachment to OneDrive and
          * include a link to the file in the mail item. However, since only a link is included, `getAttachmentsAsync` doesn't return this attachment.
+         *
+         * - For attachments of type `Office.MailboxEnums.AttachmentType.Item`, the size and serialized content returned by `getAttachmentsAsync` might differ between calls
+         * made from an `OnMessageSend` or `OnAppointmentSend` event handler. To reliably detect attachment changes, handle the `OnMessageAttachmentsChanged` or `OnAppointmentAttachmentsChanged` event instead.
          *
          * @param options - An object literal that contains one or more of the following properties:-
          *        `asyncContext`: Developers can provide any object they wish to access in the callback function.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter of
          *                 type `Office.AsyncResult`. If the call fails, the `asyncResult.error` property will contain an error code with the reason for
-         *                 the failure.
+         *                 the failure. If the call succeeds, an array of `AttachmentDetailsCompose` objects is returned in the `asyncResult.value` property.
          */
         getAttachmentsAsync(options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<AttachmentDetailsCompose[]>) => void): void;
         /**
@@ -20225,12 +20717,23 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Compose
          *
-         * **Important**: In Outlook on the web and the new Outlook on Windows, users can select the **Upload and share** option to upload an attachment to OneDrive and
+         * **Important**:
+         *
+         * - Starting March 30, 2026, after the call to `addFileAttachmentAsync` or `addFileAttachmentFromBase64Async` with `isInline` set to `true` completes, inline images in messages in Outlook on the web and the new Outlook on Windows
+         * are locally assigned a temporary attachment ID while they're uploaded to the server. A temporary attachment ID is prefixed with `addinId`. Once the images are
+         * uploaded to the server, they are then assigned an Exchange Web Services (EWS) ID. The temporary attachment ID is only supported for the duration of the current compose session.
+         * For more information on the changes to how inline images are handled, see
+         * {@link https://devblogs.microsoft.com/microsoft365dev/changes-to-attachment-ids-for-inline-images-in-outlook-add-ins/ | Changes to attachment IDs for inline images in Outlook add-ins}.
+         *
+         * - In Outlook on the web and the new Outlook on Windows, users can select the **Upload and share** option to upload an attachment to OneDrive and
          * include a link to the file in the mail item. However, since only a link is included, `getAttachmentsAsync` doesn't return this attachment.
+         *
+         * - For attachments of type `Office.MailboxEnums.AttachmentType.Item`, the size and serialized content returned by `getAttachmentsAsync` might differ between calls
+         * made from an `OnMessageSend` or `OnAppointmentSend` event handler. To reliably detect attachment changes, handle the `OnMessageAttachmentsChanged` or `OnAppointmentAttachmentsChanged` event instead.
          *
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter of
          *                 type `Office.AsyncResult`. If the call fails, the `asyncResult.error` property will contain an error code with the reason for
-         *                 the failure.
+         *                 the failure. If the call succeeds, an array of `AttachmentDetailsCompose` objects are returned in the `asyncResult.value` property.
          */
         getAttachmentsAsync(callback?: (asyncResult: Office.AsyncResult<AttachmentDetailsCompose[]>) => void): void;
         /**
@@ -20750,7 +21253,7 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Compose
          *
-         * *Important**: The `removeAttachmentAsync` method doesn't remove inline attachments from a mail item.
+         * **Important**: The `removeAttachmentAsync` method doesn't remove inline attachments from a mail item.
          * To remove an inline attachment, first get the item's body, then remove any references of the attachment from its contents.
          * Use the {@link https://learn.microsoft.com/javascript/api/outlook/office.body | Office.Body} APIs to get and set the body of an item.
          *
@@ -20784,7 +21287,7 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Compose
          *
-         * *Important**: The `removeAttachmentAsync` method doesn't remove inline attachments from a mail item.
+         * **Important**: The `removeAttachmentAsync` method doesn't remove inline attachments from a mail item.
          * To remove an inline attachment, first get the item's body, then remove any references of the attachment from its contents.
          * Use the {@link https://learn.microsoft.com/javascript/api/outlook/office.body | Office.Body} APIs to get and set the body of an item.
          *
@@ -20800,10 +21303,7 @@ declare namespace Office {
          */
         removeAttachmentAsync(attachmentId: string, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
-         * Removes the event handlers for a supported event type. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Removes the event handlers for a supported event type. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -20811,6 +21311,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Compose
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should revoke the handler.
          * @param options - An object literal that contains one or more of the following properties:-
@@ -20820,10 +21322,7 @@ declare namespace Office {
          */
         removeHandlerAsync(eventType: Office.EventType | string, options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
-         * Removes the event handlers for a supported event type. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Removes the event handlers for a supported event type. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -20831,6 +21330,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Compose
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should revoke the handler.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter,
@@ -20950,6 +21451,10 @@ declare namespace Office {
          *
          * - Any code included after the `sendAsync` call isn't guaranteed to run since the add-in completes processing after the `sendAsync` call.
          *
+         * - The `sendAsync` method is available for preview in Outlook on Mac starting in Version 16.105 (Build 25121117).
+         * To test this feature, join the {@link https://techcommunity.microsoft.com/kb/microsoft-365-insider-kb/join-the-microsoft-365-insider-program-on-macos/4401756 | Microsoft 365 Insider program}
+         * and select the **Beta Channel** option to access Office beta builds.
+         *
          * @param options - An object literal that contains the `asyncContext` property. Use the `asyncContext` property to specify any object you want to access in the
          *                  callback function.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter, `asyncResult`. The `asyncResult`
@@ -20984,6 +21489,10 @@ declare namespace Office {
          * This is because the item may have already been sent and the add-in has completed processing. We recommend processing other operations before calling `sendAsync`.
          *
          * - Any code included after the `sendAsync` call isn't guaranteed to run since the add-in completes processing after the `sendAsync` call.
+         *
+         * - The `sendAsync` method is available for preview in Outlook on Mac starting in Version 16.105 (Build 25121117).
+         * To test this feature, join the {@link https://techcommunity.microsoft.com/kb/microsoft-365-insider-kb/join-the-microsoft-365-insider-program-on-macos/4401756 | Microsoft 365 Insider program}
+         * and select the **Beta Channel** option to access Office beta builds.
          *
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter, `asyncResult`. The `asyncResult`
          *                   parameter is an `Office.AsyncResult` object.
@@ -21050,32 +21559,39 @@ declare namespace Office {
     }
     /**
      * Specifies the behavior of an {@link https://learn.microsoft.com/office/dev/add-ins/outlook/encryption-decryption | encryption add-in} after it completes processing an
-     * {@link https://learn.microsoft.com/javascript/api/office/office.eventtype#fields | OnMessageRead} event.
+     * {@link https://learn.microsoft.com/office/dev/add-ins/develop/event-based-activation#outlook-events | OnMessageDecrypt} event.
      *
      * @remarks
      *
-     * [Api set: Mailbox preview]
+     * [Api set: Mailbox 1.16]
      *
      * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
      *
      * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
-     *
-     * @beta
      */
     interface MessageDecryptEventCompletedOptions {
         /**
-         * When you use the {@link https://learn.microsoft.com/javascript/api/outlook/office.mailboxevent#outlook-office-mailboxevent-completed-member(1) | completed method} to signal completion of an event handler,
-         * this value indicates if the `OnMessageRead` event should continue to run or be canceled. If the `allowEvent` property is set to `true`, the decrypted contents of the message is displayed.
+         * When you use the {@link https://learn.microsoft.com/javascript/api/outlook/office.mailboxevent#outlook-office-mailboxevent-completed-member(1) | completed method} to signal completion of an event handler
+         * and set its `allowEvent` property to `true`, this property specifies whether decrypted contents of a message can be copied and pasted, printed, or saved.
          *
          * @remarks
          *
          * [Api set: Mailbox preview]
          *
+         * @beta
+         */
+        accessControls?: AccessControls;
+        /**
+         * When you use the {@link https://learn.microsoft.com/javascript/api/outlook/office.mailboxevent#outlook-office-mailboxevent-completed-member(1) | completed method} to signal completion of an event handler,
+         * this value indicates if the `OnMessageDecrypt` event should continue to run or be canceled. If the `allowEvent` property is set to `true`, the decrypted contents of the message is displayed.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.16]
+         *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
-         *
-         * @beta
          */
         allowEvent: boolean;
         /**
@@ -21084,13 +21600,11 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
-         *
-         * @beta
          */
         attachments?: DecryptedMessageAttachment[];
         /**
@@ -21099,7 +21613,7 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
          *
@@ -21111,8 +21625,6 @@ declare namespace Office {
          * If you create a JSON string using `JSON.stringify()` and assign it to the `contextData` property, you must parse the string using `JSON.parse()` once you retrieve it.
          *
          * - You can use the `contextData` property to store custom internet headers to decrypt messages in reply and forward scenarios.
-         *
-         * @beta
          */
         contextData?: any;
         /**
@@ -21121,17 +21633,210 @@ declare namespace Office {
          *
          * @remarks
          *
-         * [Api set: Mailbox preview]
+         * [Api set: Mailbox 1.16]
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read/write item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
          *
          * **Important**: If the `emailBody` property isn't specified, an empty body is returned.
+         */
+        emailBody?: DecryptedMessageBody;
+        /**
+         * When you use the {@link https://learn.microsoft.com/javascript/api/outlook/office.mailboxevent#outlook-office-mailboxevent-completed-member(1) | completed method} to signal completion of an event handler
+         * and set its `allowEvent` property to `false`, this property sets the error message displayed to the user.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox preview]
+         *
+         * **Important**:
+         *
+         * - The `errorMessage` property is only used when the `allowEvent` property is set to `false`. If you set the `allowEvent` property to `true`, the `errorMessage` property is ignored.
+         *
+         * - If you don't specify a message in the `errorMessage` property, the following default message is shown instead: "Error from \<add-in name\>: Failed to decrypt your message."
+         *
+         * - Your custom error message is automatically prepended with "Error from \<add-in name\>: " when displayed to the user.
          *
          * @beta
          */
-        emailBody?: DecryptedMessageBody;
+        errorMessage?: string;
+    }
+    /**
+     * Represents the details of the form for composing a new message.
+     *
+     * @remarks
+     *
+     * [Api set: Mailbox 1.6]
+     *
+     * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+     *
+     * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
+     */
+    interface MessageForm {
+        /**
+         * Sets the attachments of the message. An attachment must be a file attachment (`Office.MailboxEnums.AttachmentType.File`) or an Outlook item attachment
+         * (`Office.MailboxEnums.AttachmentType.Item`).
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.6]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
+         */
+        attachments?: MessageFormAttachment[];
+        /**
+         * Sets the recipients in the Bcc field of the message.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.6]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
+         *
+         * **Important**: The `bccRecipients` array is limited to a maximum of 100 recipients.
+         */
+        bccRecipients?: string[] | EmailAddressDetails[];
+        /**
+         * Sets the recipients in the Cc field of the message.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.6]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
+         *
+         * **Important**: The `ccRecipients` array is limited to a maximum of 100 recipients.
+         */
+        ccRecipients?: string[] | EmailAddressDetails[];
+        /**
+         * Sets the body of the message.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.6]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
+         *
+         * **Important**: The body content is limited to a maximum size of 32 KB.
+         */
+        htmlBody?: string;
+        /**
+         * Sets the subject of the message.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.6]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
+         *
+         * **Important**: The subject is limited to a maximum of 255 characters.
+         */
+        subject?: string;
+        /**
+         * Sets the recipients in the To field of the message.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.6]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
+         *
+         * **Important**: The `toRecipients` array is limited to a maximum of 100 recipients.
+         */
+        toRecipients?: string[] | EmailAddressDetails[];
+    }
+    /**
+     * A file or Outlook item attachment. Used when displaying a new message form.
+     *
+     * @remarks
+     *
+     * [Api set: Mailbox 1.6]
+     *
+     * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+     *
+     * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
+     */
+    interface MessageFormAttachment {
+        /**
+         * The type of attachment. Must be `Office.MailboxEnums.AttachmentType.File` or `Office.MailboxEnums.AttachmentType.Item`.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.6]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
+         *
+         * **Important**: The `base64` and `cloud` attachment types aren't supported.
+         */
+        type: MailboxEnums.AttachmentType | string;
+        /**
+         * The name of the attachment. The name can be up to 255 characters in length.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.6]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
+         */
+        name: string;
+        /**
+         * The URI of the location for the file. Only specify if the `type` property is set to `Office.MailboxEnums.AttachmentType.File`.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.6]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
+         *
+         * **Important**: The link must be publicly accessible without need for authentication by Exchange Online servers. However, with
+         * on-premises Exchange, the link can be accessible on a private network as long as it doesn't need further authentication.
+         */
+        url?: string;
+        /**
+         * If true, indicates that the attachment will be shown inline in the message body and won't be displayed in the attachment list.
+         * Only specify if the `type` property is set to `Office.MailboxEnums.AttachmentType.File`.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.6]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
+         */
+        isInline?: boolean;
+        /**
+         * The Exchange Web Services (EWS) item ID of the attachment. The item ID is a string of up to 100 characters.
+         * Only specify if the `type` property is set to `Office.MailboxEnums.AttachmentType.Item`.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.6]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
+         */
+        itemId?: string;
     }
     /**
      * The message read mode of {@link Office.Item | Office.context.mailbox.item}.
@@ -21139,8 +21844,8 @@ declare namespace Office {
      * **Important**:
      *
      * - This is an internal Outlook object, not directly exposed through existing interfaces.
-     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to the
-     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item | Object Model} page.
+     * You should treat this as a mode of `Office.context.mailbox.item`. For more information, refer to
+     * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model | Outlook Item object model}.
      *
      * - When calling `Office.context.mailbox.item` on a message, note that the Reading Pane in the Outlook client must be turned on.
      * For guidance on how to configure the Reading Pane, see
@@ -21200,13 +21905,13 @@ declare namespace Office {
          * The `cc` property returns an array that contains an {@link Office.EmailAddressDetails | EmailAddressDetails} object for
          * each recipient listed on the **Cc** line of the message. The maximum number of recipients returned varies per Outlook client.
          *
-         * - Windows (classic): 500 recipients
+         * - Windows (classic - Mailbox 1.15 and earlier): 500 recipients
          *
-         * - Windows (classic - in preview starting in Version 2511 (Build 19426.20000)): 1,000 recipients
+         * - Windows (classic - Mailbox 1.16 and later): 1,000 recipients
          *
          * - Android, classic Mac UI, iOS: 100 recipients
          *
-         * - Web browser, Windows (new): 20 recipients (collapsed view), 500 recipients (expanded view)
+         * - Web browser, Windows (new): 20 recipients (collapsed view), 1,000 recipients (expanded view)
          *
          * - New Mac UI: No limit
          *
@@ -21290,11 +21995,6 @@ declare namespace Office {
         /**
          * Gets the email address of the sender of a message.
          *
-         * The `from` and `sender` properties represent the same person unless the message is sent by a delegate.
-         * In that case, the `from` property represents the delegator, and the `sender` property represents the delegate.
-         *
-         * **Note**: The `recipientType` property of the `EmailAddressDetails` object in the `from` property is undefined.
-         *
          * The `from` property returns an `EmailAddressDetails` object.
          *
          * @remarks
@@ -21302,20 +22002,34 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
+         *
+         * **Important**:
+         *
+         * - The `from` and `sender` properties represent the same person unless the message is sent by a delegate with **Send on behalf** permissions.
+         * In this case, the `from` property returns the email address of the mailbox owner or shared mailbox, and the `sender` property returns the address of the delegate.
+         * If the delegate has both **Send on behalf** and **Send as** permissions, the **Send as** permission applies. For information about mailbox delegation, see
+         * {@link https://learn.microsoft.com/exchange/recipients-in-exchange-online/manage-permissions-for-recipients | Manage permissions for recipients in Exchange Online}.
+         *
+         * - The `recipientType` property of the `EmailAddressDetails` object in the `from` property is undefined.
          */
         from: EmailAddressDetails;
         /**
          * Gets the internet message identifier for an email message.
-         *
-         * **Important**: In the **Sent Items** folder, the `internetMessageId` may not be available yet on recently sent items. In that case,
-         * consider using {@link https://learn.microsoft.com/office/dev/add-ins/outlook/web-services | Exchange Web Services} to get this
-         * {@link https://learn.microsoft.com/exchange/client-developer/web-service-reference/internetmessageid | property from the server}.
          *
          * @remarks
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
+         *
+         * **Important**: In the **Sent Items** folder, the `internetMessageId` may not be available yet on recently sent items. In that case,
+         * consider using one of the following options depending on your Exchange environment.
+         *
+         * - For Exchange Online, use {@link https://learn.microsoft.com/office/dev/add-ins/outlook/microsoft-graph | Microsoft Graph} to get the
+         * {@link https://learn.microsoft.com/graph/api/resources/message | internetMessageId} property.
+         *
+         * - For Exchange Server (on-premises), use {@link https://learn.microsoft.com/office/dev/add-ins/outlook/web-services | Exchange Web Services} to get the
+         * {@link https://learn.microsoft.com/exchange/client-developer/web-service-reference/internetmessageid | InternetMessageId} property from the server.
          */
         internetMessageId: string;
         /**
@@ -21484,16 +22198,20 @@ declare namespace Office {
         /**
          * Gets the email address of the sender of an email message.
          *
-         * The `from` and `sender` properties represent the same person unless the message is sent by a delegate.
-         * In that case, the `from` property represents the delegator, and the `sender` property represents the delegate.
-         *
-         * **Note**: The `recipientType` property of the `EmailAddressDetails` object in the `sender` property is undefined.
-         *
          * @remarks
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
+         *
+         * **Important**:
+         *
+         * - The `from` and `sender` properties represent the same person unless the message is sent by a delegate with **Send on behalf** permissions.
+         * In this case, the `from` property returns the email address of the mailbox owner or shared mailbox, and the `sender` property returns the address of the delegate.
+         * If the delegate has both **Send on behalf** and **Send as** permissions, the **Send as** permission applies. For information about mailbox delegation, see
+         * {@link https://learn.microsoft.com/exchange/recipients-in-exchange-online/manage-permissions-for-recipients | Manage permissions for recipients in Exchange Online}.
+         *
+         * - The `recipientType` property of the `EmailAddressDetails` object in the `sender` property is undefined.
          */
         sender: EmailAddressDetails;
         /**
@@ -21530,13 +22248,13 @@ declare namespace Office {
          * The `to` property returns an array that contains an {@link Office.EmailAddressDetails | EmailAddressDetails} object for
          * each recipient listed on the **To** line of the message. The maximum number of recipients returned varies per Outlook client.
          *
-         * - Windows (classic): 500 recipients
+         * - Windows (classic - Mailbox 1.15 and earlier): 500 recipients
          *
-         * - Windows (classic - in preview starting in Version 2511 (Build 19426.20000)): 1,000 recipients
+         * - Windows (classic - Mailbox 1.16 and later): 1,000 recipients
          *
          * - Android, classic Mac UI, iOS: 100 recipients
          *
-         * - Web browser, Windows (new): 20 recipients (collapsed view), 500 recipients (expanded view)
+         * - Web browser, Windows (new): 20 recipients (collapsed view), 1,000 recipients (expanded view)
          *
          * - New Mac UI: No limit
          *
@@ -21548,10 +22266,7 @@ declare namespace Office {
          */
         to: EmailAddressDetails[];
         /**
-         * Adds an event handler for a supported event. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Adds an event handler for a supported event. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -21559,6 +22274,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should invoke the handler.
          * @param handler - The function to handle the event. The function must accept a single parameter, which is an object literal.
@@ -21570,10 +22287,7 @@ declare namespace Office {
          */
         addHandlerAsync(eventType: Office.EventType | string, handler: any, options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
-         * Adds an event handler for a supported event. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Adds an event handler for a supported event. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -21581,6 +22295,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should invoke the handler.
          * @param handler - The function to handle the event. The function must accept a single parameter, which is an object literal.
@@ -22207,10 +22923,7 @@ declare namespace Office {
          */
         loadCustomPropertiesAsync(callback: (asyncResult: Office.AsyncResult<CustomProperties>) => void, userContext?: any): void;
         /**
-         * Removes the event handlers for a supported event type. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Removes the event handlers for a supported event type. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -22218,6 +22931,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should revoke the handler.
          * @param options - An object literal that contains one or more of the following properties:-
@@ -22227,10 +22942,7 @@ declare namespace Office {
          */
         removeHandlerAsync(eventType: Office.EventType | string, options: Office.AsyncContextOptions, callback?: (asyncResult: Office.AsyncResult<void>) => void): void;
         /**
-         * Removes the event handlers for a supported event type. **Note**: Events are only available with task pane implementation.
-         *
-         * For supported events, refer to the Item object model
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/preview-requirement-set/office.context.mailbox.item#events | events section}.
+         * Removes the event handlers for a supported event type. Events are only available in task pane add-ins.
          *
          * @remarks
          * [Api set: Mailbox 1.7]
@@ -22238,6 +22950,8 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Message Read
+         *
+         * **Important**: For a list of events supported on a mail item, see {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-item-object-model#events | Outlook Item object model}.
          *
          * @param eventType - The event that should revoke the handler.
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter,
@@ -22830,16 +23544,14 @@ declare namespace Office {
          *
          * **Important**:
          *
-         * With the `addAsync` method, you can add a maximum of 100 recipients to a mail item in Outlook on the web, on Windows
+         * With the `addAsync` method, you can add a maximum of 100 recipients to a mail item at a time in Outlook on the web, on Windows
          * ({@link https://support.microsoft.com/office/656bb8d9-5a60-49b2-a98b-ba7822bc7627 | new} and classic), on Mac (classic UI), on Android, and on iOS.
          * However, take note of the following:
          *
-         * - In Outlook on the web, on Windows (new and classic), and on Mac (classic UI), you can have a maximum of 500 recipients in a target field.
-         * If you need to add more than 100 recipients to a mail item, you can call `addAsync` repeatedly, but be mindful of the recipient limit of the field.
-         *
-         * - In classic Outlook on Windows, a maximum of 1,000 recipients in a target field is available for preview. To test this increased limit, you must install Version 2511 (Build 19426.20000) or later.
-         * Then, join the {@link https://techcommunity.microsoft.com/kb/microsoft-365-insider-kb/join-the-microsoft-365-insider-program-on-windows/4401748 | Microsoft 365 Insider program} and select the
-         * **Beta Channel** option to access Office beta builds.
+         * - In classic Outlook on Windows (Mailbox 1.15 and earlier) and on Mac (classic UI), you can have a maximum of 500 recipients in a target field.
+         * In classic Outlook on Windows, clients that support Mailbox 1.16 and later can have a maximum of 1,000 recipients. Target fields in Outlook on the web and the
+         * new Outlook on Windows have no recipient limits. If you need to add more than 100 recipients to a mail item, you can call `addAsync` repeatedly,
+         * but be mindful of the recipient limit of the field.
          *
          * - In Outlook on Android and on iOS, the `addAsync` method is supported starting in Version 4.2530.0. On these mobile clients, the `addAsync` method isn't
          * supported when a user replies from the the reply field at the bottom of a message.
@@ -22848,6 +23560,14 @@ declare namespace Office {
          *
          * The `addAsync` method isn't supported on a message that's currently loaded using the `loadItemByIdAsync` method.
          * For more information, see {@link https://learn.microsoft.com/office/dev/add-ins/outlook/item-multi-select | Activate your Outlook add-in on multiple messages}.
+         *
+         * All Outlook clients use regular expression rules to resolve email addresses in recipient fields.
+         *
+         * In Outlook on the web and the new Outlook on Windows, `addAsync` and `setAsync` add both resolved and unresolved email addresses to recipient fields.
+         * However, unresolved email addresses prevent an item from being sent until they are resolved or successfully validated.
+         * If unresolved recipients are added by a Smart Alerts add-in to any recipient field, the send operation is blocked and an error notification is displayed.
+         * The error notification identifies the add-in that added the unresolved recipients and lists the affected email addresses.
+         * If a Smart Alerts dialog is shown after selecting **Send**, the error notification is displayed after the dialog is dismissed (by selecting **Send Anyway** or **Don't Send**, or by closing the dialog).
          *
          * **Errors**:
          *
@@ -22873,15 +23593,14 @@ declare namespace Office {
          *
          * **Important**:
          *
-         * With the `addAsync` method, you can add a maximum of 100 recipients to a mail item in Outlook on the web, on Windows,
-         * on Mac (classic UI), on Android, and on iOS. However, take note of the following:
+         * With the `addAsync` method, you can add a maximum of 100 recipients to a mail item at a time in Outlook on the web, on Windows
+         * ({@link https://support.microsoft.com/office/656bb8d9-5a60-49b2-a98b-ba7822bc7627 | new} and classic), on Mac (classic UI), on Android, and on iOS.
+         * However, take note of the following:
          *
-         * - In Outlook on the web, on Windows, and on Mac (classic UI), you can have a maximum of 500 recipients in a target field.
-         * If you need to add more than 100 recipients to a mail item, you can call `addAsync` repeatedly, but be mindful of the recipient limit of the field.
-         *
-         * - In classic Outlook on Windows, a maximum of 1,000 recipients in a target field is available for preview. To test this increased limit, you must install Version 2511 (Build 19426.20000) or later.
-         * Then, join the {@link https://techcommunity.microsoft.com/kb/microsoft-365-insider-kb/join-the-microsoft-365-insider-program-on-windows/4401748 | Microsoft 365 Insider program} and select the
-         * **Beta Channel** option to access Office beta builds.
+         * - In classic Outlook on Windows (Mailbox 1.15 and earlier) and on Mac (classic UI), you can have a maximum of 500 recipients in a target field.
+         * In classic Outlook on Windows, clients that support Mailbox 1.16 and later can have a maximum of 1,000 recipients. Target fields in Outlook on the web and the
+         * new Outlook on Windows have no recipient limits. If you need to add more than 100 recipients to a mail item, you can call `addAsync` repeatedly,
+         * but be mindful of the recipient limit of the field.
          *
          * - In Outlook on Android and on iOS, the `addAsync` method is supported starting in Version 4.2530.0. On these mobile clients, the `addAsync` method isn't
          * supported when a user replies from the the reply field at the bottom of a message.
@@ -22890,6 +23609,14 @@ declare namespace Office {
          *
          * The `addAsync` method isn't supported on a message that's currently loaded using the `loadItemByIdAsync` method.
          * For more information, see {@link https://learn.microsoft.com/office/dev/add-ins/outlook/item-multi-select | Activate your Outlook add-in on multiple messages}.
+         *
+         * All Outlook clients use regular expression rules to resolve email addresses in recipient fields.
+         *
+         * In Outlook on the web and the new Outlook on Windows, `addAsync` and `setAsync` add both resolved and unresolved email addresses to recipient fields.
+         * However, unresolved email addresses prevent an item from being sent until they are resolved or successfully validated.
+         * If unresolved recipients are added by a Smart Alerts add-in to any recipient field, the send operation is blocked and an error notification is displayed.
+         * The error notification identifies the add-in that added the unresolved recipients and lists the affected email addresses.
+         * If a Smart Alerts dialog is shown after selecting **Send**, the error notification is displayed after the dialog is dismissed (by selecting **Send Anyway** or **Don't Send**, or by closing the dialog).
          *
          * **Errors**:
          *
@@ -22915,9 +23642,9 @@ declare namespace Office {
          *
          * The maximum number of recipients returned by this method varies per Outlook client.
          *
-         * - Windows ({@link https://support.microsoft.com/office/656bb8d9-5a60-49b2-a98b-ba7822bc7627 | new} and classic), web browser, Mac (classic UI): 500 recipients
+         * - Windows (classic - Mailbox 1.15 and earlier), Mac (classic UI): 500 recipients
          *
-         * - Windows (classic - in preview starting in Version 2511 (Build 19426.20000)): 1,000 recipients
+         * - Web, Windows ({@link https://support.microsoft.com/office/656bb8d9-5a60-49b2-a98b-ba7822bc7627 | new}, classic - Mailbox 1.16 and later): 1,000 recipients
          *
          * - Android, iOS: 100 recipients
          *
@@ -22971,9 +23698,9 @@ declare namespace Office {
          *
          * The maximum number of recipients returned by this method varies per Outlook client.
          *
-         * - Windows ({@link https://support.microsoft.com/office/656bb8d9-5a60-49b2-a98b-ba7822bc7627 | new} and classic), web browser, Mac (classic UI): 500 recipients
+         * - Windows (classic - Mailbox 1.15 and earlier), Mac (classic UI): 500 recipients
          *
-         * - Windows (classic - in preview starting in Version 2511 (Build 19426.20000)): 1,000 recipients
+         * - Web, Windows ({@link https://support.microsoft.com/office/656bb8d9-5a60-49b2-a98b-ba7822bc7627 | new}, classic - Mailbox 1.16 and later): 1,000 recipients
          *
          * - Android, iOS: 100 recipients
          *
@@ -23022,16 +23749,14 @@ declare namespace Office {
          *
          * **Important**:
          *
-         * With the `setAsync` method, you can set a maximum of 100 recipients in Outlook on the web, on Windows
+         * With the `setAsync` method, you can set a maximum of 100 recipients at a time in Outlook on the web, on Windows
          * ({@link https://support.microsoft.com/office/656bb8d9-5a60-49b2-a98b-ba7822bc7627 | new} and classic), on Mac (classic UI), on Android, and on iOS.
          * However, take note of the following:
          *
-         * - In Outlook on the web, on Windows (new and classic), and on Mac (classic UI), you can have a maximum of 500 recipients in a target field.
-         * If you need to add more recipients after setting 100 recipients, you can call `addAsync` repeatedly, but be mindful of the recipient limit of the field.
-         *
-         * - In classic Outlook on Windows, a maximum of 1,000 recipients in a target field is available for preview. To test this increased limit, you must install Version 2511 (Build 19426.20000) or later.
-         * Then, join the {@link https://techcommunity.microsoft.com/kb/microsoft-365-insider-kb/join-the-microsoft-365-insider-program-on-windows/4401748 | Microsoft 365 Insider program} and select the
-         * **Beta Channel** option to access Office beta builds.
+         * - In classic Outlook on Windows (Mailbox 1.15 and earlier) and on Mac (classic UI), you can have a maximum of 500 recipients in a target field.
+         * In classic Outlook on Windows, clients that support Mailbox 1.16 and later can have a maximum of 1,000 recipients. Target fields in Outlook on the web and the
+         * new Outlook on Windows have no recipient limits. If you need to add more than 100 recipients to a mail item, you can call `addAsync` repeatedly,
+         * but be mindful of the recipient limit of the field.
          *
          * - In Outlook on Android and on iOS, the `setAsync` method is supported starting in Version 4.2530.0. On these mobile clients, the `setAsync` method isn't
          * supported when a user replies from the the reply field at the bottom of a message.
@@ -23040,6 +23765,14 @@ declare namespace Office {
          *
          * The `setAsync` method isn't supported on a message that's currently loaded using the `loadItemByIdAsync` method.
          * For more information, see {@link https://learn.microsoft.com/office/dev/add-ins/outlook/item-multi-select | Activate your Outlook add-in on multiple messages}.
+         *
+         * All Outlook clients use regular expression rules to resolve email addresses in recipient fields.
+         *
+         * In Outlook on the web and the new Outlook on Windows, `addAsync` and `setAsync` add both resolved and unresolved email addresses to recipient fields.
+         * However, unresolved email addresses prevent an item from being sent until they are resolved or successfully validated.
+         * If unresolved recipients are added by a Smart Alerts add-in to any recipient field, the send operation is blocked and an error notification is displayed.
+         * The error notification identifies the add-in that added the unresolved recipients and lists the affected email addresses.
+         * If a Smart Alerts dialog is shown after selecting **Send**, the error notification is displayed after the dialog is dismissed (by selecting **Send Anyway** or **Don't Send**, or by closing the dialog).
          *
          * **Errors**:
          *
@@ -23068,16 +23801,14 @@ declare namespace Office {
          *
          * **Important**:
          *
-         * With the `setAsync` method, you can set a maximum of 100 recipients in Outlook on the web, on Windows
+         * With the `setAsync` method, you can set a maximum of 100 recipients at a time in Outlook on the web, on Windows
          * ({@link https://support.microsoft.com/office/656bb8d9-5a60-49b2-a98b-ba7822bc7627 | new} and classic), on Mac (classic UI), on Android, and on iOS.
          * However, take note of the following:
          *
-         * - In Outlook on the web, on Windows (new and classic), and on Mac (classic UI), you can have a maximum of 500 recipients in a target field.
-         * If you need to add more recipients after setting 100 recipients, you can call `addAsync` repeatedly, but be mindful of the recipient limit of the field.
-         *
-         * - In classic Outlook on Windows, a maximum of 1,000 recipients in a target field is available for preview. To test this increased limit, you must install Version 2511 (Build 19426.20000) or later.
-         * Then, join the {@link https://techcommunity.microsoft.com/kb/microsoft-365-insider-kb/join-the-microsoft-365-insider-program-on-windows/4401748 | Microsoft 365 Insider program} and select the
-         * **Beta Channel** option to access Office beta builds.
+         * - In classic Outlook on Windows (Mailbox 1.15 and earlier) and on Mac (classic UI), you can have a maximum of 500 recipients in a target field.
+         * In classic Outlook on Windows, clients that support Mailbox 1.16 and later can have a maximum of 1,000 recipients. Target fields in Outlook on the web and the
+         * new Outlook on Windows have no recipient limits. If you need to add more than 100 recipients to a mail item, you can call `addAsync` repeatedly,
+         * but be mindful of the recipient limit of the field.
          *
          * - In Outlook on Android and on iOS, the `setAsync` method is supported starting in Version 4.2530.0. On these mobile clients, the `setAsync` method isn't
          * supported when a user replies from the the reply field at the bottom of a message.
@@ -23086,6 +23817,14 @@ declare namespace Office {
          *
          * The `setAsync` method isn't supported on a message that's currently loaded using the `loadItemByIdAsync` method.
          * For more information, see {@link https://learn.microsoft.com/office/dev/add-ins/outlook/item-multi-select | Activate your Outlook add-in on multiple messages}.
+         *
+         * All Outlook clients use regular expression rules to resolve email addresses in recipient fields.
+         *
+         * In Outlook on the web and the new Outlook on Windows, `addAsync` and `setAsync` add both resolved and unresolved email addresses to recipient fields.
+         * However, unresolved email addresses prevent an item from being sent until they are resolved or successfully validated.
+         * If unresolved recipients are added by a Smart Alerts add-in to any recipient field, the send operation is blocked and an error notification is displayed.
+         * The error notification identifies the add-in that added the unresolved recipients and lists the affected email addresses.
+         * If a Smart Alerts dialog is shown after selecting **Send**, the error notification is displayed after the dialog is dismissed (by selecting **Send Anyway** or **Don't Send**, or by closing the dialog).
          *
          * **Errors**:
          *
@@ -23281,7 +24020,7 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
-         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose
          *
          * @param options - An object literal that contains one or more of the following properties:-
          *        `asyncContext`: Developers can provide any object they wish to access in the callback function.
@@ -23299,7 +24038,7 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
          *
-         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose or Read
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose
          *
          * @param callback - Optional. When the method completes, the function passed in the `callback` parameter is called with a single parameter,
          *                `asyncResult`, which is an `Office.AsyncResult` object. The `value` property of the result is a `Recurrence` object.
@@ -23446,12 +24185,26 @@ declare namespace Office {
     }
     /**
      * A file or item attachment. Used when displaying a reply form.
+     *
+     * @remarks
+     *
+     * [Api set: Mailbox 1.1]
+     *
+     * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+     *
+     * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
      */
     interface ReplyFormAttachment {
         /**
          * Indicates the type of attachment.
          *
          * @remarks
+         *
+         * [Api set: Mailbox 1.1]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          *
          * **Important**:
          *
@@ -23464,12 +24217,26 @@ declare namespace Office {
         type: MailboxEnums.AttachmentType;
         /**
          * A string that contains the name of the attachment, up to 255 characters in length.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.1]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          */
         name: string;
         /**
          * The URI of the location for the file. Only use if `type` is set to `file`.
          *
          * @remarks
+         *
+         * [Api set: Mailbox 1.1]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          *
          * **Important**: This link must be publicly accessible without need for authentication by Exchange Online servers. However, with
          * on-premises Exchange, the link can be accessible on a private network as long as it doesn't need further authentication.
@@ -23478,10 +24245,26 @@ declare namespace Office {
         /**
          * If true, indicates that the attachment will be shown inline in the message body and shouldn't be displayed in the attachment list.
          * Only use if `type` is set to `base64` or `file`.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.1]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          */
         inLine?: boolean;
         /**
          * The EWS item ID of the attachment. This is a string up to 100 characters. Only use if `type` is set to `item`.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.1]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          */
         itemId?: string;
         /**
@@ -23490,29 +24273,72 @@ declare namespace Office {
          * @remarks
          *
          * [Api set: Mailbox 1.15]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          */
         base64file?: string;
     }
     /**
      * A ReplyFormData object that contains body or attachment data and a callback function. Used when displaying a reply form.
+     *
+     * @remarks
+     *
+     * [Api set: Mailbox 1.1]
+     *
+     * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+     *
+     * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
      */
     interface ReplyFormData {
         /**
          * A string that contains text and HTML and that represents the body of the reply form. The string is limited to 32 KB.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.1]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          */
         htmlBody?: string;
         /**
          * An array of {@link Office.ReplyFormAttachment | ReplyFormAttachment} that are Base64-encoded files, Exchange items, or file attachments.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.2]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          */
         attachments?: ReplyFormAttachment[];
         /**
          * When the reply display call completes, the function passed in the callback parameter is called with a single parameter,
          * `asyncResult`, which is an `Office.AsyncResult` object.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.1]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          */
         callback?: (asyncResult: Office.AsyncResult<any>) => void;
         /**
-         * An object literal that contains the following property:-
-         * `asyncContext`: Developers can provide any object they wish to access in the callback function.
+         * An object literal that contains the `asyncContext` property. Use the `asyncContext` property to specify any object that you want to access in the callback function.
+         *
+         * @remarks
+         *
+         * [Api set: Mailbox 1.1]
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/understanding-outlook-add-in-permissions | Minimum permission level}**: **read item**
+         *
+         * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Read
          */
         options?: Office.AsyncContextOptions;
     }
@@ -23819,7 +24645,7 @@ declare namespace Office {
      * **Important**: To use the sensitivity label feature in your add-in, you must have a Microsoft 365 E5 subscription.
      *
      * To learn more about how to manage sensitivity labels in your add-in, see
-     * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+     * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
      */
     interface SensitivityLabel {
         /**
@@ -23835,7 +24661,7 @@ declare namespace Office {
          * **Important**: To use the sensitivity label feature in your add-in, you must have a Microsoft 365 E5 subscription.
          *
          * To learn more about how to manage sensitivity labels in your add-in, see
-         * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+         * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
          *
          * @param options - An object literal that contains one or more of the following properties:-
          *        `asyncContext`: Developers can provide any object they wish to access in the callback function.
@@ -23857,7 +24683,7 @@ declare namespace Office {
          * **Important**: To use the sensitivity label feature in your add-in, you must have a Microsoft 365 E5 subscription.
          *
          * To learn more about how to manage sensitivity labels in your add-in, see
-         * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+         * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
          *
          * @param callback - When the method completes, the function passed in the `callback` parameter is called with a single parameter, `asyncResult`,
          *                 which is an `Office.AsyncResult` object. The sensitivity label's GUID is returned in the
@@ -23884,7 +24710,7 @@ declare namespace Office {
          * **Tip**: To determine the sensitivity labels available for use, call the `Office.context.sensitivityLabelsCatalog.getAsync` method.
          *
          * To learn more about how to manage sensitivity labels in your add-in, see
-         * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+         * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
          * 
          * @param sensitivityLabel - The sensitivity label to be applied to the message or appointment being composed. The parameter value can be a sensitivity label's
          *                         unique identifier (GUID) or a {@link Office.SensitivityLabelDetails | SensitivityLabelDetails} object.
@@ -23914,7 +24740,7 @@ declare namespace Office {
          * **Tip**: To determine the sensitivity labels available for use, call the `Office.context.sensitivityLabelsCatalog.getAsync` method.
          *
          * To learn more about how to manage sensitivity labels in your add-in, see
-         * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+         * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
          * 
          * @param sensitivityLabel - The sensitivity label to be applied to the message or appointment being composed. The parameter value can be a sensitivity label's
          *                         unique identifier (GUID) or a {@link Office.SensitivityLabelDetails | SensitivityLabelDetails} object.
@@ -23933,7 +24759,7 @@ declare namespace Office {
      * **Important**: To use the sensitivity label feature in your add-in, you must have a Microsoft 365 E5 subscription.
      *
      * To learn more about how to manage sensitivity labels in your add-in, see
-     * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+     * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
      */
     export interface SensitivityLabelChangedEventArgs {
         /**
@@ -23957,7 +24783,7 @@ declare namespace Office {
      * **Important**: To use the sensitivity label feature in your add-in, you must have a Microsoft 365 E5 subscription.
      *
      * To learn more about how to manage sensitivity labels in your add-in, see
-     * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+     * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
      */
     interface SensitivityLabelDetails {
         /**
@@ -23996,7 +24822,7 @@ declare namespace Office {
      * **Important**: To use the sensitivity label feature in your add-in, you must have a Microsoft 365 E5 subscription.
      *
      * To learn more about how to manage sensitivity labels in your add-in, see
-     * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+     * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
      */
     export interface SensitivityLabelsCatalog {
         /**
@@ -24014,7 +24840,7 @@ declare namespace Office {
          * **Recommended**: To determine whether the catalog of sensitivity labels is enabled in Outlook, call `getIsEnabledAsync` before using `getAsync`.
          *
          * To learn more about how to manage sensitivity labels in your add-in, see
-         * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+         * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
          *
          * @param options - An object literal that contains one or more of the following properties:-
          *        `asyncContext`: Developers can provide any object they wish to access in the callback function.
@@ -24038,7 +24864,7 @@ declare namespace Office {
          * **Recommended**: To determine whether the catalog of sensitivity labels is enabled in Outlook, call `getIsEnabledAsync` before using `getAsync`.
          *
          * To learn more about how to manage sensitivity labels in your add-in, see
-         * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+         * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
          * 
          * @param callback - When the method completes, the function passed in the `callback` parameter is called with a single parameter, `asyncResult`,
          *                 which is an `Office.AsyncResult` object. The available sensitivity labels and their properties are returned in the
@@ -24061,7 +24887,7 @@ declare namespace Office {
          * **Important**: To use the sensitivity label feature in your add-in, you must have a Microsoft 365 E5 subscription.
          *
          * To learn more about how to manage sensitivity labels in your add-in, see
-         * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+         * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
          *
          * @param options - An object literal that contains one or more of the following properties:-
          *        `asyncContext`: Developers can provide any object they wish to access in the callback function.
@@ -24085,7 +24911,7 @@ declare namespace Office {
          * **Important**: To use the sensitivity label feature in your add-in, you must have a Microsoft 365 E5 subscription.
          *
          * To learn more about how to manage sensitivity labels in your add-in, see
-         * {@link https://learn.microsoft.com/office/dev/add-ins/outlook/sensitivity-label | Manage the sensitivity label of your message or appointment in compose mode}.
+         * {@link https://learn.microsoft.com/office/dev/add-ins/develop/sensitivity-label | Manage sensitivity labels in Office Add-ins}.
          *
          * @param callback - When the method completes, the function passed in the `callback` parameter is called with a single parameter, `asyncResult`,
          *                 which is an `Office.AsyncResult` object. The status of the catalog of sensitivity labels is returned in the `asyncResult.value` property.
@@ -24277,7 +25103,8 @@ declare namespace Office {
      *
      * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose
      *
-     * **Important**: For each mail item, the entire SessionData object is limited to 50,000 characters per add-in.
+     * **Important**: In Outlook clients that support Mailbox 1.15 or earlier, the entire SessionData object for each mail item is limited to 50,000 characters per add-in.
+     * In clients that support Mailbox 1.16 or later, the character limit per add-in is 2,621,440 characters.
      */
     interface SessionData {
         /**
@@ -24382,9 +25209,7 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose
          *
          * **Important**: In Outlook clients that support Mailbox 1.15 or earlier, the entire SessionData object for each mail item is limited to 50,000 characters per add-in.
-         * In classic Outlook on Windows, you can preview an increased character limit of up to 2,621,440 characters per add-in. To test the updated limit, join the
-         * {@link https://aka.ms/MSFT365InsiderProgram | Microsoft 365 Insider program}, then choose the Beta Channel in the classic Outlook on Windows client.
-         * Your client must be on Version 2510 (Build 19317.20000) or later.
+         * In clients that support Mailbox 1.16 or later, the character limit per add-in is 2,621,440 characters.
          *
          * @param name - The session data key.
          * @param value - The session data value as a string.
@@ -24405,9 +25230,7 @@ declare namespace Office {
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose
          *
          * **Important**: In Outlook clients that support Mailbox 1.15 or earlier, the entire SessionData object for each mail item is limited to 50,000 characters per add-in.
-         * In classic Outlook on Windows, you can preview an increased character limit of up to 2,621,440 characters per add-in. To test the updated limit, join the
-         * {@link https://aka.ms/MSFT365InsiderProgram | Microsoft 365 Insider program}, then choose the Beta Channel in the classic Outlook on Windows client.
-         * Your client must be on Version 2510 (Build 19317.20000) or later.
+         * In clients that support Mailbox 1.16 or later, the character limit per add-in is 2,621,440 characters.
          *
          * @param name - The session data key.
          * @param value - The session data value as a string.
@@ -24503,16 +25326,15 @@ declare namespace Office {
          *
          * The customizable button in the Smart Alerts dialog varies depending on the Outlook client and its version.
          *
-         * - In Outlook on the web, new Outlook on Windows, and classic Outlook on Windows starting in Version 2412 (Build 18324.20000), the `cancelLabel` property customizes the text of the **Take Action** button.
+         * - In Outlook on the web, on Mac (in preview starting in Version 16.105 (Build 25121117)), new Outlook on Windows, and classic Outlook on Windows starting in Version 2412 (Build 18324.20000), the `cancelLabel` property customizes the text of the **Take Action** button.
          * The **Take Action** button only appears on the Smart Alerts dialog if the `commandId` option is configured in the `event.completed` call. The option must be configured
          * if you want to customize the text of the dialog button. In this implementation, the **Don't Send** button cancels the item being sent. Its text and functionality can't be customized.
          * If you previously customized the text of the **Don't Send** button without assigning it a task pane or function command, your custom text won't take effect in the latest Outlook client versions.
          * If you previously assigned a task pane or function command to the **Don't Send** button, no additional action is needed to implement the **Take Action** button in the latest versions.
          * The default or customized **Take Action** button will automatically appear the next time a user receives a Smart Alerts dialog. Although no implementation changes are needed, we recommend notifying users of this updated experience.
          *
-         * - In earlier supported versions of classic Outlook on Windows (versions prior to Version 2412 (Build 18324.20000) that support
-         * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-api-requirement-sets#version-support-for-requirement-sets-in-classic-outlook-on-windows | Mailbox requirement set 1.14}),
-         * and Outlook on Mac, the `cancelLabel` property customizes the text of the **Don't Send** button. The **Don't Send** button cancels the item being sent.
+         * - In classic Outlook on Windows (prior to Version 2412 (Build 18324.20000) and Outlook on Mac (prior to Version 16.105 (Build 25121117)),
+         * the `cancelLabel` property customizes the text of the **Don't Send** button. The **Don't Send** button cancels the item being sent.
          */
         cancelLabel?: string;
         /**
@@ -24540,13 +25362,13 @@ declare namespace Office {
          * - **Unified manifest for Microsoft 365**: The "id" property of the task pane or function command in the "controls" array.
          *
          * The button in the Smart Alerts dialog that opens a task pane or runs a function varies depending on the Outlook client and version.
-         * In Outlook on the web, new Outlook on Windows, and classic Outlook on Windows starting in Version 2412 (Build 18324.20000), the **Take Action** button opens a
+         * In Outlook on the web, on Mac (in preview starting in Version 16.105 (Build 25121117)), new Outlook on Windows, and classic Outlook on Windows starting in Version 2412 (Build 18324.20000), the **Take Action** button opens a
          * task pane or runs a function. In this implementation, the **Don't Send** button cancels the item being sent. Its text and functionality can't be customized.
          * In earlier supported versions of classic Outlook on Windows (versions prior to Version 2412 (Build 18324.20000) that support
          * {@link https://learn.microsoft.com/javascript/api/requirement-sets/outlook/outlook-api-requirement-sets#version-support-for-requirement-sets-in-classic-outlook-on-windows | Mailbox requirement set 1.14}),
          * and Outlook on Mac, the **Don't Send** button opens a task pane or runs a function.
          *
-         * If you customized the text and functionality of the **Don't Send** button in your Smart Alerts add-in prior to Version 2412 (Build 18324.20000) of classic Outlook on Windows,
+         * If you've already customized the text and functionality of the **Don't Send** button in your Smart Alerts add-in prior to Version 2412 (Build 18324.20000) of classic Outlook on Windows or prior to Version 16.105 (Build 25121117) of Outlook on Mac,
          * no additional action is needed to implement the **Take Action** button in the latest supported versions. The default or customized **Take Action** button will automatically appear the next time a user receives a Smart Alerts dialog.
          * Although no implementation changes are needed, we recommend notifying users of this updated experience.
          *
@@ -24557,6 +25379,10 @@ declare namespace Office {
          *
          * When you configure a button in the Smart Alerts dialog to run a function, a button for the function is also added to the ribbon or action bar of the Outlook client.
          * Use the `contextData` option to distinguish when a user runs the function from the Smart Alerts dialog.
+         *
+         * Programming a button in the Smart Alerts dialog to run a function is available for preview in Outlook on Mac starting in Version 16.105 (Build 25121117).
+         * To test this feature, join the {@link https://techcommunity.microsoft.com/kb/microsoft-365-insider-kb/join-the-microsoft-365-insider-program-on-macos/4401756 | Microsoft 365 Insider program}
+         * and select the **Beta Channel** option to access Office beta builds.
          */
         commandId?: string;
         /**
@@ -24607,7 +25433,11 @@ declare namespace Office {
          *
          * **{@link https://learn.microsoft.com/office/dev/add-ins/outlook/outlook-add-ins-overview#extension-points | Applicable Outlook mode}**: Compose
          *
-         * **Important**: The error message must be 500 characters or less.
+         * **Important**:
+         *
+         * - The error message must be 500 characters or less.
+         *
+         * - If you don't specify a message in the `errorMessage` property, the following default message is shown instead: "\<Add-in name\> is preventing this email from being sent."
          */
         errorMessage?: string;
         /**
@@ -24745,6 +25575,10 @@ declare namespace Office {
          * `Office.MailboxEnums.MoveSpamItemTo.NoMove`.
          *
          * - If you implement a task pane to open after a reported message is processed, when the `event.completed` call occurs, any task pane that's open or pinned is closed.
+         *
+         * - The `commandId` option is available for preview in Outlook on Mac starting in Version 16.103 (Build 25101816). To test this option, join the
+         * {@link https://techcommunity.microsoft.com/kb/microsoft-365-insider-kb/join-the-microsoft-365-insider-program-on-macos/4401756 | Microsoft 365 Insider program}
+         * and select the **Beta Channel** option to access Office beta builds.
          */
         commandId?: string;
         /**
@@ -24782,6 +25616,10 @@ declare namespace Office {
          * - To retrieve the value of the `contextData` property, you must call `Office.context.mailbox.item.getInitializationContextAsync` in the JavaScript implementation
          * of your task pane. If you create a JSON string using `JSON.stringify()` and assign it to the `contextData` property, you must parse the string using
          * `JSON.parse()` once you retrieve it.
+         *
+         * - The `contextData` option is available for preview in Outlook on Mac starting in Version 16.103 (Build 25101816). To test this option, join the
+         * {@link https://techcommunity.microsoft.com/kb/microsoft-365-insider-kb/join-the-microsoft-365-insider-program-on-macos/4401756 | Microsoft 365 Insider program}
+         * and select the **Beta Channel** option to access Office beta builds.
          */
         contextData?: any;
         /**
@@ -25312,7 +26150,7 @@ declare namespace OfficeExtension {
         top?: number;
         /**
          * Only usable on collection types. Specifies the number of items in the collection that are to be skipped and not included in the result.
-         * If top is specified, the result set will start after skipping the specified number of items.
+         * If `top` is specified, the result set will start after skipping the specified number of items.
          */
         skip?: number;
     }
@@ -25564,15 +26402,17 @@ declare namespace OfficeExtension {
          */
         add(objects: ClientObject[]): void;
         /**
-         * Release the memory associated with an object that was previously added to this collection.
-         * Having many tracked objects slows down the Office application, so please remember to free any objects you add, once you're done using them.
-         * You will need to call `context.sync()` before the memory release takes effect.
+         * If the given proxy object is already in this collection, this method releases the memory associated with the object.
+         * You need to call `context.sync()` before the memory release takes effect.
+         * If the given proxy object isn't in this collection, the proxy object won't be stored after `context.sync()` is called.
+         * This speeds up instances where many objects are created for single-use operations.
          */
         remove(object: ClientObject): void;
         /**
-         * Release the memory associated with an object that was previously added to this collection.
-         * Having many tracked objects slows down the Office application, so please remember to free any objects you add, once you're done using them.
-         * You will need to call `context.sync()` before the memory release takes effect.
+         * If the given proxy objects are already in this collection, this method releases the memory associated with the objects.
+         * You need to call `context.sync()` before the memory release takes effect.
+         * If the given proxy objects aren't in this collection, the proxy objects won't be stored after `context.sync()` is called.
+         * This speeds up instances where many objects are created for single-use operations.
          */
         remove(objects: ClientObject[]): void;
     }
@@ -25667,7 +26507,6 @@ declare namespace OfficeCore {
 ////////////////////////////////////////////////////////////////
 /////////////////////// Begin Excel APIs ///////////////////////
 ////////////////////////////////////////////////////////////////
-
 
 declare namespace Excel {
     /**
@@ -34819,6 +35658,10 @@ declare namespace Excel {
         * [Api set: ExcelApi 1.5]
         */
         readonly runtime: Runtime;
+        /**
+        * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+        */
+        readonly sensitivityLabelsCatalog: SensitivityLabelsCatalog;
     }
     interface RunOptions extends OfficeExtension.RunOptions<Session> {
         /**
@@ -34869,8 +35712,458 @@ declare namespace Excel {
      * @param batch - A function that takes in a RequestContext and returns a promise (typically, just the result of "context.sync()"). The context parameter facilitates requests to the Excel application. Since the Office add-in and the Excel application run in two different processes, the RequestContext is required to get access to the Excel object model from the add-in.
      */
     function run<T>(context: OfficeExtension.ClientRequestContext, batch: (context: Excel.RequestContext) => Promise<T>): Promise<T>;
-    function postprocessBindingDescriptor(response: any): any;
-    function getDataCommonPostprocess(response: any, callArgs: any): any;
+    /**
+     * Represents the labeling capability status of the sensitivity label catalog.
+     *
+     * @remarks
+     * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    enum LabelingCapability {
+        /**
+         * No valid license is available for sensitivity labeling.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        noLicense = "NoLicense",
+        /**
+         * Sensitivity labeling is disabled for the user or tenant.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelingDisabled = "LabelingDisabled",
+        /**
+         * No labeling policy was found for the user.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelingPolicyNotFound = "LabelingPolicyNotFound",
+        /**
+         * Sensitivity labeling is fully enabled.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelingEnabled = "LabelingEnabled"
+    }
+    /**
+     * Represents the sensitivity label on the workbook.
+     *
+     * @remarks
+     * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabel extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * Gets the current label information that exists on the workbook for the user.
+                    If there's no sensitivity label on the current workbook, an object with an `isNullObject` property set to `true` is returned.
+                    For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         * @returns The current `SensitivityLabelDetails` object.
+         */
+        getCurrentOrNullObject(): Excel.SensitivityLabelDetails;
+        /**
+         * Tries to update to the provided sensitivity label on the workbook for the user.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         *
+         * @param labelId The ID of the label to apply.
+         * @returns The `SensitivityLabelUpdateResult` object.
+         */
+        tryToUpdate(labelId: string): OfficeExtension.ClientResult<Excel.SensitivityLabelUpdateResult>;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `Excel.SensitivityLabel` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `Excel.Interfaces.SensitivityLabelData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): {
+            [key: string]: string;
+        };
+    }
+    /**
+     * Represents the properties of available sensitivity labels in Excel.
+     *
+     * @remarks
+     * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabelDetails extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * Gets the sublabels of the sensitivity label. Returns `null` if a label doesn't have any sublabels.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly children: SensitivityLabelDetailsCollection | null;
+        /**
+         * Gets the color of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly color: string;
+        /**
+         * Gets the unique identifier (GUID) of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly id: string;
+        /**
+         * Gets a value indicating whether the label is enabled.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly isEnabled: boolean;
+        /**
+         * Gets the name of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly name: string;
+        /**
+         * Gets the priority of the sensitivity label, with 0 as lowest priority.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly order: number;
+        /**
+         * Gets a value indicating the protection type provided by this label.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly protectionType: Excel.SensitivityLabelProtectionType | "NoProtection" | "AdminDefined" | "UserDefined";
+        /**
+         * Gets the unique identifier (GUID) of the tenant which the sensitivity label is belonged.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly siteId: string;
+        /**
+         * Gets the description of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly tooltip: string;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: Excel.Interfaces.SensitivityLabelDetailsLoadOptions): Excel.SensitivityLabelDetails;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): Excel.SensitivityLabelDetails;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: {
+            select?: string;
+            expand?: string;
+        }): Excel.SensitivityLabelDetails;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `Excel.SensitivityLabelDetails` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `Excel.Interfaces.SensitivityLabelDetailsData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): Excel.Interfaces.SensitivityLabelDetailsData;
+    }
+    /**
+     * Represents the collection of {@link Excel.SensitivityLabelDetails} objects.
+     *
+     * @remarks
+     * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabelDetailsCollection extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /** Gets the loaded child items in this collection. */
+        readonly items: Excel.SensitivityLabelDetails[];
+        /**
+         * Gets the first `SensitivityLabelDetails` object in this collection. Throws an `ItemNotFound` error if this collection is empty.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         * @returns A new `SensitivityLabelDetails` object.
+         */
+        getFirst(): Excel.SensitivityLabelDetails;
+        /**
+         * Gets the first `SensitivityLabelDetails` object in this collection. If this collection is empty, then this method will return an object with its `isNullObject` property set to `true`. For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         * @returns The new `SensitivityLabelDetails` object.
+         */
+        getFirstOrNullObject(): OfficeExtension.ClientResult<any>;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: Excel.Interfaces.SensitivityLabelDetailsCollectionLoadOptions & Excel.Interfaces.CollectionLoadOptions): Excel.SensitivityLabelDetailsCollection;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): Excel.SensitivityLabelDetailsCollection;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: OfficeExtension.LoadOption): Excel.SensitivityLabelDetailsCollection;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `Excel.SensitivityLabelDetailsCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `Excel.Interfaces.SensitivityLabelDetailsCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
+        toJSON(): Excel.Interfaces.SensitivityLabelDetailsCollectionData;
+    }
+    /**
+     * Represents the protection type.
+     *
+     * @remarks
+     * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    enum SensitivityLabelProtectionType {
+        /**
+         * No protection is applied by this label.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        noProtection = "NoProtection",
+        /**
+         * Protection is defined by an administrator.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        adminDefined = "AdminDefined",
+        /**
+         * Protection is defined by the user.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        userDefined = "UserDefined"
+    }
+    /**
+     * Represents the result of updating the sensitivity label on the workbook.
+     *
+     * @remarks
+     * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    enum SensitivityLabelUpdateResult {
+        /**
+         * The sensitivity label was successfully updated.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        success = "Success",
+        /**
+         * The update failed due to an unspecified error.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        unspecifiedFailure = "UnspecifiedFailure",
+        /**
+         * The specified sensitivity label could not be found.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelNotFound = "LabelNotFound",
+        /**
+         * The document is read-only and cannot be modified.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        documentReadOnly = "DocumentReadOnly",
+        /**
+         * The user does not have sufficient permissions to update the label.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        insufficientPermission = "InsufficientPermission",
+        /**
+         * The label update failed due to unsupported Double Key Encryption (DKE).
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        unsupportedDoubleKeyEncryption = "UnsupportedDoubleKeyEncryption",
+        /**
+         * The label update failed because native labeling is not enabled for the user or installed SKU.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelingDisabled = "LabelingDisabled",
+        /**
+         * The label update failed because the user's identity is not valid for applying a label.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        userNotFound = "UserNotFound",
+        /**
+         * The label update failed due to unsupported User Defined Permissions (UDP).
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        unsupportedUdp = "UnsupportedUdp",
+        /**
+         * The label update failed because the specified label is a parent label, which cannot be applied.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        parentLabelNotSupported = "ParentLabelNotSupported",
+        /**
+         * The label update failed because the document doesn't belong to the same tenant as the user.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        crossTenant = "CrossTenant"
+    }
+    /**
+     * Provides methods to check the status of the catalog of sensitivity labels in Excel and retrieve all available sensitivity labels if the catalog is enabled.
+     *
+     * @remarks
+     * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabelsCatalog extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * Gets whether the catalog of sensitivity labels is enabled in Excel.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly getLabelingCapability: Excel.LabelingCapability | "NoLicense" | "LabelingDisabled" | "LabelingPolicyNotFound" | "LabelingEnabled";
+        /**
+         * Gets sensitivity labels that are available to the current user.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         * @returns The current `SensitivityLabelDetailsCollection` object.
+         */
+        getLabels(): Excel.SensitivityLabelDetailsCollection;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: Excel.Interfaces.SensitivityLabelsCatalogLoadOptions): Excel.SensitivityLabelsCatalog;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): Excel.SensitivityLabelsCatalog;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: {
+            select?: string;
+            expand?: string;
+        }): Excel.SensitivityLabelsCatalog;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `Excel.SensitivityLabelsCatalog` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `Excel.Interfaces.SensitivityLabelsCatalogData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): Excel.Interfaces.SensitivityLabelsCatalogData;
+    }
+    /**
+     * Provides information about the ranges that raised the `onCalculationBusy` event, which triggers when the calculation is in progress in a worksheet.
+     *
+     * @remarks
+     * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    interface WorksheetCalculationBusyEventArgs {
+        /**
+         * The address of the ranges that began calculation.
+                    If multiple ranges began calculation, the string is a comma-separated list of those range addresses.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        address: string;
+        /**
+         * The source of the event. It can be local or remote (through co-authoring).
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        source: Excel.EventSource | "Local" | "Remote";
+        /**
+         * Gets the type of the event. See `Excel.EventType` for details.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        type: "WorksheetCalculationBusy";
+        /**
+         * The ID of the worksheet within which the calculation occurred.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        worksheetId: string;
+    }
     /**
      * Provides information about the local image.
      *
@@ -35350,15 +36643,6 @@ declare namespace Excel {
          * @beta
          */
         delete(): void;
-        /**
-         * Refreshes the query.
-                    This only starts the refresh.
-         *
-         * @remarks
-         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
-         * @beta
-         */
-        refresh(): void;
         /**
          * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
          *
@@ -38672,6 +39956,9 @@ declare namespace Excel {
     interface WorksheetFormulaChangedEventArgs {
         /**
          * Gets an array of `FormulaChangedEventDetail` objects, which contain the details about the all of the changed formulas.
+                    
+                    If the number of changed formulas or the size of the changed formula text exceeds a size limit, `formulaDetails`
+                    returns undefined. This indicates that something on the sheet has changed, but the details cannot be reported.
          *
          * @remarks
          * [Api set: ExcelApi 1.13]
@@ -39658,6 +40945,7 @@ declare namespace Excel {
         readonly calculationEngineVersion: number;
         /**
          * Returns the calculation mode used in the workbook, as defined by the constants in `Excel.CalculationMode`. Possible values are: `Automatic`, where Excel controls recalculation; `AutomaticExceptTables`, where Excel controls recalculation but ignores changes in tables; `Manual`, where calculation is done when the user requests it.
+         * This is a runtime property. The `calculationMode` setting is not persisted in the workbook.
          *
          * @remarks
          * [Api set: ExcelApi 1.1 for get, 1.8 for set]
@@ -40114,6 +41402,14 @@ declare namespace Excel {
          */
         readonly worksheets: Excel.WorksheetCollection;
         /**
+         * Returns the sensitivity label of the workbook.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly sensitivityLabel: Excel.SensitivityLabel;
+        /**
          * Specifies if the workbook is in AutoSave mode.
          *
          * @remarks
@@ -40328,16 +41624,23 @@ declare namespace Excel {
          */
         getSelectedRanges(): Excel.RangeAreas;
         /**
+         * Returns whether the workbook is currently in preview mode.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        inPreviewMode(): OfficeExtension.ClientResult<boolean>;
+        /**
          * Inserts the specified worksheets from a source workbook into the current workbook.
                     
                      The `extensionHardening` Windows registry key affects this API. The file extension defined by the `base64File` param must match the real file type of the inserted file. If `extensionHardening` is set to deny mismatches and the file extension does not match the real file type, this API throws the following error: "This operation is not allowed due to the extension hardening policy."
-                     
-                     **Note**: This API is currently only supported for Office on Windows, Mac, and the web.
          *
          * @remarks
          * [Api set: ExcelApi 1.13]
          * 
          * This API is currently only supported for Office on Windows, Mac, and the web.
+         * In Excel on the web, this API doesn't support inserting charts, comments, PivotTables, or slicers.
          *
          * @param base64File Required. The Base64-encoded string representing the source workbook file.
          * @param options Optional. The options that define which worksheets to insert and where in the workbook the new worksheets will be inserted. By default, all the worksheets from the source workbook are inserted at the end of the current workbook.
@@ -40805,6 +42108,7 @@ declare namespace Excel {
         evaluate(name: string): OfficeExtension.ClientResult<any>;
         /**
          * Finds all occurrences of the given string based on the criteria specified and returns them as a `RangeAreas` object, comprising one or more rectangular ranges.
+         * Content in hidden worksheets is not returned.
          *
          * @remarks
          * [Api set: ExcelApi 1.9]
@@ -40816,6 +42120,7 @@ declare namespace Excel {
         findAll(text: string, criteria: Excel.WorksheetSearchCriteria): Excel.RangeAreas;
         /**
          * Finds all occurrences of the given string based on the criteria specified and returns them as a `RangeAreas` object, comprising one or more rectangular ranges.
+         * Content in hidden worksheets is not returned.
          *
          * @remarks
          * [Api set: ExcelApi 1.9]
@@ -40993,6 +42298,27 @@ declare namespace Excel {
          */
         readonly onCalculated: OfficeExtension.EventHandlers<Excel.WorksheetCalculatedEventArgs>;
         /**
+         * Occurs when cells in the worksheet are being calculated asynchronously.
+
+                    This event is triggered at the end of a calculation cycle, similar to the `onCalculated` event.
+                    Ordinarily, when calculation completes for a cell, the `onCalculated` event is triggered.
+                    However, if the calculation places a transient pending value (such as "#BUSY!") in the
+                    cell, then `onCalculationBusy` is triggered instead to indicate that the cell's state has changed,
+                    although calculation of the final value is not yet complete. When a subsequent
+                    calculation cycle completes the calculation for that cell, the `onCalculated` event is
+                    then triggered.
+
+                    Formula features such as JavaScript User-Defined Functions and =PY formulas
+                    may trigger this event.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         *
+         * @eventproperty
+         * @beta
+         */
+        readonly onCalculationBusy: OfficeExtension.EventHandlers<Excel.WorksheetCalculationBusyEventArgs>;
+        /**
          * Occurs when data changes in a specific worksheet.
          *
          * @remarks
@@ -41040,6 +42366,9 @@ declare namespace Excel {
         readonly onFormatChanged: OfficeExtension.EventHandlers<Excel.WorksheetFormatChangedEventArgs>;
         /**
          * Occurs when one or more formulas are changed in this worksheet. This event is for when the formula itself changes, not the data value resulting from the formula's calculation.
+
+                The event is only triggered when the cell already contains a formula.
+                The new cell value may not include a formula. This event is not triggered when a formula is entered into a cell that did not previously contain a formula.
          *
          * @remarks
          * [Api set: ExcelApi 1.13]
@@ -41293,6 +42622,27 @@ declare namespace Excel {
          * @eventproperty
          */
         readonly onCalculated: OfficeExtension.EventHandlers<Excel.WorksheetCalculatedEventArgs>;
+        /**
+         * Occurs when cells in the worksheet are being calculated asynchronously.
+
+                    This event is triggered at the end of a calculation cycle, similar to the `onCalculated` event.
+                    Ordinarily, when calculation completes for a cell, the `onCalculated` event is triggered.
+                    However, if the calculation places a transient pending value (such as "#BUSY!") in the
+                    cell, then `onCalculationBusy` is triggered instead to indicate that the cell's state has changed,
+                    although calculation of the final value is not yet complete. When a subsequent
+                    calculation cycle completes the calculation for that cell, the `onCalculated` event is
+                    then triggered.
+
+                    Formula features such as JavaScript User-Defined Functions and =PY formulas
+                    may trigger this event.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         *
+         * @eventproperty
+         * @beta
+         */
+        readonly onCalculationBusy: OfficeExtension.EventHandlers<Excel.WorksheetCalculationBusyEventArgs>;
         /**
          * Occurs when any worksheet in the workbook is changed.
          *
@@ -42068,7 +43418,8 @@ declare namespace Excel {
         readonly valueTypes: Excel.RangeValueType[][];
         /**
          * Represents the raw values of the specified range. The data returned could be a string, number, or Boolean. Cells that contain an error will return the error string.
-                    If the returned value starts with a plus ("+"), minus ("-"), or equal sign ("="), Excel interprets this value as a formula.
+                If the returned value starts with a plus ("+"), minus ("-"), or equal sign ("="), Excel interprets this value as a formula.
+                Locale-shaped strings (such as the date "19-8-2025" in nl-NL or fr-FR, format DD-MM-YYYY) are stored as text instead of as dates. To ensure dates are stored as dates, use a locale-aware API like `formulasLocal` or use a locale-neutral format like ISO (YYYY-MM-DD) or a numeric date serial.
          *
          * @remarks
          * [Api set: ExcelApi 1.1]
@@ -42762,6 +44113,7 @@ declare namespace Excel {
         /**
          * Moves cell values, formatting, and formulas from current range to the destination range, replacing the old information in those cells.
                     The destination range will be expanded automatically if it is smaller than the current range. Any cells in the destination range that are outside of the original range's area are not changed.
+                    Note: When a range is moved to a new address using this API, the new range object should be retrieved using the new address.
          *
          * @remarks
          * [Api set: ExcelApi 1.11]
@@ -46898,7 +48250,7 @@ declare namespace Excel {
          * @param sourceData The `Range` object corresponding to the source data.
          * @param seriesBy Optional. Specifies the way columns or rows are used as data series on the chart. See `Excel.ChartSeriesBy` for details.
          */
-        add(type: "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel", sourceData: Range, seriesBy?: "Auto" | "Columns" | "Rows"): Excel.Chart;
+        add(type: "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel" | "ColumnClusteredEx" | "ColumnStackedEx" | "ColumnStacked100Ex" | "LineEx" | "LineStackedEx" | "LineStacked100Ex" | "PieEx" | "DoughnutEx" | "BarClusteredEx" | "BarStackedEx" | "BarStacked100Ex" | "AreaEx" | "AreaStackedEx" | "AreaStacked100Ex" | "XYScatterEx" | "BubbleEx", sourceData: Range, seriesBy?: "Auto" | "Columns" | "Rows"): Excel.Chart;
         /**
          * Returns the number of charts in the worksheet.
          *
@@ -47081,7 +48433,7 @@ declare namespace Excel {
          * @remarks
          * [Api set: ExcelApi 1.7]
          */
-        chartType: Excel.ChartType | "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel";
+        chartType: Excel.ChartType | "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel" | "ColumnClusteredEx" | "ColumnStackedEx" | "ColumnStacked100Ex" | "LineEx" | "LineStackedEx" | "LineStacked100Ex" | "PieEx" | "DoughnutEx" | "BarClusteredEx" | "BarStackedEx" | "BarStacked100Ex" | "AreaEx" | "AreaStackedEx" | "AreaStacked100Ex" | "XYScatterEx" | "BubbleEx";
         /**
          * Specifies the way that blank cells are plotted on a chart.
          *
@@ -47641,7 +48993,7 @@ declare namespace Excel {
          * @remarks
          * [Api set: ExcelApi 1.7]
          */
-        chartType: Excel.ChartType | "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel";
+        chartType: Excel.ChartType | "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel" | "ColumnClusteredEx" | "ColumnStackedEx" | "ColumnStacked100Ex" | "LineEx" | "LineStackedEx" | "LineStacked100Ex" | "PieEx" | "DoughnutEx" | "BarClusteredEx" | "BarStackedEx" | "BarStacked100Ex" | "AreaEx" | "AreaStackedEx" | "AreaStacked100Ex" | "XYScatterEx" | "BubbleEx";
         /**
          * Represents the doughnut hole size of a chart series. Only valid on doughnut and doughnut exploded charts.
                     Throws an `InvalidArgument` error on invalid charts.
@@ -61446,6 +62798,49 @@ declare namespace Excel {
         toJSON(): Excel.Interfaces.SlicerItemCollectionData;
     }
     /**
+     * Provides information about the `LinkedEntityCellValue` that was requested given a specified `LinkedEntityId`.
+     *
+     * @remarks
+     * [Api set: ExcelApi 1.21]
+     */
+    interface LinkedEntityCellValueLoadedEventArgs {
+        /**
+         * Any error encountered during the request to load the `LinkedEntityCellValue`.
+         *
+         * @remarks
+         * [Api set: ExcelApi 1.21]
+         */
+        error?: string;
+        /**
+         * Gets the `LinkedEntityId` of the requested `LinkedEntityCellValue`.
+         *
+         * @remarks
+         * [Api set: ExcelApi 1.21]
+         */
+        id: LinkedEntityId;
+        /**
+         * Gets the `LinkedEntityCellValue` of the requested `LinkedEntityId`. If the load operation failed, this property is `null`.
+         *
+         * @remarks
+         * [Api set: ExcelApi 1.21]
+         */
+        linkedEntityCellValue?: LinkedEntityCellValue;
+        /**
+         * Gets the source of the event. See `Excel.EventSource` for details.
+         *
+         * @remarks
+         * [Api set: ExcelApi 1.21]
+         */
+        source: Excel.EventSource | "Local" | "Remote";
+        /**
+         * Gets the type of the event. See `Excel.EventType` for details.
+         *
+         * @remarks
+         * [Api set: ExcelApi 1.21]
+         */
+        type: "LinkedEntityDataDomainLinkedEntityCellValueLoaded";
+    }
+    /**
      * Represents a specific category or field of information that shares some common characteristics or attributes.
                 A data domain is linked to a data provider, that acts as the data source for `LinkedEntityCellValue` objects in the workbook.
                 A data domain is a category of data, such as stocks, geography, or currencies. A data provider is a service, such as Bing, Power BI, or an Office Add-in.
@@ -61746,6 +63141,16 @@ declare namespace Excel {
          */
         getItemOrNullObject(id: string): Excel.LinkedEntityDataDomain;
         /**
+         * Submits a request to load the `LinkedEntityCellValue` object with the specified `LinkedEntityId`.
+                    If found, the `LinkedEntityCellValue` object will be returned through the `LinkedEntityCellValueLoaded` event.
+         *
+         * @remarks
+         * [Api set: ExcelApi 1.21]
+         *
+         * @param id A specific `LinkedEntityId`
+         */
+        loadLinkedEntityCellValue(id: LinkedEntityId): void;
+        /**
          * Refreshes all `LinkedEntityCellValue` objects of all linked entity data domains in this collection.
                     The refresh request can fail if the data providers are busy or temporarily inaccessible.
          *
@@ -61773,6 +63178,17 @@ declare namespace Excel {
          * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): Excel.LinkedEntityDataDomainCollection;
+        /**
+         * Occurs when the request to load a `LinkedEntityCellValue` is completed.
+         *
+         * @remarks
+         * [Api set: ExcelApi 1.21]
+         * 
+         * This event isn't supported in Excel on the web.
+         *
+         * @eventproperty
+         */
+        readonly onLinkedEntityCellValueLoaded: OfficeExtension.EventHandlers<Excel.LinkedEntityCellValueLoadedEventArgs>;
         /**
          * Occurs when a new linked entity data domain is added to the workbook.
          *
@@ -63453,7 +64869,87 @@ declare namespace Excel {
          * @remarks
          * [Api set: ExcelApi 1.9]
          */
-        funnel = "Funnel"
+        funnel = "Funnel",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        columnClusteredEx = "ColumnClusteredEx",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        columnStackedEx = "ColumnStackedEx",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        columnStacked100Ex = "ColumnStacked100Ex",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        lineEx = "LineEx",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        lineStackedEx = "LineStackedEx",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        lineStacked100Ex = "LineStacked100Ex",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        pieEx = "PieEx",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        doughnutEx = "DoughnutEx",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        barClusteredEx = "BarClusteredEx",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        barStackedEx = "BarStackedEx",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        barStacked100Ex = "BarStacked100Ex",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        areaEx = "AreaEx",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        areaStackedEx = "AreaStackedEx",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        areaStacked100Ex = "AreaStacked100Ex",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        xyscatterEx = "XYScatterEx",
+        /**
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        bubbleEx = "BubbleEx"
     }
     /**
      * @remarks
@@ -66356,6 +67852,62 @@ declare namespace Excel {
          */
         worksheetMoved = "WorksheetMoved",
         /**
+         * ShapeAdded represents the type of event registered when a shape has been added to a ShapeCollection.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        shapeAdded = "ShapeAdded",
+        /**
+         * ShapeDeleted represents the type of event registered when a shape has been deleted from a ShapeCollection.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        shapeDeleted = "ShapeDeleted",
+        /**
+         * PivotTableAdded represents the type of event registered when a PivotTable has been added to a PivotTableCollection.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        pivotTableAdded = "PivotTableAdded",
+        /**
+         * PivotTableDeleted represents the type of event registered when a PivotTable has been deleted from a PivotTableCollection.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        pivotTableDeleted = "PivotTableDeleted",
+        /**
+         * NamedItemAdded represents the type of event registered when a NamedItem has been added to a NamedItemCollection.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        namedItemAdded = "NamedItemAdded",
+        /**
+         * NamedItemDeleted represents the type of event registered when a NamedItem has been deleted from a NamedItemCollection.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        namedItemDeleted = "NamedItemDeleted",
+        /**
+         * WorksheetNavigationObjectChanged represents the type of event registered when a navigation object has changed on a worksheet.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        worksheetNavigationObjectChanged = "WorksheetNavigationObjectChanged",
+        /**
+         * WorkbookNavigationObjectChanged represents the type of event registered when a navigation object has changed on a workbook.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        workbookNavigationObjectChanged = "WorkbookNavigationObjectChanged",
+        /**
          * WorksheetRowHeightChanged represents the type of event registered when the height of a worksheet row is changed.
          * @remarks
          * [Api set: ExcelApi BETA (PREVIEW ONLY)]
@@ -66418,7 +67970,20 @@ declare namespace Excel {
          * @remarks
          * [Api set: ExcelApi BETA (PREVIEW ONLY)]
          */
-        augmentationLoopUploadStatusChanged = "AugmentationLoopUploadStatusChanged"
+        augmentationLoopUploadStatusChanged = "AugmentationLoopUploadStatusChanged",
+        /**
+         * `WorksheetCalculationBusy` represents the type of event registered on a `Worksheet` or `WorksheetCollection` and occurs when a cell enters a busy calculation state.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        worksheetCalculationBusy = "WorksheetCalculationBusy",
+        /**
+         * `WorkbookPreviewDirtied` represents the type of event registered when workbook preview mode has been dirtied.
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         */
+        workbookPreviewDirtied = "WorkbookPreviewDirtied"
     }
     /**
      * @remarks
@@ -71146,7 +72711,7 @@ declare namespace Excel {
          *
          * @param dateText Is text that represents a date in a Microsoft Excel date format, between 1/1/1900 or 1/1/1904 (depending on the workbook's date system) and 12/31/9999.
          */
-        datevalue(dateText: string | number | Excel.Range | Excel.RangeReference | Excel.FunctionResult<any>): FunctionResult<number>;
+        datevalue(dateText: string | Excel.Range | Excel.RangeReference | Excel.FunctionResult<any>): FunctionResult<number>;
         /**
          * Returns the day of the month, a number from 1 to 31.
          *
@@ -73972,6 +75537,10 @@ declare namespace Excel {
             */
             $skip?: number;
         }
+        /** An interface for updating data on the `SensitivityLabelDetailsCollection` object, for use in `sensitivityLabelDetailsCollection.set({ ... })`. */
+        interface SensitivityLabelDetailsCollectionUpdateData {
+            items?: Excel.Interfaces.SensitivityLabelDetailsData[];
+        }
         /** An interface for updating data on the `AllowEditRange` object, for use in `allowEditRange.set({ ... })`. */
         interface AllowEditRangeUpdateData {
             /**
@@ -74089,6 +75658,7 @@ declare namespace Excel {
             iterativeCalculation?: Excel.Interfaces.IterativeCalculationUpdateData;
             /**
              * Returns the calculation mode used in the workbook, as defined by the constants in `Excel.CalculationMode`. Possible values are: `Automatic`, where Excel controls recalculation; `AutomaticExceptTables`, where Excel controls recalculation but ignores changes in tables; `Manual`, where calculation is done when the user requests it.
+             * This is a runtime property. The `calculationMode` setting is not persisted in the workbook.
              *
              * @remarks
              * [Api set: ExcelApi 1.1 for get, 1.8 for set]
@@ -75112,7 +76682,7 @@ declare namespace Excel {
              * @remarks
              * [Api set: ExcelApi 1.7]
              */
-            chartType?: Excel.ChartType | "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel";
+            chartType?: Excel.ChartType | "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel" | "ColumnClusteredEx" | "ColumnStackedEx" | "ColumnStacked100Ex" | "LineEx" | "LineStackedEx" | "LineStacked100Ex" | "PieEx" | "DoughnutEx" | "BarClusteredEx" | "BarStackedEx" | "BarStacked100Ex" | "AreaEx" | "AreaStackedEx" | "AreaStacked100Ex" | "XYScatterEx" | "BubbleEx";
             /**
              * Specifies the way that blank cells are plotted on a chart.
              *
@@ -75337,7 +76907,7 @@ declare namespace Excel {
              * @remarks
              * [Api set: ExcelApi 1.7]
              */
-            chartType?: Excel.ChartType | "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel";
+            chartType?: Excel.ChartType | "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel" | "ColumnClusteredEx" | "ColumnStackedEx" | "ColumnStacked100Ex" | "LineEx" | "LineStackedEx" | "LineStacked100Ex" | "PieEx" | "DoughnutEx" | "BarClusteredEx" | "BarStackedEx" | "BarStacked100Ex" | "AreaEx" | "AreaStackedEx" | "AreaStacked100Ex" | "XYScatterEx" | "BubbleEx";
             /**
              * Represents the doughnut hole size of a chart series. Only valid on doughnut and doughnut exploded charts.
                         Throws an `InvalidArgument` error on invalid charts.
@@ -79624,6 +81194,96 @@ declare namespace Excel {
         interface PaneCollectionUpdateData {
             items?: Excel.Interfaces.PaneData[];
         }
+        /** An interface describing the data returned by calling `sensitivityLabelDetails.toJSON()`. */
+        interface SensitivityLabelDetailsData {
+            /**
+             * Gets the sublabels of the sensitivity label. Returns `null` if a label doesn't have any sublabels.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            children?: SensitivityLabelDetailsCollection | null;
+            /**
+             * Gets the color of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            color?: string;
+            /**
+             * Gets the unique identifier (GUID) of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            id?: string;
+            /**
+             * Gets a value indicating whether the label is enabled.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isEnabled?: boolean;
+            /**
+             * Gets the name of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            name?: string;
+            /**
+             * Gets the priority of the sensitivity label, with 0 as lowest priority.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            order?: number;
+            /**
+             * Gets a value indicating the protection type provided by this label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            protectionType?: Excel.SensitivityLabelProtectionType | "NoProtection" | "AdminDefined" | "UserDefined";
+            /**
+             * Gets the unique identifier (GUID) of the tenant which the sensitivity label is belonged.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            siteId?: string;
+            /**
+             * Gets the description of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            tooltip?: string;
+        }
+        /** An interface describing the data returned by calling `sensitivityLabelDetailsCollection.toJSON()`. */
+        interface SensitivityLabelDetailsCollectionData {
+            items?: Excel.Interfaces.SensitivityLabelDetailsData[];
+        }
+        /** An interface describing the data returned by calling `sensitivityLabelsCatalog.toJSON()`. */
+        interface SensitivityLabelsCatalogData {
+            /**
+             * Gets whether the catalog of sensitivity labels is enabled in Excel.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            getLabelingCapability?: Excel.LabelingCapability | "NoLicense" | "LabelingDisabled" | "LabelingPolicyNotFound" | "LabelingEnabled";
+        }
         /** An interface describing the data returned by calling `allowEditRange.toJSON()`. */
         interface AllowEditRangeData {
             /**
@@ -79967,6 +81627,7 @@ declare namespace Excel {
             calculationEngineVersion?: number;
             /**
              * Returns the calculation mode used in the workbook, as defined by the constants in `Excel.CalculationMode`. Possible values are: `Automatic`, where Excel controls recalculation; `AutomaticExceptTables`, where Excel controls recalculation but ignores changes in tables; `Manual`, where calculation is done when the user requests it.
+             * This is a runtime property. The `calculationMode` setting is not persisted in the workbook.
              *
              * @remarks
              * [Api set: ExcelApi 1.1 for get, 1.8 for set]
@@ -81863,7 +83524,7 @@ declare namespace Excel {
              * @remarks
              * [Api set: ExcelApi 1.7]
              */
-            chartType?: Excel.ChartType | "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel";
+            chartType?: Excel.ChartType | "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel" | "ColumnClusteredEx" | "ColumnStackedEx" | "ColumnStacked100Ex" | "LineEx" | "LineStackedEx" | "LineStacked100Ex" | "PieEx" | "DoughnutEx" | "BarClusteredEx" | "BarStackedEx" | "BarStacked100Ex" | "AreaEx" | "AreaStackedEx" | "AreaStacked100Ex" | "XYScatterEx" | "BubbleEx";
             /**
              * Specifies the way that blank cells are plotted on a chart.
              *
@@ -82109,7 +83770,7 @@ declare namespace Excel {
              * @remarks
              * [Api set: ExcelApi 1.7]
              */
-            chartType?: Excel.ChartType | "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel";
+            chartType?: Excel.ChartType | "Invalid" | "ColumnClustered" | "ColumnStacked" | "ColumnStacked100" | "3DColumnClustered" | "3DColumnStacked" | "3DColumnStacked100" | "BarClustered" | "BarStacked" | "BarStacked100" | "3DBarClustered" | "3DBarStacked" | "3DBarStacked100" | "LineStacked" | "LineStacked100" | "LineMarkers" | "LineMarkersStacked" | "LineMarkersStacked100" | "PieOfPie" | "PieExploded" | "3DPieExploded" | "BarOfPie" | "XYScatterSmooth" | "XYScatterSmoothNoMarkers" | "XYScatterLines" | "XYScatterLinesNoMarkers" | "AreaStacked" | "AreaStacked100" | "3DAreaStacked" | "3DAreaStacked100" | "DoughnutExploded" | "RadarMarkers" | "RadarFilled" | "Surface" | "SurfaceWireframe" | "SurfaceTopView" | "SurfaceTopViewWireframe" | "Bubble" | "Bubble3DEffect" | "StockHLC" | "StockOHLC" | "StockVHLC" | "StockVOHLC" | "CylinderColClustered" | "CylinderColStacked" | "CylinderColStacked100" | "CylinderBarClustered" | "CylinderBarStacked" | "CylinderBarStacked100" | "CylinderCol" | "ConeColClustered" | "ConeColStacked" | "ConeColStacked100" | "ConeBarClustered" | "ConeBarStacked" | "ConeBarStacked100" | "ConeCol" | "PyramidColClustered" | "PyramidColStacked" | "PyramidColStacked100" | "PyramidBarClustered" | "PyramidBarStacked" | "PyramidBarStacked100" | "PyramidCol" | "3DColumn" | "Line" | "3DLine" | "3DPie" | "Pie" | "XYScatter" | "3DArea" | "Area" | "Doughnut" | "Radar" | "Histogram" | "Boxwhisker" | "Pareto" | "RegionMap" | "Treemap" | "Waterfall" | "Sunburst" | "Funnel" | "ColumnClusteredEx" | "ColumnStackedEx" | "ColumnStacked100Ex" | "LineEx" | "LineStackedEx" | "LineStacked100Ex" | "PieEx" | "DoughnutEx" | "BarClusteredEx" | "BarStackedEx" | "BarStacked100Ex" | "AreaEx" | "AreaStackedEx" | "AreaStacked100Ex" | "XYScatterEx" | "BubbleEx";
             /**
              * Represents the doughnut hole size of a chart series. Only valid on doughnut and doughnut exploded charts.
                         Throws an `InvalidArgument` error on invalid charts.
@@ -87416,6 +89077,197 @@ declare namespace Excel {
             value?: T;
         }
         /**
+         * Represents the properties of available sensitivity labels in Excel.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        interface SensitivityLabelDetailsLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+             * Gets the sublabels of the sensitivity label. Returns `null` if a label doesn't have any sublabels.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            children?: boolean;
+            /**
+             * Gets the color of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            color?: boolean;
+            /**
+             * Gets the unique identifier (GUID) of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            id?: boolean;
+            /**
+             * Gets a value indicating whether the label is enabled.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isEnabled?: boolean;
+            /**
+             * Gets the name of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            name?: boolean;
+            /**
+             * Gets the priority of the sensitivity label, with 0 as lowest priority.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            order?: boolean;
+            /**
+             * Gets a value indicating the protection type provided by this label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            protectionType?: boolean;
+            /**
+             * Gets the unique identifier (GUID) of the tenant which the sensitivity label is belonged.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            siteId?: boolean;
+            /**
+             * Gets the description of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            tooltip?: boolean;
+        }
+        /**
+         * Represents the collection of {@link Excel.SensitivityLabelDetails} objects.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        interface SensitivityLabelDetailsCollectionLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the sublabels of the sensitivity label. Returns `null` if a label doesn't have any sublabels.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            children?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the color of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            color?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the unique identifier (GUID) of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            id?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets a value indicating whether the label is enabled.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isEnabled?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the name of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            name?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the priority of the sensitivity label, with 0 as lowest priority.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            order?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets a value indicating the protection type provided by this label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            protectionType?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the unique identifier (GUID) of the tenant which the sensitivity label is belonged.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            siteId?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the description of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            tooltip?: boolean;
+        }
+        /**
+         * Provides methods to check the status of the catalog of sensitivity labels in Excel and retrieve all available sensitivity labels if the catalog is enabled.
+         *
+         * @remarks
+         * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        interface SensitivityLabelsCatalogLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+             * Gets whether the catalog of sensitivity labels is enabled in Excel.
+             *
+             * @remarks
+             * [Api set: ExcelApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            getLabelingCapability?: boolean;
+        }
+        /**
          * Represents an `AllowEditRange` object found in a worksheet. This object works with worksheet protection properties.
                     When worksheet protection is enabled, an `AllowEditRange` object can be used to allow editing of a specific range, while maintaining protection on the rest of the worksheet.
          *
@@ -88135,6 +89987,7 @@ declare namespace Excel {
             calculationEngineVersion?: boolean;
             /**
              * Returns the calculation mode used in the workbook, as defined by the constants in `Excel.CalculationMode`. Possible values are: `Automatic`, where Excel controls recalculation; `AutomaticExceptTables`, where Excel controls recalculation but ignores changes in tables; `Manual`, where calculation is done when the user requests it.
+             * This is a runtime property. The `calculationMode` setting is not persisted in the workbook.
              *
              * @remarks
              * [Api set: ExcelApi 1.1 for get, 1.8 for set]
@@ -100961,6 +102814,8 @@ declare namespace Word {
      *
      * @remarks
      * [Api set: WordApi 1.8]
+     *
+     * Word critique annotation cards display a maximum of three suggestions. If more than three suggestions are provided, the rest aren't displayed in the pop-up menu.
      */
     interface CritiquePopupOptions {
         /**
@@ -101744,12 +103599,14 @@ declare namespace Word {
          */
         insertContentControl(contentControlType?: Word.ContentControlType.richText | Word.ContentControlType.plainText | Word.ContentControlType.checkBox | Word.ContentControlType.dropDownList | Word.ContentControlType.comboBox | Word.ContentControlType.buildingBlockGallery | Word.ContentControlType.datePicker | Word.ContentControlType.repeatingSection | Word.ContentControlType.picture | Word.ContentControlType.group | "RichText" | "PlainText" | "CheckBox" | "DropDownList" | "ComboBox" | "BuildingBlockGallery" | "DatePicker" | "RepeatingSection" | "Picture" | "Group"): Word.ContentControl;
         /**
-         * Inserts a document into the body at the specified location.
+         * Inserts a document into the body at the specified location. The maximum size of the document being inserted is 4 MB.
          *
          * @remarks
          * [Api set: WordApi 1.1]
          *
          * Insertion isn't supported if the document being inserted contains an ActiveX control (likely in a form field). Consider replacing such a form field with a content control or other option appropriate for your scenario.
+         *
+         * Document settings aren't preserved when inserting a document.
          *
          * @param base64File The Base64-encoded content of a .docx file.
          * @param insertLocation The value must be `replace`, `start`, or `end`.
@@ -102965,7 +104822,7 @@ declare namespace Word {
         };
     }
     /**
-     * The data specific to content controls of type CheckBox.
+     * Represents the data specific to content controls of type `CheckBox`.
      *
      * @remarks
      * [Api set: WordApi 1.7]
@@ -103028,6 +104885,8 @@ declare namespace Word {
      *
      * @remarks
      * [Api set: WordApiDesktop 1.4]
+     *
+     * This API works only with legacy coauthoring locks. It doesn't apply to modern OneDrive or SharePoint coauthoring, where lock management is handled automatically by the service. Calls on a modern document will fail with a `GeneralException` error.
      */
     class CoauthoringLock extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -103066,6 +104925,8 @@ declare namespace Word {
          *
          * @remarks
          * [Api set: WordApiDesktop 1.4]
+         *
+         * This API works only with legacy coauthoring locks. It doesn't apply to modern OneDrive or SharePoint coauthoring, where lock management is handled automatically by the service. Calls on a modern document will fail with a `GeneralException` error.
          */
         unlock(): void;
         /**
@@ -103108,6 +104969,8 @@ declare namespace Word {
      *
      * @remarks
      * [Api set: WordApiDesktop 1.4]
+     *
+     * This API works only with legacy coauthoring locks. It doesn't apply to modern OneDrive or SharePoint coauthoring, where lock management is handled automatically by the service. Calls on a modern document will fail with a `GeneralException` error.
      */
     class CoauthoringLockCollection extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -103120,6 +104983,8 @@ declare namespace Word {
          * @remarks
          * [Api set: WordApiDesktop 1.4]
          *
+         * This API works only with legacy coauthoring locks. It doesn't apply to modern OneDrive or SharePoint coauthoring, where lock management is handled automatically by the service. Calls on a modern document will fail with a `GeneralException` error.
+         *
          * @param options Optional. The options to further configure the coauthoring lock.
          */
         add(options?: Word.CoauthoringLockAddOptions): Word.CoauthoringLock;
@@ -103128,6 +104993,8 @@ declare namespace Word {
          *
          * @remarks
          * [Api set: WordApiDesktop 1.4]
+         *
+         * This API works only with legacy coauthoring locks. It doesn't apply to modern OneDrive or SharePoint coauthoring, where lock management is handled automatically by the service. Calls on a modern document will fail with a `GeneralException` error.
          */
         unlockEphemeralLocks(): void;
         /**
@@ -103167,6 +105034,8 @@ declare namespace Word {
      *
      * @remarks
      * [Api set: WordApiDesktop 1.4]
+     *
+     * This API works only with legacy coauthoring locks. It doesn't apply to modern OneDrive or SharePoint coauthoring, where lock management is handled automatically by the service. Calls on a modern document will fail with a `GeneralException` error.
      */
     interface CoauthoringLockAddOptions {
         /**
@@ -103198,6 +105067,8 @@ declare namespace Word {
          *
          * @remarks
          * [Api set: WordApiDesktop 1.4]
+         *
+         * This API works only with legacy coauthoring locks. It doesn't apply to modern OneDrive or SharePoint coauthoring, where lock management is handled automatically by the service. Calls on a modern document will fail with a `GeneralException` error.
          */
         readonly locks: Word.CoauthoringLockCollection;
         /**
@@ -103334,6 +105205,8 @@ declare namespace Word {
          *
          * @remarks
          * [Api set: WordApiDesktop 1.4]
+         *
+         * This API works only with legacy coauthoring locks. It doesn't apply to modern OneDrive or SharePoint coauthoring, where lock management is handled automatically by the service. Calls on a modern document will fail with a `GeneralException` error.
          */
         readonly locks: Word.CoauthoringLockCollection;
         /**
@@ -103763,12 +105636,12 @@ declare namespace Word {
         /** Sets multiple properties on the object at the same time, based on an existing loaded object. */
         set(properties: Word.CommentContentRange): void;
         /**
-         * Inserts text into at the specified location. **Note**: For the modern comment, the content range tracked across context turns to empty if any revision to the comment is posted through the UI.
+         * Inserts text at the specified location. **Note**: For the modern comment, the content range tracked across context turns to empty if any revision to the comment is posted through the UI.
          *
          * @remarks
          * [Api set: WordApi 1.4]
          *
-         * @param text The text to be inserted in to the `CommentContentRange`.
+         * @param text The text to be inserted into the `CommentContentRange` object.
          * @param insertLocation The value must be `replace`, `start`, `end`, `before`, or `after`.
          */
         insertText(text: string, insertLocation: Word.InsertLocation | "Replace" | "Start" | "End" | "Before" | "After"): Word.CommentContentRange;
@@ -105391,14 +107264,14 @@ declare namespace Word {
          */
         appearance: Word.ContentControlAppearance | "BoundingBox" | "Tags" | "Hidden";
         /**
-         * Specifies a value that indicates whether the user can delete the content control. Mutually exclusive with `removeWhenEdited`.
+         * Specifies whether the user can delete the content control. Mutually exclusive with `removeWhenEdited`.
          *
          * @remarks
          * [Api set: WordApi 1.1]
          */
         cannotDelete: boolean;
         /**
-         * Specifies a value that indicates whether the user can edit the contents of the content control.
+         * Specifies whether the user can edit the contents of the content control.
          *
          * @remarks
          * [Api set: WordApi 1.1]
@@ -105412,7 +107285,7 @@ declare namespace Word {
          */
         color: string;
         /**
-         * Gets an integer that represents the content control identifier.
+         * Gets an integer that represents the content control identifier. This number is unique for each content control and doesn't change.
          *
          * @remarks
          * [Api set: WordApi 1.1]
@@ -105426,7 +107299,7 @@ declare namespace Word {
          */
         placeholderText: string;
         /**
-         * Specifies a value that indicates whether the content control is removed after it's edited. Mutually exclusive with `cannotDelete`.
+         * Specifies whether the content control is removed after it's edited. Mutually exclusive with `cannotDelete`.
          *
          * @remarks
          * [Api set: WordApi 1.1]
@@ -105454,7 +107327,7 @@ declare namespace Word {
          */
         readonly subtype: Word.ContentControlType | "Unknown" | "RichTextInline" | "RichTextParagraphs" | "RichTextTableCell" | "RichTextTableRow" | "RichTextTable" | "PlainTextInline" | "PlainTextParagraph" | "Picture" | "BuildingBlockGallery" | "CheckBox" | "ComboBox" | "DropDownList" | "DatePicker" | "RepeatingSection" | "RichText" | "PlainText" | "Group";
         /**
-         * Specifies a tag to identify a content control.
+         * Specifies a tag to identify a content control. The tag is different from the title in that it isn't displayed to the user. The tag can be used to identify a content control programmatically.
          *
          * @remarks
          * [Api set: WordApi 1.1]
@@ -105594,12 +107467,14 @@ declare namespace Word {
          */
         insertBreak(breakType: Word.BreakType | "Page" | "Next" | "SectionNext" | "SectionContinuous" | "SectionEven" | "SectionOdd" | "Line", insertLocation: Word.InsertLocation.start | Word.InsertLocation.end | Word.InsertLocation.before | Word.InsertLocation.after | "Start" | "End" | "Before" | "After"): void;
         /**
-         * Inserts a document into the content control at the specified location.
+         * Inserts a document into the content control at the specified location. The maximum size of the document being inserted is 4 MB.
          *
          * @remarks
          * [Api set: WordApi 1.1]
          *
          * Insertion isn't supported if the document being inserted contains an ActiveX control (likely in a form field). Consider replacing such a form field with a content control or other option appropriate for your scenario.
+         *
+         * Document settings aren't preserved when inserting a document.
          *
          * @param base64File The Base64-encoded content of a .docx file.
          * @param insertLocation The value must be `replace`, `start`, or `end`. `replace` cannot be used with `richTextTable` and `richTextTableRow` content controls.
@@ -106394,7 +108269,7 @@ declare namespace Word {
          */
         schemaCollection: Word.CustomXmlSchemaCollection;
         /**
-         * Gets a value that indicates whether the `CustomXmlPart` is built-in.
+         * Gets whether the `CustomXmlPart` is built-in.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.3]
@@ -107109,6 +108984,14 @@ declare namespace Word {
          * [Api set: WordApiDesktop 1.4]
          */
         readonly selection: Word.Selection;
+        /**
+         * Returns the sensitivity label of the document.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly sensitivityLabel: Word.SensitivityLabel;
         /**
          * Gets the `RangeScopedCollection` object that represents all the sentences in the document.
          *
@@ -108044,22 +109927,22 @@ declare namespace Word {
          */
         closePrintPreview(): void;
         /**
-         * Displays revision marks that indicate where the specified document differs from another document.
+         * Displays revision marks that indicate where the current document differs from a specified document.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.1]
          *
-         * @param filePath The path of the document with which the specified document is compared.
-         * @param documentCompareOptions Optional. The additional options that specifies the behavior of comparing document.
+         * @param filePath The path of the document with which the current document is compared.
+         * @param documentCompareOptions Optional. The additional options that specify the behavior when comparing the documents.
          */
         compare(filePath: string, documentCompareOptions?: Word.DocumentCompareOptions): void;
         /**
-         * Displays revision marks that indicate where the specified document differs from another document.
+         * Displays revision marks that indicate where the current document differs from a specified document.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
          *
-         * @param base64File The Base64-encoded content of the document with which the specified document is compared.
+         * @param base64File The Base64-encoded content of the document with which the current document is compared.
          * @param documentCompareOptions Optional. The additional options that specify the behavior for comparing the documents. Note that the `compareTarget` option isn't allowed to be `compareTargetSelected` in this API.
          */
         compareFromBase64(base64File: string, documentCompareOptions?: Word.DocumentCompareOptions): void;
@@ -108431,11 +110314,14 @@ declare namespace Word {
         /**
          * Inserts a document into the target document at a specific location with additional properties.
                     Headers, footers, watermarks, and other section properties are copied by default.
+                    The maximum size of the document being inserted is 4 MB.
          *
          * @remarks
          * [Api set: WordApi 1.5]
          *
          * Insertion isn't supported if the document being inserted contains an ActiveX control (likely in a form field). Consider replacing such a form field with a content control or other option appropriate for your scenario.
+         *
+         * Document settings aren't preserved when inserting a document.
          *
          * @param base64File The Base64-encoded content of a .docx file.
          * @param insertLocation The value must be `replace`, `start`, or `end`.
@@ -109036,7 +110922,7 @@ declare namespace Word {
         toJSON(): Word.Interfaces.DocumentData;
     }
     /**
-     * The `DocumentCreated` object is the top level object created by `Application.createDocument`. A `DocumentCreated` object is a special `Document` object.
+     * The `DocumentCreated` object is the top-level object created by `Application.createDocument`. A `DocumentCreated` object is a special `Document` object.
      *
      * @remarks
      * [Api set: WordApi 1.3]
@@ -109171,11 +111057,14 @@ declare namespace Word {
         /**
          * Inserts a document into the target document at a specific location with additional properties.
                     Headers, footers, watermarks, and other section properties are copied by default.
+                    The maximum size of the document being inserted is 4 MB.
          *
          * @remarks
          * [Api set: WordApiHiddenDocument 1.5]
          *
          * Insertion isn't supported if the document being inserted contains an ActiveX control (likely in a form field). Consider replacing such a form field with a content control or other option appropriate for your scenario.
+         *
+         * Document settings aren't preserved when inserting a document.
          *
          * @param base64File The Base64-encoded content of a .docx file.
          * @param insertLocation The value must be `replace`, `start`, or `end`.
@@ -109427,7 +111316,7 @@ declare namespace Word {
         toJSON(): Word.Interfaces.DocumentPropertiesData;
     }
     /**
-     * The data specific to content controls of type `dropDownList`.
+     * Represents the data specific to content controls of type `dropDownList`.
      *
      * @remarks
      * [Api set: WordApi 1.9]
@@ -109490,7 +111379,7 @@ declare namespace Word {
         toJSON(): Word.Interfaces.DropDownListContentControlData;
     }
     /**
-     * The data specific to content controls of type `comboBox`.
+     * Represents the data specific to content controls of type `comboBox`.
      *
      * @remarks
      * [Api set: WordApi 1.9]
@@ -110801,7 +112690,7 @@ declare namespace Word {
          */
         readonly imageFormat: Word.ImageFormat | "Unsupported" | "Undefined" | "Bmp" | "Jpeg" | "Gif" | "Tiff" | "Png" | "Icon" | "Exif" | "Wmf" | "Emf" | "Pict" | "Pdf" | "Svg";
         /**
-         * Specifies a value that indicates whether the inline image retains its original proportions when you resize it.
+         * Specifies whether the inline image retains its original proportions when you resize it.
          *
          * @remarks
          * [Api set: WordApi 1.1]
@@ -110877,12 +112766,14 @@ declare namespace Word {
          */
         insertContentControl(): Word.ContentControl;
         /**
-         * Inserts a document at the specified location.
+         * Inserts a document at the specified location. The maximum size of the document being inserted is 4 MB.
          *
          * @remarks
          * [Api set: WordApi 1.2]
          *
          * Insertion isn't supported if the document being inserted contains an ActiveX control (likely in a form field). Consider replacing such a form field with a content control or other option appropriate for your scenario.
+         *
+         * Document settings aren't preserved when inserting a document.
          *
          * @param base64File The Base64-encoded content of a .docx file.
          * @param insertLocation The value must be `before` or `after`.
@@ -113192,6 +115083,8 @@ declare namespace Word {
          *
          * @remarks
          * [Api set: WordApi 1.6]
+         *
+         * This API requires an active Microsoft 365 subscription. It doesn't work with single-purchase licenses.
          */
         readonly uniqueLocalId: string;
         /**
@@ -113437,12 +115330,14 @@ declare namespace Word {
          */
         insertContentControl(contentControlType?: Word.ContentControlType.richText | Word.ContentControlType.plainText | Word.ContentControlType.checkBox | Word.ContentControlType.dropDownList | Word.ContentControlType.comboBox | Word.ContentControlType.buildingBlockGallery | Word.ContentControlType.datePicker | Word.ContentControlType.repeatingSection | Word.ContentControlType.picture | Word.ContentControlType.group | "RichText" | "PlainText" | "CheckBox" | "DropDownList" | "ComboBox" | "BuildingBlockGallery" | "DatePicker" | "RepeatingSection" | "Picture" | "Group"): Word.ContentControl;
         /**
-         * Inserts a document into the paragraph at the specified location.
+         * Inserts a document into the paragraph at the specified location. The maximum size of the document being inserted is 4 MB.
          *
          * @remarks
          * [Api set: WordApi 1.1]
          *
          * Insertion isn't supported if the document being inserted contains an ActiveX control (likely in a form field). Consider replacing such a form field with a content control or other option appropriate for your scenario.
+         *
+         * Document settings aren't preserved when inserting a document.
          *
          * @param base64File The Base64-encoded content of a .docx file.
          * @param insertLocation The value must be `replace`, `start`, or `end`.
@@ -113551,7 +115446,7 @@ declare namespace Word {
          */
         insertTextBox(text?: string, insertShapeOptions?: Word.InsertShapeOptions): Word.Shape;
         /**
-         * Joins a list paragraph with the closest list above or below this paragraph.
+         * Joins a list paragraph with the closest list above or below this paragraph. This method only works with bulleted lists, not numbered lists.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.4]
@@ -114914,12 +116809,14 @@ declare namespace Word {
          */
         insertField(insertLocation: Word.InsertLocation | "Replace" | "Start" | "End" | "Before" | "After", fieldType?: "Addin" | "AddressBlock" | "Advance" | "Ask" | "Author" | "AutoText" | "AutoTextList" | "BarCode" | "Bibliography" | "BidiOutline" | "Citation" | "Comments" | "Compare" | "CreateDate" | "Data" | "Database" | "Date" | "DisplayBarcode" | "DocProperty" | "DocVariable" | "EditTime" | "Embedded" | "EQ" | "Expression" | "FileName" | "FileSize" | "FillIn" | "FormCheckbox" | "FormDropdown" | "FormText" | "GotoButton" | "GreetingLine" | "Hyperlink" | "If" | "Import" | "Include" | "IncludePicture" | "IncludeText" | "Index" | "Info" | "Keywords" | "LastSavedBy" | "Link" | "ListNum" | "MacroButton" | "MergeBarcode" | "MergeField" | "MergeRec" | "MergeSeq" | "Next" | "NextIf" | "NoteRef" | "NumChars" | "NumPages" | "NumWords" | "OCX" | "Page" | "PageRef" | "Print" | "PrintDate" | "Private" | "Quote" | "RD" | "Ref" | "RevNum" | "SaveDate" | "Section" | "SectionPages" | "Seq" | "Set" | "Shape" | "SkipIf" | "StyleRef" | "Subject" | "Subscriber" | "Symbol" | "TA" | "TC" | "Template" | "Time" | "Title" | "TOA" | "TOC" | "UserAddress" | "UserInitials" | "UserName" | "XE" | "Empty" | "Others" | "Undefined", text?: string, removeFormatting?: boolean): Word.Field;
         /**
-         * Inserts a document at the specified location.
+         * Inserts a document at the specified location. The maximum size of the document being inserted is 4 MB.
          *
          * @remarks
          * [Api set: WordApi 1.1]
          *
          * Insertion isn't supported if the document being inserted contains an ActiveX control (likely in a form field). Consider replacing such a form field with a content control or other option appropriate for your scenario.
+         *
+         * Document settings aren't preserved when inserting a document.
          *
          * @param base64File The Base64-encoded content of a .docx file.
          * @param insertLocation The value must be `replace`, `start`, `end`, `before`, or `after`.
@@ -115705,6 +117602,504 @@ declare namespace Word {
         * Whereas the original `Word.SectionCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `Word.Interfaces.SectionCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
         */
         toJSON(): Word.Interfaces.SectionCollectionData;
+    }
+    /**
+     * Represents the sensitivity label on the document.
+     *
+     * @remarks
+     * [Api set: WordApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabel extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * Gets the current label information that exists on the document for the user.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        getCurrentOrNullObject(): Word.SensitivityLabelDetails;
+        /**
+         * Try to update to the provided sensitivity label on the document for the user.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         *
+         * @param LabelId The label information that needs to be set on the document.
+         * @param Justification Optional. The justification of changing the label.
+         */
+        tryToUpdate(LabelId: string, Justification?: string): OfficeExtension.ClientResult<Word.SensitivityLabelUpdateResult>;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): Word.SensitivityLabel;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: {
+            select?: string;
+            expand?: string;
+        }): Word.SensitivityLabel;
+        /**
+         * Track the object for automatic adjustment based on surrounding changes in the document. This call is a shorthand for {@link https://learn.microsoft.com/javascript/api/office/officeextension.clientrequestcontext#office-officeextension-clientrequestcontext-trackedobjects-member | context.trackedObjects.add(thisObject)}. If you're using this object across `.sync` calls and outside the sequential execution of a ".run" batch, and get an "InvalidObjectPath" error when setting a property or invoking a method on the object, you need to add the object to the tracked object collection when the object was first created. If this object is part of a collection, you should also track the parent collection.
+         */
+        track(): Word.SensitivityLabel;
+        /**
+         * Release the memory associated with this object, if it has previously been tracked. This call is shorthand for {@link https://learn.microsoft.com/javascript/api/office/officeextension.clientrequestcontext#office-officeextension-clientrequestcontext-trackedobjects-member | context.trackedObjects.remove(thisObject)}. Having many tracked objects slows down the host application, so please remember to free any objects you add, once you're done using them. You'll need to call `context.sync()` before the memory release takes effect.
+         */
+        untrack(): Word.SensitivityLabel;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `Word.SensitivityLabel` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `Word.Interfaces.SensitivityLabelData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): {
+            [key: string]: string;
+        };
+    }
+    /**
+     * Provides methods to check the status of the catalog of sensitivity labels in Word and retrieve all available sensitivity labels if the catalog is enabled.
+     *
+     * @remarks
+     * [Api set: WordApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabelsCatalog extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * Gets the labeling capability status of the sensitivity label catalog in Word.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly getLabelingCapability: Word.LabelingCapability | "NoLicense" | "LabelingDisabled" | "LabelingPolicyNotFound" | "LabelingEnabled";
+        /**
+         * Gets the attribute-based access control (ABAC) attributes available for sensitivity labels.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        getAttributes(): OfficeExtension.ClientResult<Word.SensitivityLabelAbacAttribute[]>;
+        /**
+         * Gets all the sensitivity labels that are enabled in Word.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        getLabels(): Word.SensitivityLabelDetailsCollection;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: Word.Interfaces.SensitivityLabelsCatalogLoadOptions): Word.SensitivityLabelsCatalog;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): Word.SensitivityLabelsCatalog;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: {
+            select?: string;
+            expand?: string;
+        }): Word.SensitivityLabelsCatalog;
+        /**
+         * Create a new instance of the `Word.SensitivityLabelsCatalog` object.
+         */
+        static newObject(context: OfficeExtension.ClientRequestContext): Word.SensitivityLabelsCatalog;
+        /**
+         * Track the object for automatic adjustment based on surrounding changes in the document. This call is a shorthand for {@link https://learn.microsoft.com/javascript/api/office/officeextension.clientrequestcontext#office-officeextension-clientrequestcontext-trackedobjects-member | context.trackedObjects.add(thisObject)}. If you're using this object across `.sync` calls and outside the sequential execution of a ".run" batch, and get an "InvalidObjectPath" error when setting a property or invoking a method on the object, you need to add the object to the tracked object collection when the object was first created. If this object is part of a collection, you should also track the parent collection.
+         */
+        track(): Word.SensitivityLabelsCatalog;
+        /**
+         * Release the memory associated with this object, if it has previously been tracked. This call is shorthand for {@link https://learn.microsoft.com/javascript/api/office/officeextension.clientrequestcontext#office-officeextension-clientrequestcontext-trackedobjects-member | context.trackedObjects.remove(thisObject)}. Having many tracked objects slows down the host application, so please remember to free any objects you add, once you're done using them. You'll need to call `context.sync()` before the memory release takes effect.
+         */
+        untrack(): Word.SensitivityLabelsCatalog;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `Word.SensitivityLabelsCatalog` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `Word.Interfaces.SensitivityLabelsCatalogData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): Word.Interfaces.SensitivityLabelsCatalogData;
+    }
+    /**
+     * Represents a single attribute-based access control (ABAC) attribute value for a sensitivity label.
+     *
+     * @remarks
+     * [Api set: WordApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabelAbacAttributeValue extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * The display name of the ABAC attribute value.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly displayName: string;
+        /**
+         * The display order of the ABAC attribute value.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly displayOrder: number;
+        /**
+         * The unique identifier of the ABAC attribute value.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly id: string;
+        /**
+         * Indicates whether the ABAC attribute value is active.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly isActive: boolean;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: Word.Interfaces.SensitivityLabelAbacAttributeValueLoadOptions): Word.SensitivityLabelAbacAttributeValue;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): Word.SensitivityLabelAbacAttributeValue;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: {
+            select?: string;
+            expand?: string;
+        }): Word.SensitivityLabelAbacAttributeValue;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `Word.SensitivityLabelAbacAttributeValue` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `Word.Interfaces.SensitivityLabelAbacAttributeValueData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): Word.Interfaces.SensitivityLabelAbacAttributeValueData;
+    }
+    /**
+     * Represents an attribute-based access control (ABAC) attribute for sensitivity labels.
+     *
+     * @remarks
+     * [Api set: WordApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabelAbacAttribute extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * The data type of values for this ABAC attribute.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly dataType: Word.SensitivityLabelAbacAttributeDataType | "Unknown" | "StringValue" | "BooleanValue" | "NumberValue" | "DateValue";
+        /**
+         * The display name of the ABAC attribute.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly displayName: string;
+        /**
+         * The display order of the ABAC attribute.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly displayOrder: number;
+        /**
+         * Indicates whether the ABAC attribute is active.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly isActive: boolean;
+        /**
+         * Indicates whether the ABAC attribute can have multiple values.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly isMultiValued: boolean;
+        /**
+         * The values available for the ABAC attribute.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly values: Word.SensitivityLabelAbacAttributeValue[];
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: Word.Interfaces.SensitivityLabelAbacAttributeLoadOptions): Word.SensitivityLabelAbacAttribute;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): Word.SensitivityLabelAbacAttribute;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: {
+            select?: string;
+            expand?: string;
+        }): Word.SensitivityLabelAbacAttribute;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `Word.SensitivityLabelAbacAttribute` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `Word.Interfaces.SensitivityLabelAbacAttributeData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): Word.Interfaces.SensitivityLabelAbacAttributeData;
+    }
+    /**
+     * Represents the collection of {@link Word.SensitivityLabelDetails} objects.
+     *
+     * @remarks
+     * [Api set: WordApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabelDetailsCollection extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /** Gets the loaded child items in this collection. */
+        readonly items: Word.SensitivityLabelDetails[];
+        /**
+         * Gets the first `SensitivityLabelDetails` object in this collection. Throws an `ItemNotFound` error if this collection is empty.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        getFirst(): Word.SensitivityLabelDetails;
+        /**
+         * Gets the first `SensitivityLabelDetails` object in this collection. If this collection is empty, then this method will return an object with its `isNullObject` property set to `true`. For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        getFirstOrNullObject(): Word.SensitivityLabelDetails;
+        /**
+         * Gets a `SensitivityLabelDetails` object by its index in the collection.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         *
+         * @param index A number that identifies the index location of a `SensitivityLabelDetails` object.
+         */
+        getItem(index: number): Word.SensitivityLabelDetails;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: Word.Interfaces.SensitivityLabelDetailsCollectionLoadOptions & Word.Interfaces.CollectionLoadOptions): Word.SensitivityLabelDetailsCollection;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): Word.SensitivityLabelDetailsCollection;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: OfficeExtension.LoadOption): Word.SensitivityLabelDetailsCollection;
+        /**
+         * Track the object for automatic adjustment based on surrounding changes in the document. This call is a shorthand for {@link https://learn.microsoft.com/javascript/api/office/officeextension.clientrequestcontext#office-officeextension-clientrequestcontext-trackedobjects-member | context.trackedObjects.add(thisObject)}. If you're using this object across `.sync` calls and outside the sequential execution of a ".run" batch, and get an "InvalidObjectPath" error when setting a property or invoking a method on the object, you need to add the object to the tracked object collection when the object was first created. If this object is part of a collection, you should also track the parent collection.
+         */
+        track(): Word.SensitivityLabelDetailsCollection;
+        /**
+         * Release the memory associated with this object, if it has previously been tracked. This call is shorthand for {@link https://learn.microsoft.com/javascript/api/office/officeextension.clientrequestcontext#office-officeextension-clientrequestcontext-trackedobjects-member | context.trackedObjects.remove(thisObject)}. Having many tracked objects slows down the host application, so please remember to free any objects you add, once you're done using them. You'll need to call `context.sync()` before the memory release takes effect.
+         */
+        untrack(): Word.SensitivityLabelDetailsCollection;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `Word.SensitivityLabelDetailsCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `Word.Interfaces.SensitivityLabelDetailsCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
+        toJSON(): Word.Interfaces.SensitivityLabelDetailsCollectionData;
+    }
+    /**
+     * Represents the properties of available sensitivity labels in Word.
+     *
+     * @remarks
+     * [Api set: WordApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabelDetails extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * The sublabels of the sensitivity label. Returns null if a label doesn't have any sublabels.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly children: Word.SensitivityLabelDetailsCollection;
+        /**
+         * The attribute-based access control (ABAC) attribute values associated with the sensitivity label.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly abacAttributeValues: Word.SensitivityLabelAbacAttributeValue[];
+        /**
+         * The color of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly color: string;
+        /**
+         * The unique identifier (GUID) of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly id: string;
+        /**
+         * Indicates whether attribute-based access control (ABAC) attributes are required when applying the sensitivity label.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly isAbacAttributesRequired: boolean;
+        /**
+         * Indicates whether the sensitivity label supports attribute-based access control (ABAC) attributes.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly isAbacEnabled: boolean;
+        /**
+         * Gets a value indicating whether the label is enabled.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly isEnabled: boolean;
+        /**
+         * The name of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly name: string;
+        /**
+         * The order of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly order: number;
+        /**
+         * Gets a value indicating the protection type provided by this label.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly protectionType: Word.SensitivityLabelProtectionType | "NoProtection" | "AdminDefined" | "UserDefined";
+        /**
+         * The unique identifier (GUID) of the tenant which the sensitivity label is belonged.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly siteId: string;
+        /**
+         * The description of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly tooltip: string;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: Word.Interfaces.SensitivityLabelDetailsLoadOptions): Word.SensitivityLabelDetails;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): Word.SensitivityLabelDetails;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: {
+            select?: string;
+            expand?: string;
+        }): Word.SensitivityLabelDetails;
+        /**
+         * Track the object for automatic adjustment based on surrounding changes in the document. This call is a shorthand for {@link https://learn.microsoft.com/javascript/api/office/officeextension.clientrequestcontext#office-officeextension-clientrequestcontext-trackedobjects-member | context.trackedObjects.add(thisObject)}. If you're using this object across `.sync` calls and outside the sequential execution of a ".run" batch, and get an "InvalidObjectPath" error when setting a property or invoking a method on the object, you need to add the object to the tracked object collection when the object was first created. If this object is part of a collection, you should also track the parent collection.
+         */
+        track(): Word.SensitivityLabelDetails;
+        /**
+         * Release the memory associated with this object, if it has previously been tracked. This call is shorthand for {@link https://learn.microsoft.com/javascript/api/office/officeextension.clientrequestcontext#office-officeextension-clientrequestcontext-trackedobjects-member | context.trackedObjects.remove(thisObject)}. Having many tracked objects slows down the host application, so please remember to free any objects you add, once you're done using them. You'll need to call `context.sync()` before the memory release takes effect.
+         */
+        untrack(): Word.SensitivityLabelDetails;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `Word.SensitivityLabelDetails` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `Word.Interfaces.SensitivityLabelDetailsData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): Word.Interfaces.SensitivityLabelDetailsData;
     }
     /**
      * Represents a setting of the add-in.
@@ -120771,7 +123166,7 @@ declare namespace Word {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
         context: RequestContext;
         /**
-         * Represents the `Body` object of the shape. Only applies to text boxes and geometric shapes.
+         * Gets the `Body` object of the shape. Only applies to text boxes and geometric shapes.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
@@ -120841,21 +123236,21 @@ declare namespace Word {
          */
         altTextDescription: string;
         /**
-         * The geometric shape type of the shape. It will be null if isn't a geometric shape.
+         * Specifies the geometric shape type of the shape. It will be null if isn't a geometric shape.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
          */
         geometricShapeType: Word.GeometricShapeType | "LineInverse" | "Triangle" | "RightTriangle" | "Rectangle" | "Diamond" | "Parallelogram" | "Trapezoid" | "NonIsoscelesTrapezoid" | "Pentagon" | "Hexagon" | "Heptagon" | "Octagon" | "Decagon" | "Dodecagon" | "Star4" | "Star5" | "Star6" | "Star7" | "Star8" | "Star10" | "Star12" | "Star16" | "Star24" | "Star32" | "RoundRectangle" | "Round1Rectangle" | "Round2SameRectangle" | "Round2DiagonalRectangle" | "SnipRoundRectangle" | "Snip1Rectangle" | "Snip2SameRectangle" | "Snip2DiagonalRectangle" | "Plaque" | "Ellipse" | "Teardrop" | "HomePlate" | "Chevron" | "PieWedge" | "Pie" | "BlockArc" | "Donut" | "NoSmoking" | "RightArrow" | "LeftArrow" | "UpArrow" | "DownArrow" | "StripedRightArrow" | "NotchedRightArrow" | "BentUpArrow" | "LeftRightArrow" | "UpDownArrow" | "LeftUpArrow" | "LeftRightUpArrow" | "QuadArrow" | "LeftArrowCallout" | "RightArrowCallout" | "UpArrowCallout" | "DownArrowCallout" | "LeftRightArrowCallout" | "UpDownArrowCallout" | "QuadArrowCallout" | "BentArrow" | "UturnArrow" | "CircularArrow" | "LeftCircularArrow" | "LeftRightCircularArrow" | "CurvedRightArrow" | "CurvedLeftArrow" | "CurvedUpArrow" | "CurvedDownArrow" | "SwooshArrow" | "Cube" | "Can" | "LightningBolt" | "Heart" | "Sun" | "Moon" | "SmileyFace" | "IrregularSeal1" | "IrregularSeal2" | "FoldedCorner" | "Bevel" | "Frame" | "HalfFrame" | "Corner" | "DiagonalStripe" | "Chord" | "Arc" | "LeftBracket" | "RightBracket" | "LeftBrace" | "RightBrace" | "BracketPair" | "BracePair" | "Callout1" | "Callout2" | "Callout3" | "AccentCallout1" | "AccentCallout2" | "AccentCallout3" | "BorderCallout1" | "BorderCallout2" | "BorderCallout3" | "AccentBorderCallout1" | "AccentBorderCallout2" | "AccentBorderCallout3" | "WedgeRectCallout" | "WedgeRRectCallout" | "WedgeEllipseCallout" | "CloudCallout" | "Cloud" | "Ribbon" | "Ribbon2" | "EllipseRibbon" | "EllipseRibbon2" | "LeftRightRibbon" | "VerticalScroll" | "HorizontalScroll" | "Wave" | "DoubleWave" | "Plus" | "FlowChartProcess" | "FlowChartDecision" | "FlowChartInputOutput" | "FlowChartPredefinedProcess" | "FlowChartInternalStorage" | "FlowChartDocument" | "FlowChartMultidocument" | "FlowChartTerminator" | "FlowChartPreparation" | "FlowChartManualInput" | "FlowChartManualOperation" | "FlowChartConnector" | "FlowChartPunchedCard" | "FlowChartPunchedTape" | "FlowChartSummingJunction" | "FlowChartOr" | "FlowChartCollate" | "FlowChartSort" | "FlowChartExtract" | "FlowChartMerge" | "FlowChartOfflineStorage" | "FlowChartOnlineStorage" | "FlowChartMagneticTape" | "FlowChartMagneticDisk" | "FlowChartMagneticDrum" | "FlowChartDisplay" | "FlowChartDelay" | "FlowChartAlternateProcess" | "FlowChartOffpageConnector" | "ActionButtonBlank" | "ActionButtonHome" | "ActionButtonHelp" | "ActionButtonInformation" | "ActionButtonForwardNext" | "ActionButtonBackPrevious" | "ActionButtonEnd" | "ActionButtonBeginning" | "ActionButtonReturn" | "ActionButtonDocument" | "ActionButtonSound" | "ActionButtonMovie" | "Gear6" | "Gear9" | "Funnel" | "MathPlus" | "MathMinus" | "MathMultiply" | "MathDivide" | "MathEqual" | "MathNotEqual" | "CornerTabs" | "SquareTabs" | "PlaqueTabs" | "ChartX" | "ChartStar" | "ChartPlus";
         /**
-         * The height, in points, of the shape.
+         * Specifies the height, in points, of the shape.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
          */
         height: number;
         /**
-         * The percentage of shape height to vertical relative size, see {@link Word.RelativeSize}. For an inline or child shape, it can't be set.
+         * Specifies the percentage of shape height to the relative vertical size (that is, the `relativeVerticalSize` property). For an inline or child shape, it can't be set.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
@@ -120876,14 +123271,14 @@ declare namespace Word {
          */
         readonly isChild: boolean;
         /**
-         * The distance, in points, from the left side of the shape to the horizontal relative position, see {@link Word.RelativeHorizontalPosition}. For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
+         * Specifies the distance, in points, from the left side of the shape to the relative horizontal position (that is, the `relativeHorizontalPosition` property). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
          */
         left: number;
         /**
-         * The relative left position as a percentage from the left side of the shape to the horizontal relative position, see {@link Word.RelativeHorizontalPosition}. For an inline or child shape, it will return 0 and can't be set.
+         * Specifies the relative left position as a percentage from the left side of the shape to the relative horizontal position (that is, the `relativeHorizontalalPosition` property). For an inline or child shape, it will return 0 and can't be set.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
@@ -120897,35 +123292,35 @@ declare namespace Word {
          */
         lockAspectRatio: boolean;
         /**
-         * The name of the shape.
+         * Specifies the name of the shape.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
          */
         name: string;
         /**
-         * The relative horizontal position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+         * Specifies the relative horizontal position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
          */
         relativeHorizontalPosition: Word.RelativeHorizontalPosition | "Margin" | "Page" | "Column" | "Character" | "LeftMargin" | "RightMargin" | "InsideMargin" | "OutsideMargin";
         /**
-         * The relative horizontal size of the shape. For an inline or child shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+         * Specifies the relative horizontal size of the shape. Use with the `widthRelative` property. For an inline or child shape, it can't be set.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
          */
         relativeHorizontalSize: Word.RelativeSize | "Margin" | "Page" | "TopMargin" | "BottomMargin" | "InsideMargin" | "OutsideMargin";
         /**
-         * The relative vertical position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeVerticalPosition}.
+         * Specifies the relative vertical position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeVerticalPosition}.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
          */
         relativeVerticalPosition: Word.RelativeVerticalPosition | "Margin" | "Page" | "Paragraph" | "Line" | "TopMargin" | "BottomMargin" | "InsideMargin" | "OutsideMargin";
         /**
-         * The relative vertical size of the shape. For an inline or child shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+         * Specifies the relative vertical size of the shape. Use with the `heightRelative` property. For an inline or child shape, it can't be set.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
@@ -120939,14 +123334,14 @@ declare namespace Word {
          */
         rotation: number;
         /**
-         * The distance, in points, from the top edge of the shape to the vertical relative position (see {@link Word.RelativeVerticalPosition}). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
+         * Specifies the distance, in points, from the top edge of the shape to the relative vertical position (that is, the `relativeVerticalPosition` property). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
          */
         top: number;
         /**
-         * The relative top position as a percentage from the top edge of the shape to the vertical relative position, see {@link Word.RelativeVerticalPosition}. For an inline or child shape, it will return 0 and can't be set.
+         * Specifies the relative top position as a percentage from the top edge of the shape to the relative vertical position (that is, the `relativeVerticalPosition` property). For an inline or child shape, it will return 0 and can't be set.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
@@ -120967,14 +123362,14 @@ declare namespace Word {
          */
         visible: boolean;
         /**
-         * The width, in points, of the shape.
+         * Specifies the width, in points, of the shape.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
          */
         width: number;
         /**
-         * The percentage of shape width to horizontal relative size, see {@link Word.RelativeSize}. For an inline or child shape, it can't be set.
+         * Specifies the percentage of shape width to the relative horizontal size (that is, the `relativeHorizontalSize` property). For an inline or child shape, it can't be set.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.2]
@@ -124879,7 +127274,7 @@ declare namespace Word {
      */
     interface ContentControlAddedEventArgs {
         /**
-         * The event type. See `Word.EventType` for details.
+         * Specifies the event type. See `Word.EventType` for details.
          *
          * @remarks
          * [Api set: WordApi 1.5]
@@ -124893,7 +127288,7 @@ declare namespace Word {
          */
         ids: number[];
         /**
-         * The source of the event. It can be local or remote (through coauthoring).
+         * Specifies the source of the event. It can be local or remote (through coauthoring).
          *
          * @remarks
          * [Api set: WordApi 1.5]
@@ -124908,7 +127303,7 @@ declare namespace Word {
      */
     interface ContentControlDataChangedEventArgs {
         /**
-         * The event type. See `Word.EventType` for details.
+         * Specifies the event type. See `Word.EventType` for details.
          *
          * @remarks
          * [Api set: WordApi 1.5]
@@ -124922,7 +127317,7 @@ declare namespace Word {
          */
         ids: number[];
         /**
-         * The source of the event. It can be local or remote (through coauthoring).
+         * Specifies the source of the event. It can be local or remote (through coauthoring).
          *
          * @remarks
          * [Api set: WordApi 1.5]
@@ -124937,7 +127332,7 @@ declare namespace Word {
      */
     interface ContentControlDeletedEventArgs {
         /**
-         * The event type. See `Word.EventType` for details.
+         * Specifies the event type. See `Word.EventType` for details.
          *
          * @remarks
          * [Api set: WordApi 1.5]
@@ -124951,7 +127346,7 @@ declare namespace Word {
          */
         ids: number[];
         /**
-         * The source of the event. It can be local or remote (through coauthoring).
+         * Specifies the source of the event. It can be local or remote (through coauthoring).
          *
          * @remarks
          * [Api set: WordApi 1.5]
@@ -124966,7 +127361,7 @@ declare namespace Word {
      */
     interface ContentControlEnteredEventArgs {
         /**
-         * The event type. See `Word.EventType` for details.
+         * Specifies the event type. See `Word.EventType` for details.
          *
          * @remarks
          * [Api set: WordApi 1.5]
@@ -124980,7 +127375,7 @@ declare namespace Word {
          */
         ids: number[];
         /**
-         * The source of the event. It can be local or remote (through coauthoring).
+         * Specifies the source of the event. It can be local or remote (through coauthoring).
          *
          * @remarks
          * [Api set: WordApi 1.5]
@@ -124995,7 +127390,7 @@ declare namespace Word {
      */
     interface ContentControlExitedEventArgs {
         /**
-         * The event type. See `Word.EventType` for details.
+         * Specifies the event type. See `Word.EventType` for details.
          *
          * @remarks
          * [Api set: WordApi 1.5]
@@ -125009,7 +127404,7 @@ declare namespace Word {
          */
         ids: number[];
         /**
-         * The source of the event. It can be local or remote (through coauthoring).
+         * Specifies the source of the event. It can be local or remote (through coauthoring).
          *
          * @remarks
          * [Api set: WordApi 1.5]
@@ -125110,7 +127505,7 @@ declare namespace Word {
      */
     interface ContentControlSelectionChangedEventArgs {
         /**
-         * The event type. See `Word.EventType` for details.
+         * Specifies the event type. See `Word.EventType` for details.
          *
          * @remarks
          * [Api set: WordApi 1.5]
@@ -125124,7 +127519,7 @@ declare namespace Word {
          */
         ids: number[];
         /**
-         * The source of the event. It can be local or remote (through coauthoring).
+         * Specifies the source of the event. It can be local or remote (through coauthoring).
          *
          * @remarks
          * [Api set: WordApi 1.5]
@@ -125139,14 +127534,14 @@ declare namespace Word {
      */
     interface ParagraphAddedEventArgs {
         /**
-         * The source of the event. It can be local or remote (through coauthoring).
+         * Specifies the source of the event. It can be local or remote (through coauthoring).
          *
          * @remarks
          * [Api set: WordApi 1.6]
          */
         source: Word.EventSource | "Local" | "Remote";
         /**
-         * The event type. See `Word.EventType` for details.
+         * Specifies the event type. See `Word.EventType` for details.
          *
          * @remarks
          * [Api set: WordApi 1.6]
@@ -125168,14 +127563,14 @@ declare namespace Word {
      */
     interface ParagraphChangedEventArgs {
         /**
-         * The source of the event. It can be local or remote (through coauthoring).
+         * Specifies the source of the event. It can be local or remote (through coauthoring).
          *
          * @remarks
          * [Api set: WordApi 1.6]
          */
         source: Word.EventSource | "Local" | "Remote";
         /**
-         * The event type. See `Word.EventType` for details.
+         * Specifies the event type. See `Word.EventType` for details.
          *
          * @remarks
          * [Api set: WordApi 1.6]
@@ -125197,14 +127592,14 @@ declare namespace Word {
      */
     interface ParagraphDeletedEventArgs {
         /**
-         * The source of the event. It can be local or remote (through coauthoring).
+         * Specifies the source of the event. It can be local or remote (through coauthoring).
          *
          * @remarks
          * [Api set: WordApi 1.6]
          */
         source: Word.EventSource | "Local" | "Remote";
         /**
-         * The event type. See `Word.EventType` for details.
+         * Specifies the event type. See `Word.EventType` for details.
          *
          * @remarks
          * [Api set: WordApi 1.6]
@@ -125243,7 +127638,7 @@ declare namespace Word {
          */
         commentDetails: Word.CommentDetail[];
         /**
-         * The source of the event. It can be local or remote (through coauthoring).
+         * Specifies the source of the event. It can be local or remote (through coauthoring).
          *
          * @remarks
          * [Api set: WordApi BETA (PREVIEW ONLY)]
@@ -125251,7 +127646,7 @@ declare namespace Word {
          */
         source: Word.EventSource | "Local" | "Remote";
         /**
-         * The event type. See `Word.EventType` for details.
+         * Specifies the event type. See `Word.EventType` for details.
          *
          * @remarks
          * [Api set: WordApi BETA (PREVIEW ONLY)]
@@ -126329,7 +128724,7 @@ declare namespace Word {
         mixed = "Mixed",
     }
     /**
-     * The {@link Word.Border | border} types.
+     * Represents the {@link Word.Border | border} type.
      *
      * @remarks
      * [Api set: WordApi 1.3]
@@ -143311,7 +145706,7 @@ declare namespace Word {
      */
     interface SelectionInsertSymbolOptions {
         /**
-         * If provided, specifies the font bias for symbols. This argument is useful for setting the correct font bias for East Asian characters. The default value is `default`.
+         * If provided, specifies the font bias for symbols. This argument is useful for setting the correct font bias for East Asian characters. The default value is `standard`.
          *
          * @remarks
          * [Api set: WordApiDesktop 1.4]
@@ -143435,7 +145830,7 @@ declare namespace Word {
         unit?: Word.OperationUnit | "Character" | "Word" | "Sentence" | "Paragraph" | "Line" | "Story" | "Screen" | "Section" | "Column" | "Row" | "Window" | "Cell" | "CharacterFormat" | "ParagraphFormat" | "Table" | "Item";
     }
     /**
-     * Represents the options for the {@link Word.Selection | Selection.next} method.
+     * Represents the options for the {@link Word.Selection | Selection.getNextRange} method.
      *
      * @remarks
      * [Api set: WordApiDesktop 1.4]
@@ -143457,7 +145852,7 @@ declare namespace Word {
         unit?: Word.OperationUnit | "Character" | "Word" | "Sentence" | "Paragraph" | "Line" | "Story" | "Screen" | "Section" | "Column" | "Row" | "Window" | "Cell" | "CharacterFormat" | "ParagraphFormat" | "Table" | "Item";
     }
     /**
-     * Represents the options for the {@link Word.Selection | Selection.previous} method.
+     * Represents the options for the {@link Word.Selection | Selection.getPreviousRange} method.
      *
      * @remarks
      * [Api set: WordApiDesktop 1.4]
@@ -147594,8 +149989,7 @@ declare namespace Word {
          * Adds a new `ListTemplate` object. Note: This operation isn't allowed if the collection represents list templates from a {@link Word.ListTemplateGallery}.
          *
          * @remarks
-         * [Api set: WordApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: WordApiDesktop 1.5]
          *
          * @param options Optional. Options for adding a new list template.
          */
@@ -147646,24 +150040,21 @@ declare namespace Word {
      * Represents the options for the {@link Word.ListTemplateCollection | ListTemplateCollection.add} method.
      *
      * @remarks
-     * [Api set: WordApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: WordApiDesktop 1.5]
      */
     interface ListTemplateAddOptions {
         /**
          * If provided, specifies the name of the list template to be added.
          *
          * @remarks
-         * [Api set: WordApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: WordApiDesktop 1.5]
          */
         name?: string;
         /**
          * If provided, specifies whether to apply outline numbering to the new list template. The default value is `false`.
          *
          * @remarks
-         * [Api set: WordApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: WordApiDesktop 1.5]
          */
         outlineNumbered?: boolean;
     }
@@ -147808,6 +150199,8 @@ declare namespace Word {
      *
      * @remarks
      * [Api set: WordApiDesktop 1.4]
+     *
+     * This API works only with legacy coauthoring locks. It doesn't apply to modern OneDrive or SharePoint coauthoring, where lock management is handled automatically by the service. Calls on a modern document will fail with a `GeneralException` error.
      */
     enum CoauthoringLockType {
         /**
@@ -147866,6 +150259,238 @@ declare namespace Word {
          * [Api set: WordApiDesktop 1.4]
          */
         owners = "Owners",
+    }
+    /**
+     * Represents the result of updating the sensitivity label on the document.
+     *
+     * @remarks
+     * [Api set: WordApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    enum SensitivityLabelUpdateResult {
+        /**
+         * The sensitivity label was successfully updated.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        success = "Success",
+        /**
+         * The update failed due to an unspecified error.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        unspecifiedFailure = "UnspecifiedFailure",
+        /**
+         * The specified sensitivity label could not be found.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelNotFound = "LabelNotFound",
+        /**
+         * The document is read-only and cannot be modified.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        documentReadOnly = "DocumentReadOnly",
+        /**
+         * The user does not have sufficient permissions to update the label.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        insufficientPermission = "InsufficientPermission",
+        /**
+         * The label update failed due to unsupported Double Key Encryption (DKE).
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        unsupportedDoubleKeyEncryption = "UnsupportedDoubleKeyEncryption",
+        /**
+         * The label update failed because native labeling is not enabled for the user or installed SKU.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelingDisabled = "LabelingDisabled",
+        /**
+         * The label update failed because the user's identity is not valid for applying a label.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        userNotFound = "UserNotFound",
+        /**
+         * The label update failed due to unsupported Universal Data Protection (UDP).
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        unsupportedUdp = "UnsupportedUdp",
+        /**
+         * The label update failed because the specified label is a parent label, which cannot be applied.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        parentLabelNotSupported = "ParentLabelNotSupported",
+        /**
+         * The label update failed because the document doesn't belong to the same tenant as the user.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        crossTenant = "CrossTenant",
+        /**
+         * Attribute-based access control (ABAC) attribute values were supplied, but the target label is not ABAC-enabled.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        abacAttributesNotAllowed = "AbacAttributesNotAllowed",
+        /**
+         * The target label is enabled for attribute-based access control (ABAC) and requires attribute selections, but no ABAC attribute values were supplied.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        abacAttributesRequired = "AbacAttributesRequired",
+        /**
+         * The label update failed due to unsupported attribute-based access control (ABAC) attribute values.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        unsupportedAbac = "UnsupportedAbac",
+        /**
+         * The label update failed because the specified label is disabled or not applicable to the user.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelDisabled = "LabelDisabled",
+        /**
+         * The label update failed because removing the sensitivity label is not supported.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        removingLabelNotSupported = "RemovingLabelNotSupported",
+    }
+    /**
+     * Represents the labeling capability status of the sensitivity label catalog.
+     *
+     * @remarks
+     * [Api set: WordApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    enum LabelingCapability {
+        /**
+         * No valid license is available for sensitivity labeling.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        noLicense = "NoLicense",
+        /**
+         * Sensitivity labeling is disabled for the user or tenant.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelingDisabled = "LabelingDisabled",
+        /**
+         * No labeling policy was found for the user.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelingPolicyNotFound = "LabelingPolicyNotFound",
+        /**
+         * Sensitivity labeling is fully enabled.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelingEnabled = "LabelingEnabled",
+    }
+    /**
+     * Specifies the type of protection applied by a sensitivity label.
+     *
+     * @remarks
+     * [Api set: WordApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    enum SensitivityLabelProtectionType {
+        /**
+         * The label applies no protection.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        noProtection = "NoProtection",
+        /**
+         * The label applies admin-defined protection.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        adminDefined = "AdminDefined",
+        /**
+         * The label applies user-defined protection.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        userDefined = "UserDefined",
+    }
+    /**
+     * Represents the data type of an ABAC attribute's values.
+     *
+     * @remarks
+     * [Api set: WordApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    enum SensitivityLabelAbacAttributeDataType {
+        /**
+         * The data type is not recognized or specified.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        unknown = "Unknown",
+        /**
+         * The attribute value is a string.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        stringValue = "StringValue",
+        /**
+         * The attribute value is a boolean.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        booleanValue = "BooleanValue",
+        /**
+         * The attribute value is a number.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        numberValue = "NumberValue",
+        /**
+         * The attribute value is a date.
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        dateValue = "DateValue",
     }
     enum ErrorCodes {
         accessDenied = "AccessDenied",
@@ -148218,7 +150843,7 @@ declare namespace Word {
         /** An interface for updating data on the `CommentContentRange` object, for use in `commentContentRange.set({ ... })`. */
         interface CommentContentRangeUpdateData {
             /**
-             * Specifies a value that indicates whether the comment text is bold.
+             * Specifies whether the comment text is bold.
              *
              * @remarks
              * [Api set: WordApi 1.4]
@@ -148232,21 +150857,21 @@ declare namespace Word {
              */
             hyperlink?: string;
             /**
-             * Specifies a value that indicates whether the comment text is italicized.
+             * Specifies whether the comment text is italicized.
              *
              * @remarks
              * [Api set: WordApi 1.4]
              */
             italic?: boolean;
             /**
-             * Specifies a value that indicates whether the comment text has a strikethrough.
+             * Specifies whether the comment text has a strikethrough.
              *
              * @remarks
              * [Api set: WordApi 1.4]
              */
             strikeThrough?: boolean;
             /**
-             * Specifies a value that indicates the comment text's underline type. `none` if the comment text isn't underlined.
+             * Specifies the comment text's underline type. `none` if the comment text isn't underlined.
              *
              * @remarks
              * [Api set: WordApi 1.4]
@@ -148481,14 +151106,14 @@ declare namespace Word {
              */
             appearance?: Word.ContentControlAppearance | "BoundingBox" | "Tags" | "Hidden";
             /**
-             * Specifies a value that indicates whether the user can delete the content control. Mutually exclusive with `removeWhenEdited`.
+             * Specifies whether the user can delete the content control. Mutually exclusive with `removeWhenEdited`.
              *
              * @remarks
              * [Api set: WordApi 1.1]
              */
             cannotDelete?: boolean;
             /**
-             * Specifies a value that indicates whether the user can edit the contents of the content control.
+             * Specifies whether the user can edit the contents of the content control.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -148509,7 +151134,7 @@ declare namespace Word {
              */
             placeholderText?: string;
             /**
-             * Specifies a value that indicates whether the content control is removed after it's edited. Mutually exclusive with `cannotDelete`.
+             * Specifies whether the content control is removed after it's edited. Mutually exclusive with `cannotDelete`.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -148530,7 +151155,7 @@ declare namespace Word {
              */
             styleBuiltIn?: Word.BuiltInStyleName | "Other" | "Normal" | "Heading1" | "Heading2" | "Heading3" | "Heading4" | "Heading5" | "Heading6" | "Heading7" | "Heading8" | "Heading9" | "Toc1" | "Toc2" | "Toc3" | "Toc4" | "Toc5" | "Toc6" | "Toc7" | "Toc8" | "Toc9" | "FootnoteText" | "Header" | "Footer" | "Caption" | "FootnoteReference" | "EndnoteReference" | "EndnoteText" | "Title" | "Subtitle" | "Hyperlink" | "Strong" | "Emphasis" | "NoSpacing" | "ListParagraph" | "Quote" | "IntenseQuote" | "SubtleEmphasis" | "IntenseEmphasis" | "SubtleReference" | "IntenseReference" | "BookTitle" | "Bibliography" | "TocHeading" | "TableGrid" | "PlainTable1" | "PlainTable2" | "PlainTable3" | "PlainTable4" | "PlainTable5" | "TableGridLight" | "GridTable1Light" | "GridTable1Light_Accent1" | "GridTable1Light_Accent2" | "GridTable1Light_Accent3" | "GridTable1Light_Accent4" | "GridTable1Light_Accent5" | "GridTable1Light_Accent6" | "GridTable2" | "GridTable2_Accent1" | "GridTable2_Accent2" | "GridTable2_Accent3" | "GridTable2_Accent4" | "GridTable2_Accent5" | "GridTable2_Accent6" | "GridTable3" | "GridTable3_Accent1" | "GridTable3_Accent2" | "GridTable3_Accent3" | "GridTable3_Accent4" | "GridTable3_Accent5" | "GridTable3_Accent6" | "GridTable4" | "GridTable4_Accent1" | "GridTable4_Accent2" | "GridTable4_Accent3" | "GridTable4_Accent4" | "GridTable4_Accent5" | "GridTable4_Accent6" | "GridTable5Dark" | "GridTable5Dark_Accent1" | "GridTable5Dark_Accent2" | "GridTable5Dark_Accent3" | "GridTable5Dark_Accent4" | "GridTable5Dark_Accent5" | "GridTable5Dark_Accent6" | "GridTable6Colorful" | "GridTable6Colorful_Accent1" | "GridTable6Colorful_Accent2" | "GridTable6Colorful_Accent3" | "GridTable6Colorful_Accent4" | "GridTable6Colorful_Accent5" | "GridTable6Colorful_Accent6" | "GridTable7Colorful" | "GridTable7Colorful_Accent1" | "GridTable7Colorful_Accent2" | "GridTable7Colorful_Accent3" | "GridTable7Colorful_Accent4" | "GridTable7Colorful_Accent5" | "GridTable7Colorful_Accent6" | "ListTable1Light" | "ListTable1Light_Accent1" | "ListTable1Light_Accent2" | "ListTable1Light_Accent3" | "ListTable1Light_Accent4" | "ListTable1Light_Accent5" | "ListTable1Light_Accent6" | "ListTable2" | "ListTable2_Accent1" | "ListTable2_Accent2" | "ListTable2_Accent3" | "ListTable2_Accent4" | "ListTable2_Accent5" | "ListTable2_Accent6" | "ListTable3" | "ListTable3_Accent1" | "ListTable3_Accent2" | "ListTable3_Accent3" | "ListTable3_Accent4" | "ListTable3_Accent5" | "ListTable3_Accent6" | "ListTable4" | "ListTable4_Accent1" | "ListTable4_Accent2" | "ListTable4_Accent3" | "ListTable4_Accent4" | "ListTable4_Accent5" | "ListTable4_Accent6" | "ListTable5Dark" | "ListTable5Dark_Accent1" | "ListTable5Dark_Accent2" | "ListTable5Dark_Accent3" | "ListTable5Dark_Accent4" | "ListTable5Dark_Accent5" | "ListTable5Dark_Accent6" | "ListTable6Colorful" | "ListTable6Colorful_Accent1" | "ListTable6Colorful_Accent2" | "ListTable6Colorful_Accent3" | "ListTable6Colorful_Accent4" | "ListTable6Colorful_Accent5" | "ListTable6Colorful_Accent6" | "ListTable7Colorful" | "ListTable7Colorful_Accent1" | "ListTable7Colorful_Accent2" | "ListTable7Colorful_Accent3" | "ListTable7Colorful_Accent4" | "ListTable7Colorful_Accent5" | "ListTable7Colorful_Accent6";
             /**
-             * Specifies a tag to identify a content control.
+             * Specifies a tag to identify a content control. The tag is different from the title in that it isn't displayed to the user. The tag can be used to identify a content control programmatically.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -149744,7 +152369,7 @@ declare namespace Word {
              */
             hyperlink?: string;
             /**
-             * Specifies a value that indicates whether the inline image retains its original proportions when you resize it.
+             * Specifies whether the inline image retains its original proportions when you resize it.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -150604,6 +153229,10 @@ declare namespace Word {
         /** An interface for updating data on the `SectionCollection` object, for use in `sectionCollection.set({ ... })`. */
         interface SectionCollectionUpdateData {
             items?: Word.Interfaces.SectionData[];
+        }
+        /** An interface for updating data on the `SensitivityLabelDetailsCollection` object, for use in `sensitivityLabelDetailsCollection.set({ ... })`. */
+        interface SensitivityLabelDetailsCollectionUpdateData {
+            items?: Word.Interfaces.SensitivityLabelDetailsData[];
         }
         /** An interface for updating data on the `Setting` object, for use in `setting.set({ ... })`. */
         interface SettingUpdateData {
@@ -151789,7 +154418,7 @@ declare namespace Word {
         /** An interface for updating data on the `Shape` object, for use in `shape.set({ ... })`. */
         interface ShapeUpdateData {
             /**
-            * Represents the `Body` object of the shape. Only applies to text boxes and geometric shapes.
+            * Gets the `Body` object of the shape. Only applies to text boxes and geometric shapes.
             *
             * @remarks
             * [Api set: WordApiDesktop 1.2]
@@ -151859,35 +154488,35 @@ declare namespace Word {
              */
             altTextDescription?: string;
             /**
-             * The geometric shape type of the shape. It will be null if isn't a geometric shape.
+             * Specifies the geometric shape type of the shape. It will be null if isn't a geometric shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             geometricShapeType?: Word.GeometricShapeType | "LineInverse" | "Triangle" | "RightTriangle" | "Rectangle" | "Diamond" | "Parallelogram" | "Trapezoid" | "NonIsoscelesTrapezoid" | "Pentagon" | "Hexagon" | "Heptagon" | "Octagon" | "Decagon" | "Dodecagon" | "Star4" | "Star5" | "Star6" | "Star7" | "Star8" | "Star10" | "Star12" | "Star16" | "Star24" | "Star32" | "RoundRectangle" | "Round1Rectangle" | "Round2SameRectangle" | "Round2DiagonalRectangle" | "SnipRoundRectangle" | "Snip1Rectangle" | "Snip2SameRectangle" | "Snip2DiagonalRectangle" | "Plaque" | "Ellipse" | "Teardrop" | "HomePlate" | "Chevron" | "PieWedge" | "Pie" | "BlockArc" | "Donut" | "NoSmoking" | "RightArrow" | "LeftArrow" | "UpArrow" | "DownArrow" | "StripedRightArrow" | "NotchedRightArrow" | "BentUpArrow" | "LeftRightArrow" | "UpDownArrow" | "LeftUpArrow" | "LeftRightUpArrow" | "QuadArrow" | "LeftArrowCallout" | "RightArrowCallout" | "UpArrowCallout" | "DownArrowCallout" | "LeftRightArrowCallout" | "UpDownArrowCallout" | "QuadArrowCallout" | "BentArrow" | "UturnArrow" | "CircularArrow" | "LeftCircularArrow" | "LeftRightCircularArrow" | "CurvedRightArrow" | "CurvedLeftArrow" | "CurvedUpArrow" | "CurvedDownArrow" | "SwooshArrow" | "Cube" | "Can" | "LightningBolt" | "Heart" | "Sun" | "Moon" | "SmileyFace" | "IrregularSeal1" | "IrregularSeal2" | "FoldedCorner" | "Bevel" | "Frame" | "HalfFrame" | "Corner" | "DiagonalStripe" | "Chord" | "Arc" | "LeftBracket" | "RightBracket" | "LeftBrace" | "RightBrace" | "BracketPair" | "BracePair" | "Callout1" | "Callout2" | "Callout3" | "AccentCallout1" | "AccentCallout2" | "AccentCallout3" | "BorderCallout1" | "BorderCallout2" | "BorderCallout3" | "AccentBorderCallout1" | "AccentBorderCallout2" | "AccentBorderCallout3" | "WedgeRectCallout" | "WedgeRRectCallout" | "WedgeEllipseCallout" | "CloudCallout" | "Cloud" | "Ribbon" | "Ribbon2" | "EllipseRibbon" | "EllipseRibbon2" | "LeftRightRibbon" | "VerticalScroll" | "HorizontalScroll" | "Wave" | "DoubleWave" | "Plus" | "FlowChartProcess" | "FlowChartDecision" | "FlowChartInputOutput" | "FlowChartPredefinedProcess" | "FlowChartInternalStorage" | "FlowChartDocument" | "FlowChartMultidocument" | "FlowChartTerminator" | "FlowChartPreparation" | "FlowChartManualInput" | "FlowChartManualOperation" | "FlowChartConnector" | "FlowChartPunchedCard" | "FlowChartPunchedTape" | "FlowChartSummingJunction" | "FlowChartOr" | "FlowChartCollate" | "FlowChartSort" | "FlowChartExtract" | "FlowChartMerge" | "FlowChartOfflineStorage" | "FlowChartOnlineStorage" | "FlowChartMagneticTape" | "FlowChartMagneticDisk" | "FlowChartMagneticDrum" | "FlowChartDisplay" | "FlowChartDelay" | "FlowChartAlternateProcess" | "FlowChartOffpageConnector" | "ActionButtonBlank" | "ActionButtonHome" | "ActionButtonHelp" | "ActionButtonInformation" | "ActionButtonForwardNext" | "ActionButtonBackPrevious" | "ActionButtonEnd" | "ActionButtonBeginning" | "ActionButtonReturn" | "ActionButtonDocument" | "ActionButtonSound" | "ActionButtonMovie" | "Gear6" | "Gear9" | "Funnel" | "MathPlus" | "MathMinus" | "MathMultiply" | "MathDivide" | "MathEqual" | "MathNotEqual" | "CornerTabs" | "SquareTabs" | "PlaqueTabs" | "ChartX" | "ChartStar" | "ChartPlus";
             /**
-             * The height, in points, of the shape.
+             * Specifies the height, in points, of the shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             height?: number;
             /**
-             * The percentage of shape height to vertical relative size, see {@link Word.RelativeSize}. For an inline or child shape, it can't be set.
+             * Specifies the percentage of shape height to the relative vertical size (that is, the `relativeVerticalSize` property). For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             heightRelative?: number;
             /**
-             * The distance, in points, from the left side of the shape to the horizontal relative position, see {@link Word.RelativeHorizontalPosition}. For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
+             * Specifies the distance, in points, from the left side of the shape to the relative horizontal position (that is, the `relativeHorizontalPosition` property). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             left?: number;
             /**
-             * The relative left position as a percentage from the left side of the shape to the horizontal relative position, see {@link Word.RelativeHorizontalPosition}. For an inline or child shape, it will return 0 and can't be set.
+             * Specifies the relative left position as a percentage from the left side of the shape to the relative horizontal position (that is, the `relativeHorizontalalPosition` property). For an inline or child shape, it will return 0 and can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -151901,35 +154530,35 @@ declare namespace Word {
              */
             lockAspectRatio?: boolean;
             /**
-             * The name of the shape.
+             * Specifies the name of the shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             name?: string;
             /**
-             * The relative horizontal position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+             * Specifies the relative horizontal position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             relativeHorizontalPosition?: Word.RelativeHorizontalPosition | "Margin" | "Page" | "Column" | "Character" | "LeftMargin" | "RightMargin" | "InsideMargin" | "OutsideMargin";
             /**
-             * The relative horizontal size of the shape. For an inline or child shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+             * Specifies the relative horizontal size of the shape. Use with the `widthRelative` property. For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             relativeHorizontalSize?: Word.RelativeSize | "Margin" | "Page" | "TopMargin" | "BottomMargin" | "InsideMargin" | "OutsideMargin";
             /**
-             * The relative vertical position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeVerticalPosition}.
+             * Specifies the relative vertical position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeVerticalPosition}.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             relativeVerticalPosition?: Word.RelativeVerticalPosition | "Margin" | "Page" | "Paragraph" | "Line" | "TopMargin" | "BottomMargin" | "InsideMargin" | "OutsideMargin";
             /**
-             * The relative vertical size of the shape. For an inline or child shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+             * Specifies the relative vertical size of the shape. Use with the `heightRelative` property. For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -151943,14 +154572,14 @@ declare namespace Word {
              */
             rotation?: number;
             /**
-             * The distance, in points, from the top edge of the shape to the vertical relative position (see {@link Word.RelativeVerticalPosition}). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
+             * Specifies the distance, in points, from the top edge of the shape to the relative vertical position (that is, the `relativeVerticalPosition` property). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             top?: number;
             /**
-             * The relative top position as a percentage from the top edge of the shape to the vertical relative position, see {@link Word.RelativeVerticalPosition}. For an inline or child shape, it will return 0 and can't be set.
+             * Specifies the relative top position as a percentage from the top edge of the shape to the relative vertical position (that is, the `relativeVerticalPosition` property). For an inline or child shape, it will return 0 and can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -151964,14 +154593,14 @@ declare namespace Word {
              */
             visible?: boolean;
             /**
-             * The width, in points, of the shape.
+             * Specifies the width, in points, of the shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             width?: number;
             /**
-             * The percentage of shape width to horizontal relative size, see {@link Word.RelativeSize}. For an inline or child shape, it can't be set.
+             * Specifies the percentage of shape width to the relative horizontal size (that is, the `relativeHorizontalSize` property). For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -154022,7 +156651,7 @@ declare namespace Word {
              */
             styleBuiltIn?: Word.BuiltInStyleName | "Other" | "Normal" | "Heading1" | "Heading2" | "Heading3" | "Heading4" | "Heading5" | "Heading6" | "Heading7" | "Heading8" | "Heading9" | "Toc1" | "Toc2" | "Toc3" | "Toc4" | "Toc5" | "Toc6" | "Toc7" | "Toc8" | "Toc9" | "FootnoteText" | "Header" | "Footer" | "Caption" | "FootnoteReference" | "EndnoteReference" | "EndnoteText" | "Title" | "Subtitle" | "Hyperlink" | "Strong" | "Emphasis" | "NoSpacing" | "ListParagraph" | "Quote" | "IntenseQuote" | "SubtleEmphasis" | "IntenseEmphasis" | "SubtleReference" | "IntenseReference" | "BookTitle" | "Bibliography" | "TocHeading" | "TableGrid" | "PlainTable1" | "PlainTable2" | "PlainTable3" | "PlainTable4" | "PlainTable5" | "TableGridLight" | "GridTable1Light" | "GridTable1Light_Accent1" | "GridTable1Light_Accent2" | "GridTable1Light_Accent3" | "GridTable1Light_Accent4" | "GridTable1Light_Accent5" | "GridTable1Light_Accent6" | "GridTable2" | "GridTable2_Accent1" | "GridTable2_Accent2" | "GridTable2_Accent3" | "GridTable2_Accent4" | "GridTable2_Accent5" | "GridTable2_Accent6" | "GridTable3" | "GridTable3_Accent1" | "GridTable3_Accent2" | "GridTable3_Accent3" | "GridTable3_Accent4" | "GridTable3_Accent5" | "GridTable3_Accent6" | "GridTable4" | "GridTable4_Accent1" | "GridTable4_Accent2" | "GridTable4_Accent3" | "GridTable4_Accent4" | "GridTable4_Accent5" | "GridTable4_Accent6" | "GridTable5Dark" | "GridTable5Dark_Accent1" | "GridTable5Dark_Accent2" | "GridTable5Dark_Accent3" | "GridTable5Dark_Accent4" | "GridTable5Dark_Accent5" | "GridTable5Dark_Accent6" | "GridTable6Colorful" | "GridTable6Colorful_Accent1" | "GridTable6Colorful_Accent2" | "GridTable6Colorful_Accent3" | "GridTable6Colorful_Accent4" | "GridTable6Colorful_Accent5" | "GridTable6Colorful_Accent6" | "GridTable7Colorful" | "GridTable7Colorful_Accent1" | "GridTable7Colorful_Accent2" | "GridTable7Colorful_Accent3" | "GridTable7Colorful_Accent4" | "GridTable7Colorful_Accent5" | "GridTable7Colorful_Accent6" | "ListTable1Light" | "ListTable1Light_Accent1" | "ListTable1Light_Accent2" | "ListTable1Light_Accent3" | "ListTable1Light_Accent4" | "ListTable1Light_Accent5" | "ListTable1Light_Accent6" | "ListTable2" | "ListTable2_Accent1" | "ListTable2_Accent2" | "ListTable2_Accent3" | "ListTable2_Accent4" | "ListTable2_Accent5" | "ListTable2_Accent6" | "ListTable3" | "ListTable3_Accent1" | "ListTable3_Accent2" | "ListTable3_Accent3" | "ListTable3_Accent4" | "ListTable3_Accent5" | "ListTable3_Accent6" | "ListTable4" | "ListTable4_Accent1" | "ListTable4_Accent2" | "ListTable4_Accent3" | "ListTable4_Accent4" | "ListTable4_Accent5" | "ListTable4_Accent6" | "ListTable5Dark" | "ListTable5Dark_Accent1" | "ListTable5Dark_Accent2" | "ListTable5Dark_Accent3" | "ListTable5Dark_Accent4" | "ListTable5Dark_Accent5" | "ListTable5Dark_Accent6" | "ListTable6Colorful" | "ListTable6Colorful_Accent1" | "ListTable6Colorful_Accent2" | "ListTable6Colorful_Accent3" | "ListTable6Colorful_Accent4" | "ListTable6Colorful_Accent5" | "ListTable6Colorful_Accent6" | "ListTable7Colorful" | "ListTable7Colorful_Accent1" | "ListTable7Colorful_Accent2" | "ListTable7Colorful_Accent3" | "ListTable7Colorful_Accent4" | "ListTable7Colorful_Accent5" | "ListTable7Colorful_Accent6";
             /**
-             * Gets the text of the body. Use the insertText method to insert text.
+             * Gets the text of the body. Use the `insertText` method to insert text.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -154286,6 +156915,8 @@ declare namespace Word {
             *
             * @remarks
             * [Api set: WordApiDesktop 1.4]
+            *
+            * This API works only with legacy coauthoring locks. It doesn't apply to modern OneDrive or SharePoint coauthoring, where lock management is handled automatically by the service. Calls on a modern document will fail with a `GeneralException` error.
             */
             locks?: Word.Interfaces.CoauthoringLockData[];
             /**
@@ -154342,6 +156973,8 @@ declare namespace Word {
             *
             * @remarks
             * [Api set: WordApiDesktop 1.4]
+            *
+            * This API works only with legacy coauthoring locks. It doesn't apply to modern OneDrive or SharePoint coauthoring, where lock management is handled automatically by the service. Calls on a modern document will fail with a `GeneralException` error.
             */
             locks?: Word.Interfaces.CoauthoringLockData[];
             /**
@@ -154460,7 +157093,7 @@ declare namespace Word {
         /** An interface describing the data returned by calling `commentContentRange.toJSON()`. */
         interface CommentContentRangeData {
             /**
-             * Specifies a value that indicates whether the comment text is bold.
+             * Specifies whether the comment text is bold.
              *
              * @remarks
              * [Api set: WordApi 1.4]
@@ -154481,14 +157114,14 @@ declare namespace Word {
              */
             isEmpty?: boolean;
             /**
-             * Specifies a value that indicates whether the comment text is italicized.
+             * Specifies whether the comment text is italicized.
              *
              * @remarks
              * [Api set: WordApi 1.4]
              */
             italic?: boolean;
             /**
-             * Specifies a value that indicates whether the comment text has a strikethrough.
+             * Specifies whether the comment text has a strikethrough.
              *
              * @remarks
              * [Api set: WordApi 1.4]
@@ -154502,7 +157135,7 @@ declare namespace Word {
              */
             text?: string;
             /**
-             * Specifies a value that indicates the comment text's underline type. `none` if the comment text isn't underlined.
+             * Specifies the comment text's underline type. `none` if the comment text isn't underlined.
              *
              * @remarks
              * [Api set: WordApi 1.4]
@@ -154959,14 +157592,14 @@ declare namespace Word {
              */
             appearance?: Word.ContentControlAppearance | "BoundingBox" | "Tags" | "Hidden";
             /**
-             * Specifies a value that indicates whether the user can delete the content control. Mutually exclusive with `removeWhenEdited`.
+             * Specifies whether the user can delete the content control. Mutually exclusive with `removeWhenEdited`.
              *
              * @remarks
              * [Api set: WordApi 1.1]
              */
             cannotDelete?: boolean;
             /**
-             * Specifies a value that indicates whether the user can edit the contents of the content control.
+             * Specifies whether the user can edit the contents of the content control.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -154980,7 +157613,7 @@ declare namespace Word {
              */
             color?: string;
             /**
-             * Gets an integer that represents the content control identifier.
+             * Gets an integer that represents the content control identifier. This number is unique for each content control and doesn't change.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -154994,7 +157627,7 @@ declare namespace Word {
              */
             placeholderText?: string;
             /**
-             * Specifies a value that indicates whether the content control is removed after it's edited. Mutually exclusive with `cannotDelete`.
+             * Specifies whether the content control is removed after it's edited. Mutually exclusive with `cannotDelete`.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -155022,7 +157655,7 @@ declare namespace Word {
              */
             subtype?: Word.ContentControlType | "Unknown" | "RichTextInline" | "RichTextParagraphs" | "RichTextTableCell" | "RichTextTableRow" | "RichTextTable" | "PlainTextInline" | "PlainTextParagraph" | "Picture" | "BuildingBlockGallery" | "CheckBox" | "ComboBox" | "DropDownList" | "DatePicker" | "RepeatingSection" | "RichText" | "PlainText" | "Group";
             /**
-             * Specifies a tag to identify a content control.
+             * Specifies a tag to identify a content control. The tag is different from the title in that it isn't displayed to the user. The tag can be used to identify a content control programmatically.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -155142,7 +157775,7 @@ declare namespace Word {
             */
             schemaCollection?: Word.Interfaces.CustomXmlSchemaData[];
             /**
-             * Gets a value that indicates whether the `CustomXmlPart` is built-in.
+             * Gets whether the `CustomXmlPart` is built-in.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.3]
@@ -156733,7 +159366,7 @@ declare namespace Word {
              */
             imageFormat?: Word.ImageFormat | "Unsupported" | "Undefined" | "Bmp" | "Jpeg" | "Gif" | "Tiff" | "Png" | "Icon" | "Exif" | "Wmf" | "Emf" | "Pict" | "Pdf" | "Svg";
             /**
-             * Specifies a value that indicates whether the inline image retains its original proportions when you resize it.
+             * Specifies whether the inline image retains its original proportions when you resize it.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -157529,6 +160162,8 @@ declare namespace Word {
              *
              * @remarks
              * [Api set: WordApi 1.6]
+             *
+             * This API requires an active Microsoft 365 subscription. It doesn't work with single-purchase licenses.
              */
             uniqueLocalId?: string;
         }
@@ -158069,6 +160704,206 @@ declare namespace Word {
         /** An interface describing the data returned by calling `sectionCollection.toJSON()`. */
         interface SectionCollectionData {
             items?: Word.Interfaces.SectionData[];
+        }
+        /** An interface describing the data returned by calling `sensitivityLabelsCatalog.toJSON()`. */
+        interface SensitivityLabelsCatalogData {
+            /**
+             * Gets the labeling capability status of the sensitivity label catalog in Word.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            getLabelingCapability?: Word.LabelingCapability | "NoLicense" | "LabelingDisabled" | "LabelingPolicyNotFound" | "LabelingEnabled";
+        }
+        /** An interface describing the data returned by calling `sensitivityLabelAbacAttributeValue.toJSON()`. */
+        interface SensitivityLabelAbacAttributeValueData {
+            /**
+             * The display name of the ABAC attribute value.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayName?: string;
+            /**
+             * The display order of the ABAC attribute value.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayOrder?: number;
+            /**
+             * The unique identifier of the ABAC attribute value.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            id?: string;
+            /**
+             * Indicates whether the ABAC attribute value is active.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isActive?: boolean;
+        }
+        /** An interface describing the data returned by calling `sensitivityLabelAbacAttribute.toJSON()`. */
+        interface SensitivityLabelAbacAttributeData {
+            /**
+             * The data type of values for this ABAC attribute.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            dataType?: Word.SensitivityLabelAbacAttributeDataType | "Unknown" | "StringValue" | "BooleanValue" | "NumberValue" | "DateValue";
+            /**
+             * The display name of the ABAC attribute.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayName?: string;
+            /**
+             * The display order of the ABAC attribute.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayOrder?: number;
+            /**
+             * Indicates whether the ABAC attribute is active.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isActive?: boolean;
+            /**
+             * Indicates whether the ABAC attribute can have multiple values.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isMultiValued?: boolean;
+            /**
+             * The values available for the ABAC attribute.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            values?: Word.SensitivityLabelAbacAttributeValue[];
+        }
+        /** An interface describing the data returned by calling `sensitivityLabelDetailsCollection.toJSON()`. */
+        interface SensitivityLabelDetailsCollectionData {
+            items?: Word.Interfaces.SensitivityLabelDetailsData[];
+        }
+        /** An interface describing the data returned by calling `sensitivityLabelDetails.toJSON()`. */
+        interface SensitivityLabelDetailsData {
+            /**
+            * The sublabels of the sensitivity label. Returns null if a label doesn't have any sublabels.
+            *
+            * @remarks
+            * [Api set: WordApi BETA (PREVIEW ONLY)]
+            * @beta
+            */
+            children?: Word.Interfaces.SensitivityLabelDetailsData[];
+            /**
+             * The attribute-based access control (ABAC) attribute values associated with the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            abacAttributeValues?: Word.SensitivityLabelAbacAttributeValue[];
+            /**
+             * The color of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            color?: string;
+            /**
+             * The unique identifier (GUID) of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            id?: string;
+            /**
+             * Indicates whether attribute-based access control (ABAC) attributes are required when applying the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isAbacAttributesRequired?: boolean;
+            /**
+             * Indicates whether the sensitivity label supports attribute-based access control (ABAC) attributes.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isAbacEnabled?: boolean;
+            /**
+             * Gets a value indicating whether the label is enabled.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isEnabled?: boolean;
+            /**
+             * The name of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            name?: string;
+            /**
+             * The order of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            order?: number;
+            /**
+             * Gets a value indicating the protection type provided by this label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            protectionType?: Word.SensitivityLabelProtectionType | "NoProtection" | "AdminDefined" | "UserDefined";
+            /**
+             * The unique identifier (GUID) of the tenant which the sensitivity label is belonged.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            siteId?: string;
+            /**
+             * The description of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            tooltip?: string;
         }
         /** An interface describing the data returned by calling `setting.toJSON()`. */
         interface SettingData {
@@ -159664,7 +162499,7 @@ declare namespace Word {
         /** An interface describing the data returned by calling `shape.toJSON()`. */
         interface ShapeData {
             /**
-            * Represents the `Body` object of the shape. Only applies to text boxes and geometric shapes.
+            * Gets the `Body` object of the shape. Only applies to text boxes and geometric shapes.
             *
             * @remarks
             * [Api set: WordApiDesktop 1.2]
@@ -159734,21 +162569,21 @@ declare namespace Word {
              */
             altTextDescription?: string;
             /**
-             * The geometric shape type of the shape. It will be null if isn't a geometric shape.
+             * Specifies the geometric shape type of the shape. It will be null if isn't a geometric shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             geometricShapeType?: Word.GeometricShapeType | "LineInverse" | "Triangle" | "RightTriangle" | "Rectangle" | "Diamond" | "Parallelogram" | "Trapezoid" | "NonIsoscelesTrapezoid" | "Pentagon" | "Hexagon" | "Heptagon" | "Octagon" | "Decagon" | "Dodecagon" | "Star4" | "Star5" | "Star6" | "Star7" | "Star8" | "Star10" | "Star12" | "Star16" | "Star24" | "Star32" | "RoundRectangle" | "Round1Rectangle" | "Round2SameRectangle" | "Round2DiagonalRectangle" | "SnipRoundRectangle" | "Snip1Rectangle" | "Snip2SameRectangle" | "Snip2DiagonalRectangle" | "Plaque" | "Ellipse" | "Teardrop" | "HomePlate" | "Chevron" | "PieWedge" | "Pie" | "BlockArc" | "Donut" | "NoSmoking" | "RightArrow" | "LeftArrow" | "UpArrow" | "DownArrow" | "StripedRightArrow" | "NotchedRightArrow" | "BentUpArrow" | "LeftRightArrow" | "UpDownArrow" | "LeftUpArrow" | "LeftRightUpArrow" | "QuadArrow" | "LeftArrowCallout" | "RightArrowCallout" | "UpArrowCallout" | "DownArrowCallout" | "LeftRightArrowCallout" | "UpDownArrowCallout" | "QuadArrowCallout" | "BentArrow" | "UturnArrow" | "CircularArrow" | "LeftCircularArrow" | "LeftRightCircularArrow" | "CurvedRightArrow" | "CurvedLeftArrow" | "CurvedUpArrow" | "CurvedDownArrow" | "SwooshArrow" | "Cube" | "Can" | "LightningBolt" | "Heart" | "Sun" | "Moon" | "SmileyFace" | "IrregularSeal1" | "IrregularSeal2" | "FoldedCorner" | "Bevel" | "Frame" | "HalfFrame" | "Corner" | "DiagonalStripe" | "Chord" | "Arc" | "LeftBracket" | "RightBracket" | "LeftBrace" | "RightBrace" | "BracketPair" | "BracePair" | "Callout1" | "Callout2" | "Callout3" | "AccentCallout1" | "AccentCallout2" | "AccentCallout3" | "BorderCallout1" | "BorderCallout2" | "BorderCallout3" | "AccentBorderCallout1" | "AccentBorderCallout2" | "AccentBorderCallout3" | "WedgeRectCallout" | "WedgeRRectCallout" | "WedgeEllipseCallout" | "CloudCallout" | "Cloud" | "Ribbon" | "Ribbon2" | "EllipseRibbon" | "EllipseRibbon2" | "LeftRightRibbon" | "VerticalScroll" | "HorizontalScroll" | "Wave" | "DoubleWave" | "Plus" | "FlowChartProcess" | "FlowChartDecision" | "FlowChartInputOutput" | "FlowChartPredefinedProcess" | "FlowChartInternalStorage" | "FlowChartDocument" | "FlowChartMultidocument" | "FlowChartTerminator" | "FlowChartPreparation" | "FlowChartManualInput" | "FlowChartManualOperation" | "FlowChartConnector" | "FlowChartPunchedCard" | "FlowChartPunchedTape" | "FlowChartSummingJunction" | "FlowChartOr" | "FlowChartCollate" | "FlowChartSort" | "FlowChartExtract" | "FlowChartMerge" | "FlowChartOfflineStorage" | "FlowChartOnlineStorage" | "FlowChartMagneticTape" | "FlowChartMagneticDisk" | "FlowChartMagneticDrum" | "FlowChartDisplay" | "FlowChartDelay" | "FlowChartAlternateProcess" | "FlowChartOffpageConnector" | "ActionButtonBlank" | "ActionButtonHome" | "ActionButtonHelp" | "ActionButtonInformation" | "ActionButtonForwardNext" | "ActionButtonBackPrevious" | "ActionButtonEnd" | "ActionButtonBeginning" | "ActionButtonReturn" | "ActionButtonDocument" | "ActionButtonSound" | "ActionButtonMovie" | "Gear6" | "Gear9" | "Funnel" | "MathPlus" | "MathMinus" | "MathMultiply" | "MathDivide" | "MathEqual" | "MathNotEqual" | "CornerTabs" | "SquareTabs" | "PlaqueTabs" | "ChartX" | "ChartStar" | "ChartPlus";
             /**
-             * The height, in points, of the shape.
+             * Specifies the height, in points, of the shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             height?: number;
             /**
-             * The percentage of shape height to vertical relative size, see {@link Word.RelativeSize}. For an inline or child shape, it can't be set.
+             * Specifies the percentage of shape height to the relative vertical size (that is, the `relativeVerticalSize` property). For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -159769,14 +162604,14 @@ declare namespace Word {
              */
             isChild?: boolean;
             /**
-             * The distance, in points, from the left side of the shape to the horizontal relative position, see {@link Word.RelativeHorizontalPosition}. For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
+             * Specifies the distance, in points, from the left side of the shape to the relative horizontal position (that is, the `relativeHorizontalPosition` property). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             left?: number;
             /**
-             * The relative left position as a percentage from the left side of the shape to the horizontal relative position, see {@link Word.RelativeHorizontalPosition}. For an inline or child shape, it will return 0 and can't be set.
+             * Specifies the relative left position as a percentage from the left side of the shape to the relative horizontal position (that is, the `relativeHorizontalalPosition` property). For an inline or child shape, it will return 0 and can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -159790,35 +162625,35 @@ declare namespace Word {
              */
             lockAspectRatio?: boolean;
             /**
-             * The name of the shape.
+             * Specifies the name of the shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             name?: string;
             /**
-             * The relative horizontal position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+             * Specifies the relative horizontal position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             relativeHorizontalPosition?: Word.RelativeHorizontalPosition | "Margin" | "Page" | "Column" | "Character" | "LeftMargin" | "RightMargin" | "InsideMargin" | "OutsideMargin";
             /**
-             * The relative horizontal size of the shape. For an inline or child shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+             * Specifies the relative horizontal size of the shape. Use with the `widthRelative` property. For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             relativeHorizontalSize?: Word.RelativeSize | "Margin" | "Page" | "TopMargin" | "BottomMargin" | "InsideMargin" | "OutsideMargin";
             /**
-             * The relative vertical position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeVerticalPosition}.
+             * Specifies the relative vertical position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeVerticalPosition}.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             relativeVerticalPosition?: Word.RelativeVerticalPosition | "Margin" | "Page" | "Paragraph" | "Line" | "TopMargin" | "BottomMargin" | "InsideMargin" | "OutsideMargin";
             /**
-             * The relative vertical size of the shape. For an inline or child shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+             * Specifies the relative vertical size of the shape. Use with the `heightRelative` property. For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -159832,14 +162667,14 @@ declare namespace Word {
              */
             rotation?: number;
             /**
-             * The distance, in points, from the top edge of the shape to the vertical relative position (see {@link Word.RelativeVerticalPosition}). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
+             * Specifies the distance, in points, from the top edge of the shape to the relative vertical position (that is, the `relativeVerticalPosition` property). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             top?: number;
             /**
-             * The relative top position as a percentage from the top edge of the shape to the vertical relative position, see {@link Word.RelativeVerticalPosition}. For an inline or child shape, it will return 0 and can't be set.
+             * Specifies the relative top position as a percentage from the top edge of the shape to the relative vertical position (that is, the `relativeVerticalPosition` property). For an inline or child shape, it will return 0 and can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -159860,14 +162695,14 @@ declare namespace Word {
              */
             visible?: boolean;
             /**
-             * The width, in points, of the shape.
+             * Specifies the width, in points, of the shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             width?: number;
             /**
-             * The percentage of shape width to horizontal relative size, see {@link Word.RelativeSize}. For an inline or child shape, it can't be set.
+             * Specifies the percentage of shape width to the relative horizontal size (that is, the `relativeHorizontalSize` property). For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -162679,7 +165514,7 @@ declare namespace Word {
              */
             styleBuiltIn?: boolean;
             /**
-             * Gets the text of the body. Use the insertText method to insert text.
+             * Gets the text of the body. Use the `insertText` method to insert text.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -163103,7 +165938,7 @@ declare namespace Word {
             name?: boolean;
         }
         /**
-         * The data specific to content controls of type CheckBox.
+         * Represents the data specific to content controls of type `CheckBox`.
          *
          * @remarks
          * [Api set: WordApi 1.7]
@@ -163126,6 +165961,8 @@ declare namespace Word {
          *
          * @remarks
          * [Api set: WordApiDesktop 1.4]
+         *
+         * This API works only with legacy coauthoring locks. It doesn't apply to modern OneDrive or SharePoint coauthoring, where lock management is handled automatically by the service. Calls on a modern document will fail with a `GeneralException` error.
          */
         interface CoauthoringLockLoadOptions {
             /**
@@ -163159,6 +165996,8 @@ declare namespace Word {
          *
          * @remarks
          * [Api set: WordApiDesktop 1.4]
+         *
+         * This API works only with legacy coauthoring locks. It doesn't apply to modern OneDrive or SharePoint coauthoring, where lock management is handled automatically by the service. Calls on a modern document will fail with a `GeneralException` error.
          */
         interface CoauthoringLockCollectionLoadOptions {
             /**
@@ -163468,6 +166307,8 @@ declare namespace Word {
             resolved?: boolean;
         }
         /**
+         * Represents a content range within a comment.
+         *
          * @remarks
          * [Api set: WordApi 1.4]
          */
@@ -163477,7 +166318,7 @@ declare namespace Word {
              */
             $all?: boolean;
             /**
-             * Specifies a value that indicates whether the comment text is bold.
+             * Specifies whether the comment text is bold.
              *
              * @remarks
              * [Api set: WordApi 1.4]
@@ -163498,14 +166339,14 @@ declare namespace Word {
              */
             isEmpty?: boolean;
             /**
-             * Specifies a value that indicates whether the comment text is italicized.
+             * Specifies whether the comment text is italicized.
              *
              * @remarks
              * [Api set: WordApi 1.4]
              */
             italic?: boolean;
             /**
-             * Specifies a value that indicates whether the comment text has a strikethrough.
+             * Specifies whether the comment text has a strikethrough.
              *
              * @remarks
              * [Api set: WordApi 1.4]
@@ -163519,7 +166360,7 @@ declare namespace Word {
              */
             text?: boolean;
             /**
-             * Specifies a value that indicates the comment text's underline type. `none` if the comment text isn't underlined.
+             * Specifies the comment text's underline type. `none` if the comment text isn't underlined.
              *
              * @remarks
              * [Api set: WordApi 1.4]
@@ -164296,14 +167137,14 @@ declare namespace Word {
              */
             appearance?: boolean;
             /**
-             * Specifies a value that indicates whether the user can delete the content control. Mutually exclusive with `removeWhenEdited`.
+             * Specifies whether the user can delete the content control. Mutually exclusive with `removeWhenEdited`.
              *
              * @remarks
              * [Api set: WordApi 1.1]
              */
             cannotDelete?: boolean;
             /**
-             * Specifies a value that indicates whether the user can edit the contents of the content control.
+             * Specifies whether the user can edit the contents of the content control.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -164317,7 +167158,7 @@ declare namespace Word {
              */
             color?: boolean;
             /**
-             * Gets an integer that represents the content control identifier.
+             * Gets an integer that represents the content control identifier. This number is unique for each content control and doesn't change.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -164331,7 +167172,7 @@ declare namespace Word {
              */
             placeholderText?: boolean;
             /**
-             * Specifies a value that indicates whether the content control is removed after it's edited. Mutually exclusive with `cannotDelete`.
+             * Specifies whether the content control is removed after it's edited. Mutually exclusive with `cannotDelete`.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -164359,7 +167200,7 @@ declare namespace Word {
              */
             subtype?: boolean;
             /**
-             * Specifies a tag to identify a content control.
+             * Specifies a tag to identify a content control. The tag is different from the title in that it isn't displayed to the user. The tag can be used to identify a content control programmatically.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -164511,14 +167352,14 @@ declare namespace Word {
              */
             appearance?: boolean;
             /**
-             * For EACH ITEM in the collection: Specifies a value that indicates whether the user can delete the content control. Mutually exclusive with `removeWhenEdited`.
+             * For EACH ITEM in the collection: Specifies whether the user can delete the content control. Mutually exclusive with `removeWhenEdited`.
              *
              * @remarks
              * [Api set: WordApi 1.1]
              */
             cannotDelete?: boolean;
             /**
-             * For EACH ITEM in the collection: Specifies a value that indicates whether the user can edit the contents of the content control.
+             * For EACH ITEM in the collection: Specifies whether the user can edit the contents of the content control.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -164532,7 +167373,7 @@ declare namespace Word {
              */
             color?: boolean;
             /**
-             * For EACH ITEM in the collection: Gets an integer that represents the content control identifier.
+             * For EACH ITEM in the collection: Gets an integer that represents the content control identifier. This number is unique for each content control and doesn't change.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -164546,7 +167387,7 @@ declare namespace Word {
              */
             placeholderText?: boolean;
             /**
-             * For EACH ITEM in the collection: Specifies a value that indicates whether the content control is removed after it's edited. Mutually exclusive with `cannotDelete`.
+             * For EACH ITEM in the collection: Specifies whether the content control is removed after it's edited. Mutually exclusive with `cannotDelete`.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -164574,7 +167415,7 @@ declare namespace Word {
              */
             subtype?: boolean;
             /**
-             * For EACH ITEM in the collection: Specifies a tag to identify a content control.
+             * For EACH ITEM in the collection: Specifies a tag to identify a content control. The tag is different from the title in that it isn't displayed to the user. The tag can be used to identify a content control programmatically.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -164753,7 +167594,7 @@ declare namespace Word {
             */
             documentElement?: Word.Interfaces.CustomXmlNodeLoadOptions;
             /**
-             * Gets a value that indicates whether the `CustomXmlPart` is built-in.
+             * Gets whether the `CustomXmlPart` is built-in.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.3]
@@ -164800,7 +167641,7 @@ declare namespace Word {
             */
             documentElement?: Word.Interfaces.CustomXmlNodeLoadOptions;
             /**
-             * For EACH ITEM in the collection: Gets a value that indicates whether the `CustomXmlPart` is built-in.
+             * For EACH ITEM in the collection: Gets whether the `CustomXmlPart` is built-in.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.3]
@@ -164847,7 +167688,7 @@ declare namespace Word {
             */
             documentElement?: Word.Interfaces.CustomXmlNodeLoadOptions;
             /**
-             * For EACH ITEM in the collection: Gets a value that indicates whether the `CustomXmlPart` is built-in.
+             * For EACH ITEM in the collection: Gets whether the `CustomXmlPart` is built-in.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.3]
@@ -165651,7 +168492,7 @@ declare namespace Word {
             xmlSaveThroughXslt?: boolean;
         }
         /**
-         * The `DocumentCreated` object is the top level object created by `Application.createDocument`. A `DocumentCreated` object is a special `Document` object.
+         * The `DocumentCreated` object is the top-level object created by `Application.createDocument`. A `DocumentCreated` object is a special `Document` object.
          *
          * @remarks
          * [Api set: WordApi 1.3]
@@ -166775,7 +169616,7 @@ declare namespace Word {
              */
             imageFormat?: boolean;
             /**
-             * Specifies a value that indicates whether the inline image retains its original proportions when you resize it.
+             * Specifies whether the inline image retains its original proportions when you resize it.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -166885,7 +169726,7 @@ declare namespace Word {
              */
             imageFormat?: boolean;
             /**
-             * For EACH ITEM in the collection: Specifies a value that indicates whether the inline image retains its original proportions when you resize it.
+             * For EACH ITEM in the collection: Specifies whether the inline image retains its original proportions when you resize it.
              *
              * @remarks
              * [Api set: WordApi 1.1]
@@ -168229,6 +171070,8 @@ declare namespace Word {
              *
              * @remarks
              * [Api set: WordApi 1.6]
+             *
+             * This API requires an active Microsoft 365 subscription. It doesn't work with single-purchase licenses.
              */
             uniqueLocalId?: boolean;
         }
@@ -168451,6 +171294,8 @@ declare namespace Word {
              *
              * @remarks
              * [Api set: WordApi 1.6]
+             *
+             * This API requires an active Microsoft 365 subscription. It doesn't work with single-purchase licenses.
              */
             uniqueLocalId?: boolean;
         }
@@ -169347,6 +172192,335 @@ declare namespace Word {
              * [Api set: WordApiDesktop 1.3]
              */
             protectedForForms?: boolean;
+        }
+        /**
+         * Provides methods to check the status of the catalog of sensitivity labels in Word and retrieve all available sensitivity labels if the catalog is enabled.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        interface SensitivityLabelsCatalogLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+             * Gets the labeling capability status of the sensitivity label catalog in Word.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            getLabelingCapability?: boolean;
+        }
+        /**
+         * Represents a single attribute-based access control (ABAC) attribute value for a sensitivity label.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        interface SensitivityLabelAbacAttributeValueLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+             * The display name of the ABAC attribute value.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayName?: boolean;
+            /**
+             * The display order of the ABAC attribute value.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayOrder?: boolean;
+            /**
+             * The unique identifier of the ABAC attribute value.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            id?: boolean;
+            /**
+             * Indicates whether the ABAC attribute value is active.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isActive?: boolean;
+        }
+        /**
+         * Represents an attribute-based access control (ABAC) attribute for sensitivity labels.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        interface SensitivityLabelAbacAttributeLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+             * The data type of values for this ABAC attribute.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            dataType?: boolean;
+            /**
+             * The display name of the ABAC attribute.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayName?: boolean;
+            /**
+             * The display order of the ABAC attribute.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayOrder?: boolean;
+            /**
+             * Indicates whether the ABAC attribute is active.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isActive?: boolean;
+            /**
+             * Indicates whether the ABAC attribute can have multiple values.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isMultiValued?: boolean;
+            /**
+             * The values available for the ABAC attribute.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            values?: boolean;
+        }
+        /**
+         * Represents the collection of {@link Word.SensitivityLabelDetails} objects.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        interface SensitivityLabelDetailsCollectionLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+             * For EACH ITEM in the collection: The attribute-based access control (ABAC) attribute values associated with the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            abacAttributeValues?: boolean;
+            /**
+             * For EACH ITEM in the collection: The color of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            color?: boolean;
+            /**
+             * For EACH ITEM in the collection: The unique identifier (GUID) of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            id?: boolean;
+            /**
+             * For EACH ITEM in the collection: Indicates whether attribute-based access control (ABAC) attributes are required when applying the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isAbacAttributesRequired?: boolean;
+            /**
+             * For EACH ITEM in the collection: Indicates whether the sensitivity label supports attribute-based access control (ABAC) attributes.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isAbacEnabled?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets a value indicating whether the label is enabled.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isEnabled?: boolean;
+            /**
+             * For EACH ITEM in the collection: The name of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            name?: boolean;
+            /**
+             * For EACH ITEM in the collection: The order of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            order?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets a value indicating the protection type provided by this label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            protectionType?: boolean;
+            /**
+             * For EACH ITEM in the collection: The unique identifier (GUID) of the tenant which the sensitivity label is belonged.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            siteId?: boolean;
+            /**
+             * For EACH ITEM in the collection: The description of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            tooltip?: boolean;
+        }
+        /**
+         * Represents the properties of available sensitivity labels in Word.
+         *
+         * @remarks
+         * [Api set: WordApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        interface SensitivityLabelDetailsLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+             * The attribute-based access control (ABAC) attribute values associated with the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            abacAttributeValues?: boolean;
+            /**
+             * The color of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            color?: boolean;
+            /**
+             * The unique identifier (GUID) of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            id?: boolean;
+            /**
+             * Indicates whether attribute-based access control (ABAC) attributes are required when applying the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isAbacAttributesRequired?: boolean;
+            /**
+             * Indicates whether the sensitivity label supports attribute-based access control (ABAC) attributes.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isAbacEnabled?: boolean;
+            /**
+             * Gets a value indicating whether the label is enabled.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isEnabled?: boolean;
+            /**
+             * The name of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            name?: boolean;
+            /**
+             * The order of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            order?: boolean;
+            /**
+             * Gets a value indicating the protection type provided by this label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            protectionType?: boolean;
+            /**
+             * The unique identifier (GUID) of the tenant which the sensitivity label is belonged.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            siteId?: boolean;
+            /**
+             * The description of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: WordApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            tooltip?: boolean;
         }
         /**
          * Represents a setting of the add-in.
@@ -172396,7 +175570,7 @@ declare namespace Word {
              */
             $all?: boolean;
             /**
-            * Represents the `Body` object of the shape. Only applies to text boxes and geometric shapes.
+            * Gets the `Body` object of the shape. Only applies to text boxes and geometric shapes.
             *
             * @remarks
             * [Api set: WordApiDesktop 1.2]
@@ -172466,21 +175640,21 @@ declare namespace Word {
              */
             altTextDescription?: boolean;
             /**
-             * The geometric shape type of the shape. It will be null if isn't a geometric shape.
+             * Specifies the geometric shape type of the shape. It will be null if isn't a geometric shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             geometricShapeType?: boolean;
             /**
-             * The height, in points, of the shape.
+             * Specifies the height, in points, of the shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             height?: boolean;
             /**
-             * The percentage of shape height to vertical relative size, see {@link Word.RelativeSize}. For an inline or child shape, it can't be set.
+             * Specifies the percentage of shape height to the relative vertical size (that is, the `relativeVerticalSize` property). For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -172501,14 +175675,14 @@ declare namespace Word {
              */
             isChild?: boolean;
             /**
-             * The distance, in points, from the left side of the shape to the horizontal relative position, see {@link Word.RelativeHorizontalPosition}. For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
+             * Specifies the distance, in points, from the left side of the shape to the relative horizontal position (that is, the `relativeHorizontalPosition` property). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             left?: boolean;
             /**
-             * The relative left position as a percentage from the left side of the shape to the horizontal relative position, see {@link Word.RelativeHorizontalPosition}. For an inline or child shape, it will return 0 and can't be set.
+             * Specifies the relative left position as a percentage from the left side of the shape to the relative horizontal position (that is, the `relativeHorizontalalPosition` property). For an inline or child shape, it will return 0 and can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -172522,35 +175696,35 @@ declare namespace Word {
              */
             lockAspectRatio?: boolean;
             /**
-             * The name of the shape.
+             * Specifies the name of the shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             name?: boolean;
             /**
-             * The relative horizontal position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+             * Specifies the relative horizontal position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             relativeHorizontalPosition?: boolean;
             /**
-             * The relative horizontal size of the shape. For an inline or child shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+             * Specifies the relative horizontal size of the shape. Use with the `widthRelative` property. For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             relativeHorizontalSize?: boolean;
             /**
-             * The relative vertical position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeVerticalPosition}.
+             * Specifies the relative vertical position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeVerticalPosition}.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             relativeVerticalPosition?: boolean;
             /**
-             * The relative vertical size of the shape. For an inline or child shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+             * Specifies the relative vertical size of the shape. Use with the `heightRelative` property. For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -172564,14 +175738,14 @@ declare namespace Word {
              */
             rotation?: boolean;
             /**
-             * The distance, in points, from the top edge of the shape to the vertical relative position (see {@link Word.RelativeVerticalPosition}). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
+             * Specifies the distance, in points, from the top edge of the shape to the relative vertical position (that is, the `relativeVerticalPosition` property). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             top?: boolean;
             /**
-             * The relative top position as a percentage from the top edge of the shape to the vertical relative position, see {@link Word.RelativeVerticalPosition}. For an inline or child shape, it will return 0 and can't be set.
+             * Specifies the relative top position as a percentage from the top edge of the shape to the relative vertical position (that is, the `relativeVerticalPosition` property). For an inline or child shape, it will return 0 and can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -172592,14 +175766,14 @@ declare namespace Word {
              */
             visible?: boolean;
             /**
-             * The width, in points, of the shape.
+             * Specifies the width, in points, of the shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             width?: boolean;
             /**
-             * The percentage of shape width to horizontal relative size, see {@link Word.RelativeSize}. For an inline or child shape, it can't be set.
+             * Specifies the percentage of shape width to the relative horizontal size (that is, the `relativeHorizontalSize` property). For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -172670,7 +175844,7 @@ declare namespace Word {
              */
             $all?: boolean;
             /**
-            * For EACH ITEM in the collection: Represents the `Body` object of the shape. Only applies to text boxes and geometric shapes.
+            * For EACH ITEM in the collection: Gets the `Body` object of the shape. Only applies to text boxes and geometric shapes.
             *
             * @remarks
             * [Api set: WordApiDesktop 1.2]
@@ -172740,21 +175914,21 @@ declare namespace Word {
              */
             altTextDescription?: boolean;
             /**
-             * For EACH ITEM in the collection: The geometric shape type of the shape. It will be null if isn't a geometric shape.
+             * For EACH ITEM in the collection: Specifies the geometric shape type of the shape. It will be null if isn't a geometric shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             geometricShapeType?: boolean;
             /**
-             * For EACH ITEM in the collection: The height, in points, of the shape.
+             * For EACH ITEM in the collection: Specifies the height, in points, of the shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             height?: boolean;
             /**
-             * For EACH ITEM in the collection: The percentage of shape height to vertical relative size, see {@link Word.RelativeSize}. For an inline or child shape, it can't be set.
+             * For EACH ITEM in the collection: Specifies the percentage of shape height to the relative vertical size (that is, the `relativeVerticalSize` property). For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -172775,14 +175949,14 @@ declare namespace Word {
              */
             isChild?: boolean;
             /**
-             * For EACH ITEM in the collection: The distance, in points, from the left side of the shape to the horizontal relative position, see {@link Word.RelativeHorizontalPosition}. For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
+             * For EACH ITEM in the collection: Specifies the distance, in points, from the left side of the shape to the relative horizontal position (that is, the `relativeHorizontalPosition` property). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             left?: boolean;
             /**
-             * For EACH ITEM in the collection: The relative left position as a percentage from the left side of the shape to the horizontal relative position, see {@link Word.RelativeHorizontalPosition}. For an inline or child shape, it will return 0 and can't be set.
+             * For EACH ITEM in the collection: Specifies the relative left position as a percentage from the left side of the shape to the relative horizontal position (that is, the `relativeHorizontalalPosition` property). For an inline or child shape, it will return 0 and can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -172796,35 +175970,35 @@ declare namespace Word {
              */
             lockAspectRatio?: boolean;
             /**
-             * For EACH ITEM in the collection: The name of the shape.
+             * For EACH ITEM in the collection: Specifies the name of the shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             name?: boolean;
             /**
-             * For EACH ITEM in the collection: The relative horizontal position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+             * For EACH ITEM in the collection: Specifies the relative horizontal position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             relativeHorizontalPosition?: boolean;
             /**
-             * For EACH ITEM in the collection: The relative horizontal size of the shape. For an inline or child shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+             * For EACH ITEM in the collection: Specifies the relative horizontal size of the shape. Use with the `widthRelative` property. For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             relativeHorizontalSize?: boolean;
             /**
-             * For EACH ITEM in the collection: The relative vertical position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeVerticalPosition}.
+             * For EACH ITEM in the collection: Specifies the relative vertical position of the shape. For an inline shape, it can't be set. For details, see {@link Word.RelativeVerticalPosition}.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             relativeVerticalPosition?: boolean;
             /**
-             * For EACH ITEM in the collection: The relative vertical size of the shape. For an inline or child shape, it can't be set. For details, see {@link Word.RelativeHorizontalPosition}.
+             * For EACH ITEM in the collection: Specifies the relative vertical size of the shape. Use with the `heightRelative` property. For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -172838,14 +176012,14 @@ declare namespace Word {
              */
             rotation?: boolean;
             /**
-             * For EACH ITEM in the collection: The distance, in points, from the top edge of the shape to the vertical relative position (see {@link Word.RelativeVerticalPosition}). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
+             * For EACH ITEM in the collection: Specifies the distance, in points, from the top edge of the shape to the relative vertical position (that is, the `relativeVerticalPosition` property). For an inline shape, it will return 0 and can't be set. For a child shape in a canvas or group, it's relative to the top left corner.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             top?: boolean;
             /**
-             * For EACH ITEM in the collection: The relative top position as a percentage from the top edge of the shape to the vertical relative position, see {@link Word.RelativeVerticalPosition}. For an inline or child shape, it will return 0 and can't be set.
+             * For EACH ITEM in the collection: Specifies the relative top position as a percentage from the top edge of the shape to the relative vertical position (that is, the `relativeVerticalPosition` property). For an inline or child shape, it will return 0 and can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -172866,14 +176040,14 @@ declare namespace Word {
              */
             visible?: boolean;
             /**
-             * For EACH ITEM in the collection: The width, in points, of the shape.
+             * For EACH ITEM in the collection: Specifies the width, in points, of the shape.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
              */
             width?: boolean;
             /**
-             * For EACH ITEM in the collection: The percentage of shape width to horizontal relative size, see {@link Word.RelativeSize}. For an inline or child shape, it can't be set.
+             * For EACH ITEM in the collection: Specifies the percentage of shape width to the relative horizontal size (that is, the `relativeHorizontalSize` property). For an inline or child shape, it can't be set.
              *
              * @remarks
              * [Api set: WordApiDesktop 1.2]
@@ -176661,6 +179835,7 @@ declare namespace Word {
         constructor(url?: string);
         readonly document: Document;
         readonly application: Application;
+        readonly sensitivityLabelsCatalog: SensitivityLabelsCatalog;
     }
     /**
      * Executes a batch script that performs actions on the Word object model, using the RequestContext of previously created API objects.
@@ -180882,7 +184057,7 @@ declare namespace OneNote {
             */
             $top?: number;
             /**
-            * Specify the number of items in the collection that are to be skipped and not included in the result. If top is specified, the selection of result will start after skipping the specified number of items.
+            * Specify the number of items in the collection that are to be skipped and not included in the result. If `top` is specified, the selection of result will start after skipping the specified number of items.
             */
             $skip?: number;
         }
@@ -185812,7 +188987,7 @@ declare namespace Visio {
             */
             $top?: number;
             /**
-            * Specify the number of items in the collection that are to be skipped and not included in the result. If top is specified, the selection of result will start after skipping the specified number of items.
+            * Specify the number of items in the collection that are to be skipped and not included in the result. If `top` is specified, the selection of result will start after skipping the specified number of items.
             */
             $skip?: number;
         }
@@ -186959,12 +190134,79 @@ declare namespace PowerPoint {
          */
         static newObject(context: OfficeExtension.ClientRequestContext): PowerPoint.Application;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.Application` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ApplicationData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.Application` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ApplicationData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): {
             [key: string]: string;
         };
+    }
+    /**
+     * Provides methods to check the status of the catalog of sensitivity labels in PowerPoint
+                and retrieve all available sensitivity labels if the catalog is enabled.
+     *
+     * @remarks
+     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabelsCatalog extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * Gets whether the catalog of sensitivity labels is enabled in PowerPoint.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly getLabelingCapability: PowerPoint.LabelingCapability | "NoLicense" | "LabelingDisabled" | "LabelingPolicyNotFound" | "LabelingEnabled";
+        /**
+         * Gets the attribute-based access control (ABAC) attributes that are available to the current user.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        getAttributes(): OfficeExtension.ClientResult<PowerPoint.SensitivityLabelAbacAttribute[]>;
+        /**
+         * Gets sensitivity labels that are available to the current user.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         * @returns The current  object.
+         */
+        getLabels(): PowerPoint.SensitivityLabelDetailsCollection;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: PowerPoint.Interfaces.SensitivityLabelsCatalogLoadOptions): PowerPoint.SensitivityLabelsCatalog;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): PowerPoint.SensitivityLabelsCatalog;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: {
+            select?: string;
+            expand?: string;
+        }): PowerPoint.SensitivityLabelsCatalog;
+        /**
+         * Create a new instance of the `PowerPoint.SensitivityLabelsCatalog` object.
+         */
+        static newObject(context: OfficeExtension.ClientRequestContext): PowerPoint.SensitivityLabelsCatalog;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SensitivityLabelsCatalog` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SensitivityLabelsCatalogData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): PowerPoint.Interfaces.SensitivityLabelsCatalogData;
     }
     /**
      * The `Presentation` object is the top-level object with one or more slides that contain the contents of the presentation.
@@ -186995,8 +190237,7 @@ declare namespace PowerPoint {
          * Returns the page setup information whose properties control slide setup attributes for the presentation.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly pageSetup: PowerPoint.PageSetup;
         /**
@@ -187006,6 +190247,14 @@ declare namespace PowerPoint {
          * [Api set: PowerPointApi 1.7]
          */
         readonly properties: PowerPoint.DocumentProperties;
+        /**
+         * Returns the sensitivity label of the presentation.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly sensitivityLabel: PowerPoint.SensitivityLabel;
         /**
          * Returns the collection of `SlideMaster` objects that are in the presentation.
          *
@@ -187126,9 +190375,21 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.Presentation;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.Presentation` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.PresentationData`) that contains shallow copies of any loaded child properties from the original object.
+         * Occurs when the selection of slides in the presentation changes.
+                    This event is raised when the user selects a different slide or changes the selection of slides.
+                    This event is not raised when the selection of the contents (for example, shapes) in the slide changes.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         *
+         * @eventproperty
+         * @beta
          */
+        readonly onSlideSelectionChanged: OfficeExtension.EventHandlers<PowerPoint.SlideSelectionChangedEventArgs>;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.Presentation` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.PresentationData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.PresentationData;
     }
     /**
@@ -187138,6 +190399,15 @@ declare namespace PowerPoint {
      * [Api set: PowerPointApi 1.3]
      */
     interface AddSlideOptions {
+        /**
+         * Specifies the 0-based index at which the new slide should be inserted.
+                    If not specified or if the specified index is out of bounds, the new slide will be added at the end of the presentation.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        index?: number;
         /**
          * Specifies the ID of a Slide Layout to be used for the new slide.
                     If no `layoutId` is provided, but a `slideMasterId` is provided, then the ID of the first layout from the specified Slide Master will be used.
@@ -187162,8 +190432,7 @@ declare namespace PowerPoint {
      * Represents the adjustment values for a shape.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     class Adjustments extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -187172,8 +190441,7 @@ declare namespace PowerPoint {
          * Specifies the number of adjustment points.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly count: number;
         /**
@@ -187181,8 +190449,7 @@ declare namespace PowerPoint {
                     Throws an `InvalidArgument` exception when the index is out of range.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param index The index of the adjustment to retrieve.
          * @returns The adjustment value at the given index.
@@ -187193,8 +190460,7 @@ declare namespace PowerPoint {
                     Throws an `InvalidArgument` exception when the index is out of range.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param index The index of the adjustment to set.
          * @param value The adjustment value to set.
@@ -187222,9 +190488,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.Adjustments;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.Adjustments` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.AdjustmentsData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.Adjustments` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.AdjustmentsData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.AdjustmentsData;
     }
     /**
@@ -187309,9 +190575,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.CustomXmlPart;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.CustomXmlPart` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.CustomXmlPartData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.CustomXmlPart` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.CustomXmlPartData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.CustomXmlPartData;
     }
     /**
@@ -187349,8 +190615,7 @@ declare namespace PowerPoint {
                     Throws an `InvalidArgument` exception when the index is out of range.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param index The index of the custom XML part in the collection.
          * @returns The custom XML part at the given index.
@@ -187402,9 +190667,9 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.CustomXmlPartScopedCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.CustomXmlPartScopedCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.CustomXmlPartScopedCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.CustomXmlPartScopedCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.CustomXmlPartScopedCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.CustomXmlPartScopedCollectionData;
     }
     /**
@@ -187458,8 +190723,7 @@ declare namespace PowerPoint {
                     Throws an `InvalidArgument` exception when the index is out of range.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param index The index of the custom XML part in the collection.
          * @returns The custom XML part at the given index.
@@ -187495,33 +190759,76 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.CustomXmlPartCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.CustomXmlPartCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.CustomXmlPartCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.CustomXmlPartCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.CustomXmlPartCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.CustomXmlPartCollectionData;
+    }
+    /**
+     * Represents a graphic object in PowerPoint.
+     *
+     * @remarks
+     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class Graphic extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * Returns the `Shape` object associated with the graphic.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly shape: PowerPoint.Shape;
+        convertToShape(): PowerPoint.ShapeScopedCollection;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: PowerPoint.Interfaces.GraphicLoadOptions): PowerPoint.Graphic;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): PowerPoint.Graphic;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: {
+            select?: string;
+            expand?: string;
+        }): PowerPoint.Graphic;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.Graphic` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.GraphicData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): PowerPoint.Interfaces.GraphicData;
     }
     /**
      * Represents the available options when adding a {@link PowerPoint.Hyperlink}.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     interface HyperlinkAddOptions {
         /**
          * Specifies the address of the hyperlink, which can be a URL, a file name or file path, or an email address with the `mailto` URI scheme.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         address?: string;
         /**
          * Specifies the string displayed when hovering over the hyperlink.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         screenTip?: string;
     }
@@ -187529,8 +190836,7 @@ declare namespace PowerPoint {
      * Represents a scoped collection of hyperlinks.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     class HyperlinkScopedCollection extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -187541,8 +190847,7 @@ declare namespace PowerPoint {
          * Gets the number of hyperlinks in the collection.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          * @returns The number of hyperlinks in the collection.
          */
         getCount(): OfficeExtension.ClientResult<number>;
@@ -187551,8 +190856,7 @@ declare namespace PowerPoint {
                     Throws an `InvalidArgument` exception when the index is out of range.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param index The index of the hyperlink in the collection.
          * @returns The hyperlink at the given index.
@@ -187577,9 +190881,9 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.HyperlinkScopedCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.HyperlinkScopedCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.HyperlinkScopedCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.HyperlinkScopedCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.HyperlinkScopedCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.HyperlinkScopedCollectionData;
     }
     /**
@@ -187636,302 +190940,259 @@ declare namespace PowerPoint {
      * Specifies the style of a bullet.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     enum BulletStyle {
         /**
          * Style is unsupported.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         unsupported = "Unsupported",
         /**
          * Lowercase alphabetical characters with a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         alphabetLowercasePeriod = "AlphabetLowercasePeriod",
         /**
          * Uppercase alphabetical characters with a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         alphabetUppercasePeriod = "AlphabetUppercasePeriod",
         /**
          * Arabic numerals with closing parenthesis.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         arabicNumeralParenthesisRight = "ArabicNumeralParenthesisRight",
         /**
          * Arabic numerals with a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         arabicNumeralPeriod = "ArabicNumeralPeriod",
         /**
          * Lowercase Roman numerals with both parentheses.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         romanLowercaseParenthesesBoth = "RomanLowercaseParenthesesBoth",
         /**
          * Lowercase Roman numerals with closing parenthesis.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         romanLowercaseParenthesisRight = "RomanLowercaseParenthesisRight",
         /**
          * Lowercase Roman numerals with period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         romanLowercasePeriod = "RomanLowercasePeriod",
         /**
          * Uppercase Roman numerals with period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         romanUppercasePeriod = "RomanUppercasePeriod",
         /**
          * Lowercase alphabetical characters with both parentheses.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         alphabetLowercaseParenthesesBoth = "AlphabetLowercaseParenthesesBoth",
         /**
          * Lowercase alphabetical characters with closing parenthesis.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         alphabetLowercaseParenthesisRight = "AlphabetLowercaseParenthesisRight",
         /**
          * Uppercase alphabetical characters with both parentheses.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         alphabetUppercaseParenthesesBoth = "AlphabetUppercaseParenthesesBoth",
         /**
          * Uppercase alphabetical characters with closing parenthesis.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         alphabetUppercaseParenthesisRight = "AlphabetUppercaseParenthesisRight",
         /**
          * Arabic numerals with both parentheses.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         arabicNumeralParenthesesBoth = "ArabicNumeralParenthesesBoth",
         /**
          * Arabic numerals.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         arabicNumeralPlain = "ArabicNumeralPlain",
         /**
          * Uppercase Roman numerals with both parentheses.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         romanUppercaseParenthesesBoth = "RomanUppercaseParenthesesBoth",
         /**
          * Uppercase Roman numerals with closing parenthesis.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         romanUppercaseParenthesisRight = "RomanUppercaseParenthesisRight",
         /**
          * Simplified Chinese without a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         simplifiedChinesePlain = "SimplifiedChinesePlain",
         /**
          * Simplified Chinese with a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         simplifiedChinesePeriod = "SimplifiedChinesePeriod",
         /**
          * Double-byte circled number for values up to 10.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         circleNumberDoubleBytePlain = "CircleNumberDoubleBytePlain",
         /**
          * Text colored number with same color circle drawn around it.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         circleNumberWideDoubleByteWhitePlain = "CircleNumberWideDoubleByteWhitePlain",
         /**
          * Shadow color number with circular background of normal text color.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         circleNumberWideDoubleByteBlackPlain = "CircleNumberWideDoubleByteBlackPlain",
         /**
          * Traditional Chinese without a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         traditionalChinesePlain = "TraditionalChinesePlain",
         /**
          * Traditional Chinese with a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         traditionalChinesePeriod = "TraditionalChinesePeriod",
         /**
          * Arabic alphabet with a dash.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         arabicAlphabetDash = "ArabicAlphabetDash",
         /**
          * Arabic Abjad alphabet with a dash.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         arabicAbjadDash = "ArabicAbjadDash",
         /**
          * Hebrew alphabet with a dash.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         hebrewAlphabetDash = "HebrewAlphabetDash",
         /**
          * Japanese/Korean numbers without a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         kanjiKoreanPlain = "KanjiKoreanPlain",
         /**
          * Japanese/Korean numbers with a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         kanjiKoreanPeriod = "KanjiKoreanPeriod",
         /**
          * Double-byte Arabic numbering scheme (no punctuation).
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         arabicDoubleBytePlain = "ArabicDoubleBytePlain",
         /**
          * Double-byte Arabic numbering scheme with double-byte period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         arabicDoubleBytePeriod = "ArabicDoubleBytePeriod",
         /**
          * Thai alphabet with a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         thaiAlphabetPeriod = "ThaiAlphabetPeriod",
         /**
          * Thai alphabet with closing parenthesis.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         thaiAlphabetParenthesisRight = "ThaiAlphabetParenthesisRight",
         /**
          * Thai alphabet with both parentheses.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         thaiAlphabetParenthesesBoth = "ThaiAlphabetParenthesesBoth",
         /**
          * Thai numerals with a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         thaiNumeralPeriod = "ThaiNumeralPeriod",
         /**
          * Thai numerals with closing parenthesis.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         thaiNumeralParenthesisRight = "ThaiNumeralParenthesisRight",
         /**
          * Thai numerals with both parentheses.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         thaiNumeralParenthesesBoth = "ThaiNumeralParenthesesBoth",
         /**
          * Hindi alphabet (vowels) with a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         hindiAlphabetPeriod = "HindiAlphabetPeriod",
         /**
          * Hindi numerals with a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         hindiNumeralPeriod = "HindiNumeralPeriod",
         /**
          * Kanji Simplified Chinese with double-byte period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         kanjiSimplifiedChineseDoubleBytePeriod = "KanjiSimplifiedChineseDoubleBytePeriod",
         /**
          * Hindi numerals with closing parenthesis.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         hindiNumeralParenthesisRight = "HindiNumeralParenthesisRight",
         /**
          * Hindi alphabet (consonants) with a period.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         hindiAlphabet1Period = "HindiAlphabet1Period",
     }
@@ -187939,36 +191200,31 @@ declare namespace PowerPoint {
      * Specifies the type of a bullet.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     enum BulletType {
         /**
          * Type is unsupported.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         unsupported = "Unsupported",
         /**
          * No bullets.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         none = "None",
         /**
          * Numbered bullet (e.g., 1, 2, 3 or a, b, c).
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         numbered = "Numbered",
         /**
          * Symbol-based bullet (e.g., disc, circle, square).
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         unnumbered = "Unnumbered",
     }
@@ -187986,8 +191242,7 @@ declare namespace PowerPoint {
                     Returns `null` if the {@link PowerPoint.TextRange} includes text fragments with different bullet formatting properties.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         style: PowerPoint.BulletStyle | "Unsupported" | "AlphabetLowercasePeriod" | "AlphabetUppercasePeriod" | "ArabicNumeralParenthesisRight" | "ArabicNumeralPeriod" | "RomanLowercaseParenthesesBoth" | "RomanLowercaseParenthesisRight" | "RomanLowercasePeriod" | "RomanUppercasePeriod" | "AlphabetLowercaseParenthesesBoth" | "AlphabetLowercaseParenthesisRight" | "AlphabetUppercaseParenthesesBoth" | "AlphabetUppercaseParenthesisRight" | "ArabicNumeralParenthesesBoth" | "ArabicNumeralPlain" | "RomanUppercaseParenthesesBoth" | "RomanUppercaseParenthesisRight" | "SimplifiedChinesePlain" | "SimplifiedChinesePeriod" | "CircleNumberDoubleBytePlain" | "CircleNumberWideDoubleByteWhitePlain" | "CircleNumberWideDoubleByteBlackPlain" | "TraditionalChinesePlain" | "TraditionalChinesePeriod" | "ArabicAlphabetDash" | "ArabicAbjadDash" | "HebrewAlphabetDash" | "KanjiKoreanPlain" | "KanjiKoreanPeriod" | "ArabicDoubleBytePlain" | "ArabicDoubleBytePeriod" | "ThaiAlphabetPeriod" | "ThaiAlphabetParenthesisRight" | "ThaiAlphabetParenthesesBoth" | "ThaiNumeralPeriod" | "ThaiNumeralParenthesisRight" | "ThaiNumeralParenthesesBoth" | "HindiAlphabetPeriod" | "HindiNumeralPeriod" | "KanjiSimplifiedChineseDoubleBytePeriod" | "HindiNumeralParenthesisRight" | "HindiAlphabet1Period" | null;
         /**
@@ -187995,8 +191250,7 @@ declare namespace PowerPoint {
                     Returns `null` if the {@link PowerPoint.TextRange} includes text fragments with different bullet formatting properties.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         type: PowerPoint.BulletType | "Unsupported" | "None" | "Numbered" | "Unnumbered" | null;
         /**
@@ -188028,9 +191282,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.BulletFormat;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.BulletFormat` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.BulletFormatData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.BulletFormat` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.BulletFormatData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.BulletFormatData;
     }
     /**
@@ -188060,8 +191314,7 @@ declare namespace PowerPoint {
          * Represents the indent level of the paragraph.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         indentLevel: number;
         /**
@@ -188086,9 +191339,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.ParagraphFormat;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.ParagraphFormat` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ParagraphFormatData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.ParagraphFormat` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ParagraphFormatData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.ParagraphFormatData;
     }
     /**
@@ -188364,9 +191617,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.ShapeFont;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.ShapeFont` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ShapeFontData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.ShapeFont` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ShapeFontData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.ShapeFontData;
     }
     /**
@@ -188555,9 +191808,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.TextFrame;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.TextFrame` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TextFrameData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.TextFrame` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TextFrameData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.TextFrameData;
     }
     /**
@@ -188580,8 +191833,7 @@ declare namespace PowerPoint {
          * Returns a collection of hyperlinks that exist on this `TextRange`.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly hyperlinks: PowerPoint.HyperlinkScopedCollection;
         /**
@@ -188635,8 +191887,7 @@ declare namespace PowerPoint {
          * Sets a hyperlink on this `TextRange` with the specified options. This will delete all existing hyperlinks on this `TextRange`.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param options Optional. The options for the hyperlink.
          * @returns The newly created {@link PowerPoint.Hyperlink} object.
@@ -188671,31 +191922,28 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.TextRange;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.TextRange` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TextRangeData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.TextRange` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TextRangeData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.TextRangeData;
     }
     /**
      * Specifies the type of object that a hyperlink is applied to.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     enum HyperlinkType {
         /**
          * Specifies that the hyperlink is applied to a TextRange.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         textRange = "TextRange",
         /**
          * Specifies that the hyperlink is applied to a Shape.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         shape = "Shape",
     }
@@ -188726,16 +191974,14 @@ declare namespace PowerPoint {
          * Returns the type of object that the hyperlink is applied to. See {@link PowerPoint.HyperlinkType} for details.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly type: PowerPoint.HyperlinkType | "TextRange" | "Shape";
         /**
          * Deletes the hyperlink.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         delete(): void;
         /**
@@ -188744,8 +191990,7 @@ declare namespace PowerPoint {
                     For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         getLinkedShapeOrNullObject(): PowerPoint.Shape;
         /**
@@ -188754,8 +191999,7 @@ declare namespace PowerPoint {
                     For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         getLinkedTextRangeOrNullObject(): PowerPoint.TextRange;
         /**
@@ -188780,9 +192024,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.Hyperlink;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.Hyperlink` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.HyperlinkData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.Hyperlink` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.HyperlinkData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.HyperlinkData;
     }
     /**
@@ -189081,9 +192325,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.PlaceholderFormat;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.PlaceholderFormat` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.PlaceholderFormatData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.PlaceholderFormat` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.PlaceholderFormatData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.PlaceholderFormatData;
     }
     /**
@@ -189102,8 +192346,7 @@ declare namespace PowerPoint {
                     The new hyperlink may appear anywhere in the collection and is not guaranteed to be added at the end.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param target The target to add the hyperlink to. Can be a {@link PowerPoint.TextRange} or a {@link PowerPoint.Shape}.
          * @param options Optional. The options for the hyperlink.
@@ -189148,9 +192391,9 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.HyperlinkCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.HyperlinkCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.HyperlinkCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.HyperlinkCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.HyperlinkCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.HyperlinkCollectionData;
     }
     /**
@@ -189161,19 +192404,19 @@ declare namespace PowerPoint {
      */
     enum ConnectorType {
         /**
-         * Straight connector type
+         * Straight connector type.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         straight = "Straight",
         /**
-         * Elbow connector type
+         * Elbow connector type.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         elbow = "Elbow",
         /**
-         * Curve connector type
+         * Curve connector type.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
@@ -189187,1067 +192430,1114 @@ declare namespace PowerPoint {
      */
     enum GeometricShapeType {
         /**
-         * Straight Line from Top-Right Corner to Bottom-Left Corner of the Shape
+         * Straight line from top-right corner to bottom-left corner of the shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         lineInverse = "LineInverse",
         /**
-         * Isosceles Triangle
+         * Isosceles triangle geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         triangle = "Triangle",
         /**
-         * Right Triangle
+         * Right triangle geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         rightTriangle = "RightTriangle",
         /**
-         * Rectangle
+         * Rectangle geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         rectangle = "Rectangle",
         /**
-         * Diamond
+         * Diamond geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         diamond = "Diamond",
         /**
-         * Parallelogram
+         * Parallelogram geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         parallelogram = "Parallelogram",
         /**
-         * Trapezoid
+         * Trapezoid geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         trapezoid = "Trapezoid",
         /**
-         * Trapezoid which may have Non-Equal Sides
+         * Trapezoid geometric shape which may have non-equal sides.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         nonIsoscelesTrapezoid = "NonIsoscelesTrapezoid",
         /**
-         * Pentagon
+         * Pentagon geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         pentagon = "Pentagon",
         /**
-         * Hexagon
+         * Hexagon geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         hexagon = "Hexagon",
         /**
-         * Heptagon
+         * Heptagon geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         heptagon = "Heptagon",
         /**
-         * Octagon
+         * Octagon geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         octagon = "Octagon",
         /**
-         * Decagon
+         * Decagon geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         decagon = "Decagon",
         /**
-         * Dodecagon
+         * Dodecagon geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         dodecagon = "Dodecagon",
         /**
-         * Star: 4 Points
+         * Star: 4 points.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         star4 = "Star4",
         /**
-         * Star: 5 Points
+         * Star: 5 points.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         star5 = "Star5",
         /**
-         * Star: 6 Points
+         * Star: 6 points.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         star6 = "Star6",
         /**
-         * Star: 7 Points
+         * Star: 7 points.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         star7 = "Star7",
         /**
-         * Star: 8 Points
+         * Star: 8 points.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         star8 = "Star8",
         /**
-         * Star: 10 Points
+         * Star: 10 points.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         star10 = "Star10",
         /**
-         * Star: 12 Points
+         * Star: 12 points.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         star12 = "Star12",
         /**
-         * Star: 16 Points
+         * Star: 16 points.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         star16 = "Star16",
         /**
-         * Star: 24 Points
+         * Star: 24 points.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         star24 = "Star24",
         /**
-         * Star: 32 Points
+         * Star: 32 points.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         star32 = "Star32",
         /**
-         * Rectangle: Rounded Corners
+         * Rectangle geometric shape: rounded corners.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         roundRectangle = "RoundRectangle",
         /**
-         * Rectangle: Single Corner Rounded
+         * Rectangle geometric shape: single corner rounded.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         round1Rectangle = "Round1Rectangle",
         /**
-         * Rectangle: Top Corners Rounded
+         * Rectangle geometric shape: top corners rounded.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         round2SameRectangle = "Round2SameRectangle",
         /**
-         * Rectangle: Diagonal Corners Rounded
+         * Rectangle geometric shape: diagonal corners rounded.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         round2DiagonalRectangle = "Round2DiagonalRectangle",
         /**
-         * Rectangle: Top Corners One Rounded and One Snipped
+         * Rectangle geometric shape: top corners one rounded and one snipped.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         snipRoundRectangle = "SnipRoundRectangle",
         /**
-         * Rectangle: Single Corner Snipped
+         * Rectangle geometric shape: single corner snipped.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         snip1Rectangle = "Snip1Rectangle",
         /**
-         * Rectangle: Top Corners Snipped
+         * Rectangle geometric shape: top corners snipped.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         snip2SameRectangle = "Snip2SameRectangle",
         /**
-         * Rectangle: Diagonal Corners Snipped
+         * Rectangle geometric shape: diagonal corners snipped.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         snip2DiagonalRectangle = "Snip2DiagonalRectangle",
         /**
-         * Plaque
+         * Plaque geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         plaque = "Plaque",
         /**
-         * Oval
+         * Oval geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         ellipse = "Ellipse",
         /**
-         * Teardrop
+         * Teardrop geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         teardrop = "Teardrop",
         /**
-         * Arrow: Pentagon
+         * Arrow: pentagon.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         homePlate = "HomePlate",
         /**
-         * Arrow: Chevron
+         * Arrow: chevron.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         chevron = "Chevron",
         /**
-         * Partial Circle
+         * Partial circle geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         pieWedge = "PieWedge",
         /**
-         * Partial Circle with Adjustable Spanning Area
+         * Partial circle geometric shape with adjustable spanning area.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         pie = "Pie",
         /**
-         * Block Arc
+         * Block arc geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         blockArc = "BlockArc",
         /**
-         * Circle: Hollow
+         * Circle geometric shape: hollow.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         donut = "Donut",
         /**
-         * "Not Allowed" Symbol
+         * "Not allowed" symbol.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         noSmoking = "NoSmoking",
         /**
-         * Arrow: Right
+         * Arrow: right.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         rightArrow = "RightArrow",
         /**
-         * Arrow: Left
+         * Arrow: left.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         leftArrow = "LeftArrow",
         /**
-         * Arrow: Up
+         * Arrow: up.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         upArrow = "UpArrow",
         /**
-         * Arrow: Down
+         * Arrow: down.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         downArrow = "DownArrow",
         /**
-         * Arrow: Striped Right
+         * Arrow: striped right.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         stripedRightArrow = "StripedRightArrow",
         /**
-         * Arrow: Notched Right
+         * Arrow: notched right.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         notchedRightArrow = "NotchedRightArrow",
         /**
-         * Arrow: Bent-Up
+         * Arrow: bent-up.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         bentUpArrow = "BentUpArrow",
         /**
-         * Arrow: Left-Right
+         * Arrow: left-right.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         leftRightArrow = "LeftRightArrow",
         /**
-         * Arrow: Up-Down
+         * Arrow: up-down.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         upDownArrow = "UpDownArrow",
         /**
-         * Arrow: Left-Up
+         * Arrow: left-up.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         leftUpArrow = "LeftUpArrow",
         /**
-         * Arrow: Left-Right-Up
+         * Arrow: left-right-up.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         leftRightUpArrow = "LeftRightUpArrow",
         /**
-         * Arrow: Quad
+         * Arrow: quad.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         quadArrow = "QuadArrow",
         /**
-         * Callout: Left Arrow
+         * Callout: left arrow.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         leftArrowCallout = "LeftArrowCallout",
         /**
-         * Callout: Right Arrow
+         * Callout: right arrow.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         rightArrowCallout = "RightArrowCallout",
         /**
-         * Callout: Up Arrow
+         * Callout: up arrow.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         upArrowCallout = "UpArrowCallout",
         /**
-         * Callout: Down Arrow
+         * Callout: down arrow.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         downArrowCallout = "DownArrowCallout",
         /**
-         * Callout: Left-Right Arrow
+         * Callout: left-right arrow.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         leftRightArrowCallout = "LeftRightArrowCallout",
         /**
-         * Callout: Up-Down Arrow
+         * Callout: up-down arrow.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         upDownArrowCallout = "UpDownArrowCallout",
         /**
-         * Callout: Quad Arrow
+         * Callout: quad arrow.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         quadArrowCallout = "QuadArrowCallout",
         /**
-         * Arrow: Bent
+         * Arrow: bent.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         bentArrow = "BentArrow",
         /**
-         * Arrow: U-Turn
+         * Arrow: U-turn.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         uturnArrow = "UturnArrow",
         /**
-         * Arrow: Circular
+         * Arrow: circular.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         circularArrow = "CircularArrow",
         /**
-         * Arrow: Circular with Opposite Arrow Direction
+         * Arrow: circular with opposite arrow direction.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         leftCircularArrow = "LeftCircularArrow",
         /**
-         * Arrow: Circular with Two Arrows in Both Directions
+         * Arrow: circular with two arrows in both directions.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         leftRightCircularArrow = "LeftRightCircularArrow",
         /**
-         * Arrow: Curved Right
+         * Arrow: curved right.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         curvedRightArrow = "CurvedRightArrow",
         /**
-         * Arrow: Curved Left
+         * Arrow: curved left.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         curvedLeftArrow = "CurvedLeftArrow",
         /**
-         * Arrow: Curved Up
+         * Arrow: curved up.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         curvedUpArrow = "CurvedUpArrow",
         /**
-         * Arrow: Curved Down
+         * Arrow: curved down.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         curvedDownArrow = "CurvedDownArrow",
         /**
-         * Arrow: Curved Right Arrow with Varying Width
+         * Arrow: curved right arrow with varying width.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         swooshArrow = "SwooshArrow",
         /**
-         * Cube
+         * Cube geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         cube = "Cube",
         /**
-         * Cylinder
+         * Cylinder geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         can = "Can",
         /**
-         * Lightning Bolt
+         * Lightning bolt.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         lightningBolt = "LightningBolt",
         /**
-         * Heart
+         * Heart geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         heart = "Heart",
         /**
-         * Sun
+         * Sun.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         sun = "Sun",
         /**
-         * Moon
+         * Moon geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         moon = "Moon",
         /**
-         * Smiley Face
+         * Smiley face.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         smileyFace = "SmileyFace",
         /**
-         * Explosion: 8 Points
+         * Explosion: 8 points.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         irregularSeal1 = "IrregularSeal1",
         /**
-         * Explosion: 14 Points
+         * Explosion: 14 points.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         irregularSeal2 = "IrregularSeal2",
         /**
-         * Rectangle: Folded Corner
+         * Rectangle geometric shape: folded corner.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         foldedCorner = "FoldedCorner",
         /**
-         * Rectangle: Beveled
+         * Rectangle geometric shape: beveled.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         bevel = "Bevel",
         /**
-         * Frame
+         * Frame geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         frame = "Frame",
         /**
-         * Half Frame
+         * Half frame geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         halfFrame = "HalfFrame",
         /**
-         * L-Shape
+         * L-shape geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         corner = "Corner",
         /**
-         * Diagonal Stripe
+         * Diagonal stripe geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         diagonalStripe = "DiagonalStripe",
         /**
-         * Chord
+         * Chord geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         chord = "Chord",
         /**
-         * Arc
+         * Arc geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         arc = "Arc",
         /**
-         * Left Bracket
+         * Left bracket.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         leftBracket = "LeftBracket",
         /**
-         * Right Bracket
+         * Right bracket.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         rightBracket = "RightBracket",
         /**
-         * Left Brace
+         * Left brace.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         leftBrace = "LeftBrace",
         /**
-         * Right Brace
+         * Right brace.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         rightBrace = "RightBrace",
         /**
-         * Double Bracket
+         * Double bracket.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         bracketPair = "BracketPair",
         /**
-         * Double Brace
+         * Double brace.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         bracePair = "BracePair",
         /**
-         * Callout: Line with No Border
+         * Callout: line with no border.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         callout1 = "Callout1",
         /**
-         * Callout: Bent Line with No Border
+         * Callout: bent line with no border.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         callout2 = "Callout2",
         /**
-         * Callout: Double Bent Line with No Border
+         * Callout: double bent line with no border.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         callout3 = "Callout3",
         /**
-         * Callout: Line with Accent Bar
+         * Callout: line with accent bar.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         accentCallout1 = "AccentCallout1",
         /**
-         * Callout: Bent Line with Accent Bar
+         * Callout: bent line with accent bar.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         accentCallout2 = "AccentCallout2",
         /**
-         * Callout: Double Bent Line with Accent Bar
+         * Callout: double bent line with accent bar.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         accentCallout3 = "AccentCallout3",
         /**
-         * Callout: Line
+         * Callout: line.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         borderCallout1 = "BorderCallout1",
         /**
-         * Callout: Bent Line
+         * Callout: bent line.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         borderCallout2 = "BorderCallout2",
         /**
-         * Callout: Double Bent Line
+         * Callout: double bent line.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         borderCallout3 = "BorderCallout3",
         /**
-         * Callout: Line with Border and Accent Bar
+         * Callout: line with border and accent bar.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         accentBorderCallout1 = "AccentBorderCallout1",
         /**
-         * Callout: Bent Line with Border and Accent Bar
+         * Callout: bent line with border and accent bar.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         accentBorderCallout2 = "AccentBorderCallout2",
         /**
-         * Callout: Double Bent Line with Border and Accent Bar
+         * Callout: double bent line with border and accent bar.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         accentBorderCallout3 = "AccentBorderCallout3",
         /**
-         * Speech Bubble: Rectangle
+         * Speech bubble: rectangle.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         wedgeRectCallout = "WedgeRectCallout",
         /**
-         * Speech Bubble: Rectangle with Corners Rounded
+         * Speech bubble: rectangle with corners rounded.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         wedgeRRectCallout = "WedgeRRectCallout",
         /**
-         * Speech Bubble: Oval
+         * Speech bubble: oval.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         wedgeEllipseCallout = "WedgeEllipseCallout",
         /**
-         * Thought Bubble: Cloud
+         * Thought bubble: cloud.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         cloudCallout = "CloudCallout",
         /**
-         * Cloud
+         * Cloud.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         cloud = "Cloud",
         /**
-         * Ribbon: Tilted Down
+         * Ribbon: tilted down.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         ribbon = "Ribbon",
         /**
-         * Ribbon: Tilted Up
+         * Ribbon: tilted up.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         ribbon2 = "Ribbon2",
         /**
-         * Ribbon: Curved and Tilted Down
+         * Ribbon: curved and tilted down.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         ellipseRibbon = "EllipseRibbon",
         /**
-         * Ribbon: Curved and Tilted Up
+         * Ribbon: curved and tilted up.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         ellipseRibbon2 = "EllipseRibbon2",
         /**
-         * Ribbon: Straight with Both Left and Right Arrows
+         * Ribbon: straight with both left and right arrows.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         leftRightRibbon = "LeftRightRibbon",
         /**
-         * Scroll: Vertical
+         * Scroll: vertical.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         verticalScroll = "VerticalScroll",
         /**
-         * Scroll: Horizontal
+         * Scroll: horizontal.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         horizontalScroll = "HorizontalScroll",
         /**
-         * Wave
+         * Wave geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         wave = "Wave",
         /**
-         * Double Wave
+         * Double wave geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         doubleWave = "DoubleWave",
         /**
-         * Cross
+         * Cross geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         plus = "Plus",
         /**
-         * Flowchart: Process
+         * Flowchart: process.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartProcess = "FlowChartProcess",
         /**
-         * Flowchart: Decision
+         * Flowchart: decision.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartDecision = "FlowChartDecision",
         /**
-         * Flowchart: Data
+         * Flowchart: data.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartInputOutput = "FlowChartInputOutput",
         /**
-         * Flowchart: Predefined Process
+         * Flowchart: predefined process.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartPredefinedProcess = "FlowChartPredefinedProcess",
         /**
-         * Flowchart: Internal Storage
+         * Flowchart: internal storage.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartInternalStorage = "FlowChartInternalStorage",
         /**
-         * Flowchart: Document
+         * Flowchart: document.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartDocument = "FlowChartDocument",
         /**
-         * Flowchart: Multidocument
+         * Flowchart: multidocument.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartMultidocument = "FlowChartMultidocument",
         /**
-         * Flowchart: Terminator
+         * Flowchart: terminator.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartTerminator = "FlowChartTerminator",
         /**
-         * Flowchart: Preparation
+         * Flowchart: preparation.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartPreparation = "FlowChartPreparation",
         /**
-         * Flowchart: Manual Input
+         * Flowchart: manual input.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartManualInput = "FlowChartManualInput",
         /**
-         * Flowchart: Manual Operation
+         * Flowchart: manual operation.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartManualOperation = "FlowChartManualOperation",
         /**
-         * Flowchart: Connector
+         * Flowchart: connector.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartConnector = "FlowChartConnector",
         /**
-         * Flowchart: Card
+         * Flowchart: card.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartPunchedCard = "FlowChartPunchedCard",
         /**
-         * Flowchart: Punched Tape
+         * Flowchart: punched tape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartPunchedTape = "FlowChartPunchedTape",
         /**
-         * Flowchart: Summing Junction
+         * Flowchart: summing junction.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartSummingJunction = "FlowChartSummingJunction",
         /**
-         * Flowchart: Or
+         * Flowchart: or.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartOr = "FlowChartOr",
         /**
-         * Flowchart: Collate
+         * Flowchart: collate.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartCollate = "FlowChartCollate",
         /**
-         * Flowchart: Sort
+         * Flowchart: sort.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartSort = "FlowChartSort",
         /**
-         * Flowchart: Extract
+         * Flowchart: extract.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartExtract = "FlowChartExtract",
         /**
-         * Flowchart: Merge
+         * Flowchart: merge.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartMerge = "FlowChartMerge",
         /**
-         * FlowChart: Offline Storage
+         * Flowchart: offline storage.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartOfflineStorage = "FlowChartOfflineStorage",
         /**
-         * Flowchart: Stored Data
+         * Flowchart: stored data.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartOnlineStorage = "FlowChartOnlineStorage",
         /**
-         * Flowchart: Sequential Access Storage
+         * Flowchart: sequential access storage.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartMagneticTape = "FlowChartMagneticTape",
         /**
-         * Flowchart: Magnetic Disk
+         * Flowchart: magnetic disk.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartMagneticDisk = "FlowChartMagneticDisk",
         /**
-         * Flowchart: Direct Access Storage
+         * Flowchart: direct access storage.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartMagneticDrum = "FlowChartMagneticDrum",
         /**
-         * Flowchart: Display
+         * Flowchart: display.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartDisplay = "FlowChartDisplay",
         /**
-         * Flowchart: Delay
+         * Flowchart: delay.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartDelay = "FlowChartDelay",
         /**
-         * Flowchart: Alternate Process
+         * Flowchart: alternate process.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartAlternateProcess = "FlowChartAlternateProcess",
         /**
-         * Flowchart: Off-page Connector
+         * Flowchart: off-page connector.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         flowChartOffpageConnector = "FlowChartOffpageConnector",
         /**
-         * Action Button: Blank
+         * Action button: blank.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         actionButtonBlank = "ActionButtonBlank",
         /**
-         * Action Button: Go Home
+         * Action button: go home.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         actionButtonHome = "ActionButtonHome",
         /**
-         * Action Button: Help
+         * Action button: help.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         actionButtonHelp = "ActionButtonHelp",
         /**
-         * Action Button: Get Information
+         * Action button: get information.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         actionButtonInformation = "ActionButtonInformation",
         /**
-         * Action Button: Go Forward or Next
+         * Action button: go forward or next.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         actionButtonForwardNext = "ActionButtonForwardNext",
         /**
-         * Action Button: Go Back or Previous
+         * Action button: go back or previous.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         actionButtonBackPrevious = "ActionButtonBackPrevious",
         /**
-         * Action Button: Go to End
+         * Action button: go to end.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         actionButtonEnd = "ActionButtonEnd",
         /**
-         * Action Button: Go to Beginning
+         * Action button: go to beginning.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         actionButtonBeginning = "ActionButtonBeginning",
         /**
-         * Action Button: Return
+         * Action button: return.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         actionButtonReturn = "ActionButtonReturn",
         /**
-         * Action Button: Document
+         * Action button: document.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         actionButtonDocument = "ActionButtonDocument",
         /**
-         * Action Button: Sound
+         * Action button: sound.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         actionButtonSound = "ActionButtonSound",
         /**
-         * Action Button: Video
+         * Action button: video.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         actionButtonMovie = "ActionButtonMovie",
         /**
-         * Gear: A Gear with Six Teeth
+         * Gear: a gear with six teeth.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         gear6 = "Gear6",
         /**
-         * Gear: A Gear with Nine Teeth
+         * Gear: a gear with nine teeth.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         gear9 = "Gear9",
         /**
-         * Funnel
+         * Funnel geometric shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         funnel = "Funnel",
         /**
-         * Plus Sign
+         * Plus sign.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         mathPlus = "MathPlus",
         /**
-         * Minus Sign
+         * Minus sign.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         mathMinus = "MathMinus",
         /**
-         * Multiplication Sign
+         * Multiplication sign.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         mathMultiply = "MathMultiply",
         /**
-         * Division Sign
+         * Division sign.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         mathDivide = "MathDivide",
         /**
-         * Equals
+         * Equals.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         mathEqual = "MathEqual",
         /**
-         * Not Equal
+         * Not equal.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         mathNotEqual = "MathNotEqual",
         /**
-         * Four Right Triangles that Define a Rectangular Shape
+         * Four right triangles that define a rectangular shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         cornerTabs = "CornerTabs",
         /**
-         * Four Small Squares that Define a Rectangular Shape.
+         * Four small squares that define a rectangular shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         squareTabs = "SquareTabs",
         /**
-         * Four Quarter Circles that Define a Rectangular Shape.
+         * Four quarter circles that define a rectangular shape.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         plaqueTabs = "PlaqueTabs",
         /**
-         * A Rectangle Divided into Four Parts Along Diagonal Lines.
+         * A rectangle divided into four parts along diagonal lines.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         chartX = "ChartX",
         /**
-         * A Rectangle Divided into Six Parts Along a Vertical Line and Diagonal Lines.
+         * A rectangle divided into six parts along a vertical line and diagonal lines.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         chartStar = "ChartStar",
         /**
-         * A Rectangle Divided Vertically and Horizontally into Four Quarters.
+         * A rectangle divided vertically and horizontally into four quarters.
          * @remarks
          * [Api set: PowerPointApi 1.4]
          */
         chartPlus = "ChartPlus",
+    }
+    /**
+     * Represents the available options when adding a picture (represented by a {@link PowerPoint.Shape} object).
+     *
+     * @remarks
+     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    interface PictureAddOptions {
+        /**
+         * Specifies the height, in points, of the picture.
+                    When not provided, the default value is 72 points (1 inch).
+                    Throws an `InvalidArgument` exception when set with a negative value.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        height?: number;
+        /**
+         * Specifies the distance, in points, from the left side of the picture to the left side of the slide.
+                    When not provided, the default value is 0.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        left?: number;
+        /**
+         * Specifies the distance, in points, from the top edge of the picture to the top edge of the slide.
+                    When not provided, the default value is 0.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        top?: number;
+        /**
+         * Specifies the width, in points, of the picture.
+                    When not provided, the default value is 72 points (1 inch).
+                    Throws an `InvalidArgument` exception when set with a negative value.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        width?: number;
     }
     /**
      * Represents the available options when adding shapes.
@@ -190290,6 +193580,88 @@ declare namespace PowerPoint {
          * [Api set: PowerPointApi 1.4]
          */
         width?: number;
+    }
+    /**
+     * Represents a collection of shapes.
+     *
+     * @remarks
+     * [Api set: PowerPointApi 1.5]
+     */
+    class ShapeScopedCollection extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /** Gets the loaded child items in this collection. */
+        readonly items: PowerPoint.Shape[];
+        /**
+         * Gets the number of shapes in the collection.
+         *
+         * @remarks
+         * [Api set: PowerPointApi 1.5]
+         * @returns The number of shapes in the collection.
+         */
+        getCount(): OfficeExtension.ClientResult<number>;
+        /**
+         * Gets a shape using its unique ID. An error is thrown if the shape doesn't exist.
+         *
+         * @remarks
+         * [Api set: PowerPointApi 1.5]
+         *
+         * @param key The ID of the shape.
+         * @returns The shape with the unique ID. If such a shape doesn't exist, an error is thrown.
+         */
+        getItem(key: string): PowerPoint.Shape;
+        /**
+         * Gets a shape using its zero-based index in the collection. An error is thrown if the index is out of range.
+         *
+         * @remarks
+         * [Api set: PowerPointApi 1.5]
+         *
+         * @param index The index of the shape in the collection.
+         * @returns The shape at the given index. An error is thrown if index is out of range.
+         */
+        getItemAt(index: number): PowerPoint.Shape;
+        /**
+         * Gets a shape using its unique ID. If such a shape doesn't exist, an object with an `isNullObject` property set to true is returned. For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
+         *
+         * @remarks
+         * [Api set: PowerPointApi 1.5]
+         *
+         * @param id The ID of the shape.
+         * @returns The shape with the unique ID. If such a shape doesn't exist, an object with an `isNullObject` property set to true is returned.
+         */
+        getItemOrNullObject(id: string): PowerPoint.Shape;
+        /**
+         * Groups all shapes in this collection into a single shape.
+                    If the collection contains fewer than two shapes, then this method returns the `GeneralException` error.
+         *
+         * @remarks
+         * [Api set: PowerPointApi 1.8]
+         * @returns The newly created grouped shape as a {@link PowerPoint.Shape}.
+         */
+        group(): PowerPoint.Shape;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: PowerPoint.Interfaces.ShapeScopedCollectionLoadOptions & PowerPoint.Interfaces.CollectionLoadOptions): PowerPoint.ShapeScopedCollection;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): PowerPoint.ShapeScopedCollection;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.ShapeScopedCollection;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.ShapeScopedCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ShapeScopedCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
+        toJSON(): PowerPoint.Interfaces.ShapeScopedCollectionData;
     }
     /**
      * Specifies the dash style for a line.
@@ -190508,9 +193880,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.Borders;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.Borders` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.BordersData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.Borders` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.BordersData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.BordersData;
     }
     /**
@@ -190572,9 +193944,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.Margins;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.Margins` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.MarginsData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.Margins` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.MarginsData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.MarginsData;
     }
     /**
@@ -190965,9 +194337,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.TableCell;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.TableCell` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableCellData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.TableCell` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableCellData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.TableCellData;
     }
     /**
@@ -191019,9 +194391,9 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.TableCellCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.TableCellCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableCellCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.TableCellCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableCellCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.TableCellCollectionData;
     }
     /**
@@ -191076,9 +194448,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.TableColumn;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.TableColumn` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableColumnData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.TableColumn` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableColumnData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.TableColumnData;
     }
     /**
@@ -191149,9 +194521,9 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.TableColumnCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.TableColumnCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableColumnCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.TableColumnCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableColumnCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.TableColumnCollectionData;
     }
     /**
@@ -191242,9 +194614,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.TableRow;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.TableRow` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableRowData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.TableRow` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableRowData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.TableRowData;
     }
     /**
@@ -191315,9 +194687,9 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.TableRowCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.TableRowCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableRowCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.TableRowCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableRowCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.TableRowCollectionData;
     }
     /**
@@ -191852,9 +195224,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.TableStyleSettings;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.TableStyleSettings` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableStyleSettingsData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.TableStyleSettings` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableStyleSettingsData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.TableStyleSettingsData;
     }
     /**
@@ -191977,9 +195349,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.Table;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.Table` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.Table` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TableData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.TableData;
     }
     /**
@@ -192464,6 +195836,18 @@ declare namespace PowerPoint {
          */
         addLine(connectorType?: "Straight" | "Elbow" | "Curve", options?: PowerPoint.ShapeAddOptions): PowerPoint.Shape;
         /**
+         * Adds a picture to the slide. Returns a `Shape` object that represents the new picture.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         *
+         * @param base64EncodedImage The base64-encoded image data.
+         * @param options Optional. Additional options such as the position of the picture.
+         * @returns The newly inserted shape.
+         */
+        addPicture(base64EncodedImage: string, options?: PowerPoint.PictureAddOptions): PowerPoint.Shape;
+        /**
          * Adds a table to the slide. Returns a `Shape` object that represents the new table.
                     Use the `Shape.table` property to get the `Table` object for the shape.
          *
@@ -192544,59 +195928,52 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.ShapeCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.ShapeCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ShapeCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.ShapeCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ShapeCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.ShapeCollectionData;
     }
     /**
      * Specifies the gradient fill type for a {@link PowerPoint.SlideBackgroundGradientFill}.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     enum SlideBackgroundGradientFillType {
         /**
          * Unsupported gradient fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         unsupported = "Unsupported",
         /**
          * Linear gradient fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         linear = "Linear",
         /**
          * Radial gradient fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         radial = "Radial",
         /**
          * Rectangular gradient fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         rectangular = "Rectangular",
         /**
          * Path gradient fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         path = "Path",
         /**
          * Shade from title gradient fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         shadeFromTitle = "ShadeFromTitle",
     }
@@ -192604,8 +195981,7 @@ declare namespace PowerPoint {
      * Represents {@link PowerPoint.SlideBackground} gradient fill properties.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     class SlideBackgroundGradientFill extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -192614,8 +195990,7 @@ declare namespace PowerPoint {
          * Specifies the type of gradient fill.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         type: PowerPoint.SlideBackgroundGradientFillType | "Unsupported" | "Linear" | "Radial" | "Rectangular" | "Path" | "ShadeFromTitle";
         /**
@@ -192640,25 +196015,23 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.SlideBackgroundGradientFill;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideBackgroundGradientFill` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideBackgroundGradientFillData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideBackgroundGradientFill` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideBackgroundGradientFillData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.SlideBackgroundGradientFillData;
     }
     /**
      * Represents the available options for setting a {@link PowerPoint.SlideBackground} gradient fill.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     interface SlideBackgroundGradientFillOptions {
         /**
          * If provided, specifies the type of gradient fill.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         type?: PowerPoint.SlideBackgroundGradientFillType | "Unsupported" | "Linear" | "Radial" | "Rectangular" | "Path" | "ShadeFromTitle";
     }
@@ -192666,393 +196039,337 @@ declare namespace PowerPoint {
      * Specifies the pattern fill type for a {@link PowerPoint.SlideBackgroundPatternFill}.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     enum SlideBackgroundPatternFillType {
         /**
          * Unsupported pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         unsupported = "Unsupported",
         /**
          * 5 percent pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         percent5 = "Percent5",
         /**
          * 10 percent pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         percent10 = "Percent10",
         /**
          * 20 percent pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         percent20 = "Percent20",
         /**
          * 25 percent pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         percent25 = "Percent25",
         /**
          * 30 percent pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         percent30 = "Percent30",
         /**
          * 40 percent pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         percent40 = "Percent40",
         /**
          * 50 percent pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         percent50 = "Percent50",
         /**
          * 60 percent pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         percent60 = "Percent60",
         /**
          * 70 percent pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         percent70 = "Percent70",
         /**
          * 75 percent pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         percent75 = "Percent75",
         /**
          * 80 percent pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         percent80 = "Percent80",
         /**
          * 90 percent pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         percent90 = "Percent90",
         /**
          * Horizontal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         horizontal = "Horizontal",
         /**
          * Vertical pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         vertical = "Vertical",
         /**
          * Light horizontal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         lightHorizontal = "LightHorizontal",
         /**
          * Light vertical pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         lightVertical = "LightVertical",
         /**
          * Dark horizontal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         darkHorizontal = "DarkHorizontal",
         /**
          * Dark vertical pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         darkVertical = "DarkVertical",
         /**
          * Narrow horizontal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         narrowHorizontal = "NarrowHorizontal",
         /**
          * Narrow vertical pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         narrowVertical = "NarrowVertical",
         /**
          * Dashed horizontal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         dashedHorizontal = "DashedHorizontal",
         /**
          * Dashed vertical pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         dashedVertical = "DashedVertical",
         /**
          * Cross pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         cross = "Cross",
         /**
          * Downward diagonal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         downwardDiagonal = "DownwardDiagonal",
         /**
          * Upward diagonal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         upwardDiagonal = "UpwardDiagonal",
         /**
          * Light downward diagonal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         lightDownwardDiagonal = "LightDownwardDiagonal",
         /**
          * Light upward diagonal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         lightUpwardDiagonal = "LightUpwardDiagonal",
         /**
          * Dark downward diagonal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         darkDownwardDiagonal = "DarkDownwardDiagonal",
         /**
          * Dark upward diagonal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         darkUpwardDiagonal = "DarkUpwardDiagonal",
         /**
          * Wide downward diagonal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         wideDownwardDiagonal = "WideDownwardDiagonal",
         /**
          * Wide upward diagonal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         wideUpwardDiagonal = "WideUpwardDiagonal",
         /**
          * Dashed downward diagonal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         dashedDownwardDiagonal = "DashedDownwardDiagonal",
         /**
          * Dashed upward diagonal pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         dashedUpwardDiagonal = "DashedUpwardDiagonal",
         /**
          * Diagonal cross pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         diagonalCross = "DiagonalCross",
         /**
          * Small checker board pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         smallCheckerBoard = "SmallCheckerBoard",
         /**
          * Large checker board pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         largeCheckerBoard = "LargeCheckerBoard",
         /**
          * Small grid pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         smallGrid = "SmallGrid",
         /**
          * Large grid pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         largeGrid = "LargeGrid",
         /**
          * Dotted grid pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         dottedGrid = "DottedGrid",
         /**
          * Small confetti pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         smallConfetti = "SmallConfetti",
         /**
          * Large confetti pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         largeConfetti = "LargeConfetti",
         /**
          * Horizontal brick pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         horizontalBrick = "HorizontalBrick",
         /**
          * Diagonal brick pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         diagonalBrick = "DiagonalBrick",
         /**
          * Solid diamond pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         solidDiamond = "SolidDiamond",
         /**
          * Outlined diamond pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         outlinedDiamond = "OutlinedDiamond",
         /**
          * Dotted diamond pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         dottedDiamond = "DottedDiamond",
         /**
          * Plaid pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         plaid = "Plaid",
         /**
          * Sphere pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         sphere = "Sphere",
         /**
          * Weave pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         weave = "Weave",
         /**
          * Divot pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         divot = "Divot",
         /**
          * Shingle pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         shingle = "Shingle",
         /**
          * Wave pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         wave = "Wave",
         /**
          * Trellis pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         trellis = "Trellis",
         /**
          * Zig zag pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         zigZag = "ZigZag",
     }
@@ -193060,8 +196377,7 @@ declare namespace PowerPoint {
      * Represents {@link PowerPoint.SlideBackground} pattern fill properties.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     class SlideBackgroundPatternFill extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -193070,24 +196386,21 @@ declare namespace PowerPoint {
          * Specifies the background color in HTML color format (e.g., "#FFFFFF" or "white").
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         backgroundColor: string;
         /**
          * Specifies the foreground color in HTML color format (e.g., "#FFA500" or "orange").
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         foregroundColor: string;
         /**
          * Specifies the pattern type.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         pattern: PowerPoint.SlideBackgroundPatternFillType | "Unsupported" | "Percent5" | "Percent10" | "Percent20" | "Percent25" | "Percent30" | "Percent40" | "Percent50" | "Percent60" | "Percent70" | "Percent75" | "Percent80" | "Percent90" | "Horizontal" | "Vertical" | "LightHorizontal" | "LightVertical" | "DarkHorizontal" | "DarkVertical" | "NarrowHorizontal" | "NarrowVertical" | "DashedHorizontal" | "DashedVertical" | "Cross" | "DownwardDiagonal" | "UpwardDiagonal" | "LightDownwardDiagonal" | "LightUpwardDiagonal" | "DarkDownwardDiagonal" | "DarkUpwardDiagonal" | "WideDownwardDiagonal" | "WideUpwardDiagonal" | "DashedDownwardDiagonal" | "DashedUpwardDiagonal" | "DiagonalCross" | "SmallCheckerBoard" | "LargeCheckerBoard" | "SmallGrid" | "LargeGrid" | "DottedGrid" | "SmallConfetti" | "LargeConfetti" | "HorizontalBrick" | "DiagonalBrick" | "SolidDiamond" | "OutlinedDiamond" | "DottedDiamond" | "Plaid" | "Sphere" | "Weave" | "Divot" | "Shingle" | "Wave" | "Trellis" | "ZigZag";
         /**
@@ -193112,41 +196425,37 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.SlideBackgroundPatternFill;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideBackgroundPatternFill` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideBackgroundPatternFillData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideBackgroundPatternFill` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideBackgroundPatternFillData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.SlideBackgroundPatternFillData;
     }
     /**
      * Represents the available options for setting a {@link PowerPoint.SlideBackground} pattern fill.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     interface SlideBackgroundPatternFillOptions {
         /**
          * If provided, specifies the background color in HTML color format (e.g., "#FFFFFF" or "white").
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         backgroundColor?: string;
         /**
          * If provided, specifies the foreground color in HTML color format (e.g., "#FFA500" or "orange").
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         foregroundColor?: string;
         /**
          * If provided, specifies the pattern type.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         pattern?: PowerPoint.SlideBackgroundPatternFillType | "Unsupported" | "Percent5" | "Percent10" | "Percent20" | "Percent25" | "Percent30" | "Percent40" | "Percent50" | "Percent60" | "Percent70" | "Percent75" | "Percent80" | "Percent90" | "Horizontal" | "Vertical" | "LightHorizontal" | "LightVertical" | "DarkHorizontal" | "DarkVertical" | "NarrowHorizontal" | "NarrowVertical" | "DashedHorizontal" | "DashedVertical" | "Cross" | "DownwardDiagonal" | "UpwardDiagonal" | "LightDownwardDiagonal" | "LightUpwardDiagonal" | "DarkDownwardDiagonal" | "DarkUpwardDiagonal" | "WideDownwardDiagonal" | "WideUpwardDiagonal" | "DashedDownwardDiagonal" | "DashedUpwardDiagonal" | "DiagonalCross" | "SmallCheckerBoard" | "LargeCheckerBoard" | "SmallGrid" | "LargeGrid" | "DottedGrid" | "SmallConfetti" | "LargeConfetti" | "HorizontalBrick" | "DiagonalBrick" | "SolidDiamond" | "OutlinedDiamond" | "DottedDiamond" | "Plaid" | "Sphere" | "Weave" | "Divot" | "Shingle" | "Wave" | "Trellis" | "ZigZag";
     }
@@ -193154,8 +196463,7 @@ declare namespace PowerPoint {
      * Represents {@link PowerPoint.SlideBackground} picture or texture fill properties.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     class SlideBackgroundPictureOrTextureFill extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -193164,16 +196472,14 @@ declare namespace PowerPoint {
          * Specifies the transparency percentage of the fill as a value from 0.0 (opaque) through 1.0 (clear).
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         transparency: number;
         /**
          * Sets the image used to fill.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param base64EncodedImage A string that is a Base64 encoding of the image data.
          */
@@ -193200,33 +196506,30 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.SlideBackgroundPictureOrTextureFill;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideBackgroundPictureOrTextureFill` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideBackgroundPictureOrTextureFillData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideBackgroundPictureOrTextureFill` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideBackgroundPictureOrTextureFillData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.SlideBackgroundPictureOrTextureFillData;
     }
     /**
      * Represents {@link PowerPoint.SlideBackground} picture or texture fill options.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     interface SlideBackgroundPictureOrTextureFillOptions {
         /**
          * If provided, specifies the Base64-encoded image data for the fill.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         imageBase64?: string;
         /**
          * If provided, specifies the transparency percentage of the fill as a value from 0.0 (opaque) through 1.0 (clear).
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         transparency: number;
     }
@@ -193234,43 +196537,37 @@ declare namespace PowerPoint {
      * Specifies the fill type for a {@link PowerPoint.SlideBackground}.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     enum SlideBackgroundFillType {
         /**
          * Unsupported slide background fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         unsupported = "Unsupported",
         /**
          * Specifies that the slide background should have regular solid fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         solid = "Solid",
         /**
          * Specifies that the slide background should have gradient fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         gradient = "Gradient",
         /**
          * Specifies that the slide background should have picture or texture fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         pictureOrTexture = "PictureOrTexture",
         /**
          * Specifies that the slide background should have pattern fill.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         pattern = "Pattern",
     }
@@ -193278,8 +196575,7 @@ declare namespace PowerPoint {
      * Represents {@link PowerPoint.SlideBackground} solid fill properties.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     class SlideBackgroundSolidFill extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -193288,16 +196584,14 @@ declare namespace PowerPoint {
          * Specifies the fill color in HTML color format (e.g., "#FFA500" or "orange").
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         color: string;
         /**
          * Specifies the transparency percentage of the fill as a value from 0.0 (opaque) through 1.0 (clear).
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         transparency: number;
         /**
@@ -193322,33 +196616,30 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.SlideBackgroundSolidFill;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideBackgroundSolidFill` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideBackgroundSolidFillData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideBackgroundSolidFill` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideBackgroundSolidFillData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.SlideBackgroundSolidFillData;
     }
     /**
      * Represents the available options for setting a {@link PowerPoint.SlideBackground} solid fill.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     interface SlideBackgroundSolidFillOptions {
         /**
          * If provided, specifies the fill color in HTML color format (e.g., "#FFA500" or "orange").
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         color?: string;
         /**
          * If provided, specifies the transparency percentage of the fill as a value from 0.0 (opaque) through 1.0 (clear).
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         transparency?: number;
     }
@@ -193356,8 +196647,7 @@ declare namespace PowerPoint {
      * Represents the fill formatting of a slide background object.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     class SlideBackgroundFill extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -193366,8 +196656,7 @@ declare namespace PowerPoint {
          * Returns the fill type of the slide background. See {@link PowerPoint.SlideBackgroundFillType} for details.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly type: PowerPoint.SlideBackgroundFillType | "Unsupported" | "Solid" | "Gradient" | "PictureOrTexture" | "Pattern";
         /**
@@ -193375,8 +196664,7 @@ declare namespace PowerPoint {
                     For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         getGradientFillOrNullObject(): PowerPoint.SlideBackgroundGradientFill;
         /**
@@ -193384,8 +196672,7 @@ declare namespace PowerPoint {
                     For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         getPatternFillOrNullObject(): PowerPoint.SlideBackgroundPatternFill;
         /**
@@ -193393,8 +196680,7 @@ declare namespace PowerPoint {
                     For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         getPictureOrTextureFillOrNullObject(): PowerPoint.SlideBackgroundPictureOrTextureFill;
         /**
@@ -193402,16 +196688,14 @@ declare namespace PowerPoint {
                     For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         getSolidFillOrNullObject(): PowerPoint.SlideBackgroundSolidFill;
         /**
          * Sets the fill formatting of the slide background to a gradient fill. This changes the fill type to `gradient`.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param options Options for the gradient fill.
          */
@@ -193420,8 +196704,7 @@ declare namespace PowerPoint {
          * Sets the fill formatting of the slide background to a pattern fill. This changes the fill type to `pattern`.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param options Options for the pattern fill.
          */
@@ -193430,8 +196713,7 @@ declare namespace PowerPoint {
          * Sets the fill formatting of the slide background to a picture or texture fill. This changes the fill type to `pictureOrTexture`.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param options Options for the picture or texture fill.
          */
@@ -193440,8 +196722,7 @@ declare namespace PowerPoint {
          * Sets the fill formatting of the slide background to a solid fill. This changes the fill type to `solid`.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param options Options for the solid fill.
          */
@@ -193468,17 +196749,16 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.SlideBackgroundFill;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideBackgroundFill` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideBackgroundFillData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideBackgroundFill` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideBackgroundFillData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.SlideBackgroundFillData;
     }
     /**
      * Represents a background of a slide.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     class SlideBackground extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -193487,32 +196767,28 @@ declare namespace PowerPoint {
          * Returns the fill formatting of the background.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly fill: PowerPoint.SlideBackgroundFill;
         /**
          * Specifies whether the slide layout background fill hides or displays background graphic objects from the slide master.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         areBackgroundGraphicsHidden: boolean;
         /**
          * Specifies if the slide background follows the slide master background.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         isMasterBackgroundFollowed: boolean;
         /**
          * Resets the fill formatting of the slide background.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         reset(): void;
         /**
@@ -193537,9 +196813,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.SlideBackground;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideBackground` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideBackgroundData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideBackground` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideBackgroundData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.SlideBackgroundData;
     }
     /**
@@ -193568,8 +196844,7 @@ declare namespace PowerPoint {
      * Represents the background of a slide layout.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     class SlideLayoutBackground extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -193578,32 +196853,28 @@ declare namespace PowerPoint {
          * Returns the fill formatting of the background.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly fill: PowerPoint.SlideBackgroundFill;
         /**
          * Specifies whether the slide layout background fill hides or displays background graphic objects from the slide master.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         areBackgroundGraphicsHidden: boolean;
         /**
          * Specifies if the slide layout background follows the slide master background.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         isMasterBackgroundFollowed: boolean;
         /**
          * Resets the fill formatting of the slide layout background.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         reset(): void;
         /**
@@ -193628,9 +196899,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.SlideLayoutBackground;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideLayoutBackground` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideLayoutBackgroundData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideLayoutBackground` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideLayoutBackgroundData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.SlideLayoutBackgroundData;
     }
     /**
@@ -193867,106 +197138,93 @@ declare namespace PowerPoint {
      * Specifies the theme colors used in PowerPoint.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     enum ThemeColor {
         /**
          * Specifies a mixed theme color.
+                    Not applicable as input to {@link PowerPoint.ThemeColorScheme | ThemeColorScheme.getThemeColor} nor {@link PowerPoint.ThemeColorScheme| ThemeColorScheme.setThemeColor}.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         mixed = "Mixed",
         /**
          * Specifies no theme color.
+                    Not applicable as input to {@link PowerPoint.ThemeColorScheme | ThemeColorScheme.getThemeColor} nor {@link PowerPoint.ThemeColorScheme| ThemeColorScheme.setThemeColor}.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         none = "None",
         /**
          * Specifies the Accent 1 theme color.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         accent1 = "Accent1",
         /**
          * Specifies the Accent 2 theme color.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         accent2 = "Accent2",
         /**
          * Specifies the Accent 3 theme color.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         accent3 = "Accent3",
         /**
          * Specifies the Accent 4 theme color.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         accent4 = "Accent4",
         /**
          * Specifies the Accent 5 theme color.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         accent5 = "Accent5",
         /**
          * Specifies the Accent 6 theme color.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         accent6 = "Accent6",
         /**
          * Specifies the Dark 1 theme color.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         dark1 = "Dark1",
         /**
          * Specifies the Dark 2 theme color.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         dark2 = "Dark2",
         /**
          * Specifies the clicked hyperlink theme color.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         followedHyperlink = "FollowedHyperlink",
         /**
          * Specifies the hyperlink theme color.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         hyperlink = "Hyperlink",
         /**
          * Specifies the Light 1 theme color.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         light1 = "Light1",
         /**
          * Specifies the Light 2 theme color.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         light2 = "Light2",
     }
@@ -193974,8 +197232,7 @@ declare namespace PowerPoint {
      * Represents a theme color scheme.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     class ThemeColorScheme extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -193984,10 +197241,9 @@ declare namespace PowerPoint {
          * Gets the color value for the specified `ThemeColor`.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
-         * @param color The theme color.
+         * @param color The theme color. The values `none` and `mixed` are invalid for this API.
          * @returns The color value in #RRGGBB format (e.g., "FFA500").
          */
         getThemeColor(color: PowerPoint.ThemeColor): OfficeExtension.ClientResult<string>;
@@ -193995,10 +197251,9 @@ declare namespace PowerPoint {
          * Gets the color value for the specified `ThemeColor`.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
-         * @param color The theme color.
+         * @param color The theme color. The values `none` and `mixed` are invalid for this API.
          * @returns The color value in #RRGGBB format (e.g., "FFA500").
          */
         getThemeColor(color: "Mixed" | "None" | "Accent1" | "Accent2" | "Accent3" | "Accent4" | "Accent5" | "Accent6" | "Dark1" | "Dark2" | "FollowedHyperlink" | "Hyperlink" | "Light1" | "Light2"): OfficeExtension.ClientResult<string>;
@@ -194006,10 +197261,9 @@ declare namespace PowerPoint {
          * Sets the color value for the specified `ThemeColor`.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
-         * @param color The theme color.
+         * @param color The theme color. The values `none` and `mixed` are invalid for this API.
          * @param rgbColor The color value in #RRGGBB format (e.g., "FFA500") or as a named HTML color (e.g., "orange").
          */
         setThemeColor(color: PowerPoint.ThemeColor, rgbColor: string): void;
@@ -194017,17 +197271,16 @@ declare namespace PowerPoint {
          * Sets the color value for the specified `ThemeColor`.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
-         * @param color The theme color.
+         * @param color The theme color. The values `none` and `mixed` are invalid for this API.
          * @param rgbColor The color value in #RRGGBB format (e.g., "FFA500") or as a named HTML color (e.g., "orange").
          */
         setThemeColor(color: "Mixed" | "None" | "Accent1" | "Accent2" | "Accent3" | "Accent4" | "Accent5" | "Accent6" | "Dark1" | "Dark2" | "FollowedHyperlink" | "Hyperlink" | "Light1" | "Light2", rgbColor: string): void;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.ThemeColorScheme` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ThemeColorSchemeData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.ThemeColorScheme` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ThemeColorSchemeData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): {
             [key: string]: string;
         };
@@ -194045,8 +197298,7 @@ declare namespace PowerPoint {
          * Gets the background of the slide layout.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly background: PowerPoint.SlideLayoutBackground;
         /**
@@ -194067,8 +197319,7 @@ declare namespace PowerPoint {
          * Returns the `ThemeColorScheme` of the slide layout.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly themeColorScheme: PowerPoint.ThemeColorScheme;
         /**
@@ -194093,6 +197344,15 @@ declare namespace PowerPoint {
          */
         readonly type: PowerPoint.SlideLayoutType | "Blank" | "Chart" | "ChartAndText" | "ClipArtAndText" | "ClipArtAndVerticalText" | "Comparison" | "ContentWithCaption" | "Custom" | "FourObjects" | "LargeObject" | "MediaClipAndText" | "Mixed" | "Object" | "ObjectAndText" | "ObjectAndTwoObjects" | "ObjectOverText" | "OrganizationChart" | "PictureWithCaption" | "SectionHeader" | "Table" | "Text" | "TextAndChart" | "TextAndClipArt" | "TextAndMediaClip" | "TextAndObject" | "TextAndTwoObjects" | "TextOverObject" | "Title" | "TitleOnly" | "TwoColumnText" | "TwoObjects" | "TwoObjectsAndObject" | "TwoObjectsAndText" | "TwoObjectsOverText" | "VerticalText" | "VerticalTitleAndText" | "VerticalTitleAndTextOverChart";
         /**
+         * Deletes the slide layout from the presentation. Does nothing if the slide layout doesn't exist.
+                    Throws the `GeneralException` error if the slide layout is in use.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        delete(): void;
+        /**
          * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
          *
          * @param options Provides options for which properties of the object to load.
@@ -194114,9 +197374,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.SlideLayout;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideLayout` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideLayoutData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideLayout` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideLayoutData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.SlideLayoutData;
     }
     /**
@@ -194188,17 +197448,16 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.SlideLayoutCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideLayoutCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideLayoutCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideLayoutCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideLayoutCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.SlideLayoutCollectionData;
     }
     /**
      * Represents the background of a slide master.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     class SlideMasterBackground extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -194207,8 +197466,7 @@ declare namespace PowerPoint {
          * Returns the fill formatting of the background.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly fill: PowerPoint.SlideBackgroundFill;
         /**
@@ -194233,9 +197491,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.SlideMasterBackground;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideMasterBackground` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideMasterBackgroundData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideMasterBackground` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideMasterBackgroundData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.SlideMasterBackgroundData;
     }
     /**
@@ -194251,8 +197509,7 @@ declare namespace PowerPoint {
          * Gets the background of the Slide Master.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly background: PowerPoint.SlideMasterBackground;
         /**
@@ -194280,8 +197537,7 @@ declare namespace PowerPoint {
          * Returns the `ThemeColorScheme` of the Slide Master.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly themeColorScheme: PowerPoint.ThemeColorScheme;
         /**
@@ -194298,6 +197554,15 @@ declare namespace PowerPoint {
          * [Api set: PowerPointApi 1.3]
          */
         readonly name: string;
+        /**
+         * Deletes the slide master and all child layouts from the presentation. Does nothing if the slide master doesn't exist.
+                    Throws the `GeneralException` error if the slide master is in use.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        delete(): void;
         /**
          * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
          *
@@ -194320,9 +197585,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.SlideMaster;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideMaster` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideMasterData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideMaster` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideMasterData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.SlideMasterData;
     }
     /**
@@ -194370,9 +197635,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.Tag;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.Tag` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TagData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.Tag` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TagData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.TagData;
     }
     /**
@@ -194462,9 +197727,9 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.TagCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.TagCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TagCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.TagCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.TagCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.TagCollectionData;
     }
     /**
@@ -194480,8 +197745,7 @@ declare namespace PowerPoint {
          * Gets the background of the slide.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly background: PowerPoint.SlideBackground;
         /**
@@ -194530,8 +197794,7 @@ declare namespace PowerPoint {
          * Returns the `ThemeColorScheme` of the slide.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly themeColorScheme: PowerPoint.ThemeColorScheme;
         /**
@@ -194625,24 +197888,22 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.Slide;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.Slide` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.Slide` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.SlideData;
     }
     /**
      * Represents the format of an image.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     enum ShapeGetImageFormatType {
         /**
          * The picture is in PNG format.
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         png = "Png",
     }
@@ -194653,16 +197914,14 @@ declare namespace PowerPoint {
                 The resulting dimensions will automatically be clamped to the maximum supported size if too large.
      *
      * @remarks
-     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-     * @beta
+     * [Api set: PowerPointApi 1.10]
      */
     interface ShapeGetImageOptions {
         /**
          * The desired format of the resulting image.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         format?: PowerPoint.ShapeGetImageFormatType | "Png";
         /**
@@ -194670,8 +197929,7 @@ declare namespace PowerPoint {
                     Throws an `InvalidArgument` exception when set with a non-positive integer.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         height?: number;
         /**
@@ -194679,92 +197937,9 @@ declare namespace PowerPoint {
                     Throws an `InvalidArgument` exception when set with a non-positive integer.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         width?: number;
-    }
-    /**
-     * Represents a collection of shapes.
-     *
-     * @remarks
-     * [Api set: PowerPointApi 1.5]
-     */
-    class ShapeScopedCollection extends OfficeExtension.ClientObject {
-        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
-        context: RequestContext;
-        /** Gets the loaded child items in this collection. */
-        readonly items: PowerPoint.Shape[];
-        /**
-         * Gets the number of shapes in the collection.
-         *
-         * @remarks
-         * [Api set: PowerPointApi 1.5]
-         * @returns The number of shapes in the collection.
-         */
-        getCount(): OfficeExtension.ClientResult<number>;
-        /**
-         * Gets a shape using its unique ID. An error is thrown if the shape doesn't exist.
-         *
-         * @remarks
-         * [Api set: PowerPointApi 1.5]
-         *
-         * @param key The ID of the shape.
-         * @returns The shape with the unique ID. If such a shape doesn't exist, an error is thrown.
-         */
-        getItem(key: string): PowerPoint.Shape;
-        /**
-         * Gets a shape using its zero-based index in the collection. An error is thrown if the index is out of range.
-         *
-         * @remarks
-         * [Api set: PowerPointApi 1.5]
-         *
-         * @param index The index of the shape in the collection.
-         * @returns The shape at the given index. An error is thrown if index is out of range.
-         */
-        getItemAt(index: number): PowerPoint.Shape;
-        /**
-         * Gets a shape using its unique ID. If such a shape doesn't exist, an object with an `isNullObject` property set to true is returned. For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
-         *
-         * @remarks
-         * [Api set: PowerPointApi 1.5]
-         *
-         * @param id The ID of the shape.
-         * @returns The shape with the unique ID. If such a shape doesn't exist, an object with an `isNullObject` property set to true is returned.
-         */
-        getItemOrNullObject(id: string): PowerPoint.Shape;
-        /**
-         * Groups all shapes in this collection into a single shape.
-                    If the collection contains fewer than two shapes, then this method returns the `GeneralException` error.
-         *
-         * @remarks
-         * [Api set: PowerPointApi 1.8]
-         * @returns The newly created grouped shape as a {@link PowerPoint.Shape}.
-         */
-        group(): PowerPoint.Shape;
-        /**
-         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
-         *
-         * @param options Provides options for which properties of the object to load.
-         */
-        load(options?: PowerPoint.Interfaces.ShapeScopedCollectionLoadOptions & PowerPoint.Interfaces.CollectionLoadOptions): PowerPoint.ShapeScopedCollection;
-        /**
-         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
-         *
-         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
-         */
-        load(propertyNames?: string | string[]): PowerPoint.ShapeScopedCollection;
-        /**
-         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
-         *
-         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
-         */
-        load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.ShapeScopedCollection;
-        /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.ShapeScopedCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ShapeScopedCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
-        toJSON(): PowerPoint.Interfaces.ShapeScopedCollectionData;
     }
     /**
      * Represents a shape group inside a presentation. To get the corresponding Shape object, use `ShapeGroup.shape`.
@@ -194793,8 +197968,7 @@ declare namespace PowerPoint {
          * Gets the creation ID of the shape group. Returns `null` if the shape group has no creation ID.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly creationId: string | null;
         /**
@@ -194833,9 +198007,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.ShapeGroup;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.ShapeGroup` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ShapeGroupData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.ShapeGroup` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ShapeGroupData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.ShapeGroupData;
     }
     /**
@@ -194949,9 +198123,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.ShapeLineFormat;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.ShapeLineFormat` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ShapeLineFormatData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.ShapeLineFormat` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ShapeLineFormatData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.ShapeLineFormatData;
     }
     /**
@@ -194999,8 +198173,7 @@ declare namespace PowerPoint {
          * Returns an `Adjustments` object that contains adjustment values for all the adjustments in this shape.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly adjustments: PowerPoint.Adjustments;
         /**
@@ -195069,8 +198242,7 @@ declare namespace PowerPoint {
                     This information is useful for people with vision or cognitive impairments who may not be able to see or understand the shape.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         altTextDescription: string;
         /**
@@ -195081,16 +198253,14 @@ declare namespace PowerPoint {
                     A title can be read to a person with a disability and is used to determine whether they wish to hear the description of the content.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         altTextTitle: string;
         /**
          * Gets the creation ID of the shape. Returns `null` if the shape has no creation ID.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         readonly creationId: string | null;
         /**
@@ -195114,8 +198284,7 @@ declare namespace PowerPoint {
                     People using screen readers will hear these are decorative so they know they aren't missing any important information.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         isDecorative: boolean;
         /**
@@ -195150,8 +198319,7 @@ declare namespace PowerPoint {
                     A positive value indicates clockwise rotation, and a negative value indicates counterclockwise rotation.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         rotation: number;
         /**
@@ -195172,8 +198340,7 @@ declare namespace PowerPoint {
          * Specifies if the shape is visible.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         visible: boolean;
         /**
@@ -195199,11 +198366,18 @@ declare namespace PowerPoint {
          */
         delete(): void;
         /**
-         * Renders an image of the shape.
+         * Returns a {@link PowerPoint.Graphic} object if this shape is a {@link PowerPoint.ShapeType| ShapeType.graphic}. If this shape isn't a `Graphic`, an object with an `isNullObject` property set to `true` is returned. For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
          *
          * @remarks
          * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
          * @beta
+         */
+        getGraphicOrNullObject(): PowerPoint.Graphic;
+        /**
+         * Renders an image of the shape.
+         *
+         * @remarks
+         * [Api set: PowerPointApi 1.10]
          *
          * @param options Optional. Options to specify the desired output image properties.
          * @returns A Base64-encoded string of the shape image in the specified format.
@@ -195263,16 +198437,14 @@ declare namespace PowerPoint {
                     For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         getTextFrameOrNullObject(): PowerPoint.TextFrame;
         /**
          * Sets a hyperlink on this `Shape` with the specified options. This will delete any existing hyperlink on this `Shape`.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param options Optional. The options for the hyperlink.
          * @returns The newly created {@link PowerPoint.Hyperlink} object.
@@ -195318,9 +198490,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.Shape;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.Shape` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ShapeData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.Shape` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.ShapeData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.ShapeData;
     }
     /**
@@ -195382,9 +198554,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.Binding;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.Binding` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.BindingData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.Binding` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.BindingData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.BindingData;
     }
     /**
@@ -195496,9 +198668,9 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.BindingCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.BindingCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.BindingCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.BindingCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.BindingCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.BindingCollectionData;
     }
     /**
@@ -195593,9 +198765,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.CustomProperty;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.CustomProperty` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.CustomPropertyData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.CustomProperty` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.CustomPropertyData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.CustomPropertyData;
     }
     /**
@@ -195651,8 +198823,7 @@ declare namespace PowerPoint {
                     Throws an `InvalidArgument` exception when the index is out of range.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param index The index of the custom property in the collection.
          * @returns The custom property at the given index.
@@ -195689,9 +198860,9 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.CustomPropertyCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.CustomPropertyCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.CustomPropertyCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.CustomPropertyCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.CustomPropertyCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.CustomPropertyCollectionData;
     }
     /**
@@ -195809,9 +198980,9 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.DocumentProperties;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.DocumentProperties` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.DocumentPropertiesData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.DocumentProperties` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.DocumentPropertiesData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.DocumentPropertiesData;
     }
     /**
@@ -195870,11 +199041,47 @@ declare namespace PowerPoint {
         targetSlideId?: string;
     }
     /**
-     * Represents the page setup information for the presentation.
+     * Indicates the labeling capability.
      *
      * @remarks
      * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
      * @beta
+     */
+    enum LabelingCapability {
+        /**
+         * Represents there's no valid licenses.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        noLicense = "NoLicense",
+        /**
+         * Represents labeling being disabled.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelingDisabled = "LabelingDisabled",
+        /**
+         * Represents labeling policy not found.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelingPolicyNotFound = "LabelingPolicyNotFound",
+        /**
+         * Represents labeling being enabled.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelingEnabled = "LabelingEnabled",
+    }
+    /**
+     * Represents the page setup information for the presentation.
+     *
+     * @remarks
+     * [Api set: PowerPointApi 1.10]
      */
     class PageSetup extends OfficeExtension.ClientObject {
         /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
@@ -195883,16 +199090,14 @@ declare namespace PowerPoint {
          * Specifies the height of the slides in the presentation, in points.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         slideHeight: number;
         /**
          * Specifies the width of the slides in the presentation, in points.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         slideWidth: number;
         /**
@@ -195917,10 +199122,596 @@ declare namespace PowerPoint {
             expand?: string;
         }): PowerPoint.PageSetup;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.PageSetup` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.PageSetupData`) that contains shallow copies of any loaded child properties from the original object.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.PageSetup` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.PageSetupData`) that contains shallow copies of any loaded child properties from the original object.
+        */
         toJSON(): PowerPoint.Interfaces.PageSetupData;
+    }
+    /**
+     * Represents the collection of {@link PowerPoint.SensitivityLabelDetails} objects.
+     *
+     * @remarks
+     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabelDetailsCollection extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /** Gets the loaded child items in this collection. */
+        readonly items: PowerPoint.SensitivityLabelDetails[];
+        /**
+         * Gets the number of {@link PowerPoint.SensitivityLabelDetails} objects in this collection.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         * @returns The number of `SensitivityLabelDetails` objects.
+         */
+        getCount(): OfficeExtension.ClientResult<number>;
+        /**
+         * Gets the specified `SensitivityLabelDetails` object in this collection. Throws an `ItemNotFound` error if an item with the specified ID isn't found.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         *
+         * @param id The ID of the sensitivity label.
+         * @returns The specified `SensitivityLabelDetails` object.
+         */
+        getItem(id: string): PowerPoint.SensitivityLabelDetails;
+        /**
+         * Gets the `SensitivityLabelDetails` object at the specified index in this collection. Throws an `IndexOutOfRange` error if the index is out of range.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         *
+         * @param index The index of the item to retrieve. Zero-indexed.
+         * @returns The `SensitivityLabelDetails` object at the specified index.
+         */
+        getItemAt(index: number): PowerPoint.SensitivityLabelDetails;
+        /**
+         * Gets the specified `SensitivityLabelDetails` object in this collection. If an item with the specified ID isn't found, then this method will return an object with its `isNullObject` property set to `true`. For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         *
+         * @param id The ID of the sensitivity label.
+         * @returns The specified `SensitivityLabelDetails` object.
+         */
+        getItemOrNullObject(id: string): PowerPoint.SensitivityLabelDetails;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: PowerPoint.Interfaces.SensitivityLabelDetailsCollectionLoadOptions & PowerPoint.Interfaces.CollectionLoadOptions): PowerPoint.SensitivityLabelDetailsCollection;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): PowerPoint.SensitivityLabelDetailsCollection;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.SensitivityLabelDetailsCollection;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SensitivityLabelDetailsCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SensitivityLabelDetailsCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
+        toJSON(): PowerPoint.Interfaces.SensitivityLabelDetailsCollectionData;
+    }
+    /**
+     * Represents the protection type.
+     *
+     * @remarks
+     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    enum SensitivityLabelProtectionType {
+        /**
+         * No protection is applied by this label.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        noProtection = "NoProtection",
+        /**
+         * Protection is defined by an administrator.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        adminDefined = "AdminDefined",
+        /**
+         * Protection is defined by the user.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        userDefined = "UserDefined",
+    }
+    /**
+     * Represents the data type of an attribute-based access control (ABAC) attribute.
+     *
+     * @remarks
+     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    enum SensitivityLabelAbacAttributeDataType {
+        /**
+         * The data type is not recognized or specified.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        unknown = "Unknown",
+        /**
+         * The attribute value is a string.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        stringValue = "StringValue",
+        /**
+         * The attribute value is a boolean.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        booleanValue = "BooleanValue",
+        /**
+         * The attribute value is a number.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        numberValue = "NumberValue",
+        /**
+         * The attribute value is a date.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        dateValue = "DateValue",
+    }
+    /**
+     * Represents the properties of available sensitivity labels in PowerPoint.
+     *
+     * @remarks
+     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabelDetails extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * Gets the sublabels of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly children: PowerPoint.SensitivityLabelDetailsCollection;
+        /**
+         * Gets the attribute-based access control (ABAC) attribute values currently applied to this sensitivity label. Returns an empty array when no ABAC attributes are applied or this label is not ABAC-enabled.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly abacAttributeValues: PowerPoint.SensitivityLabelAbacAttributeValue[];
+        /**
+         * Gets the color of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly color: string;
+        /**
+         * Gets the unique ID of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly id: string;
+        /**
+         * Gets whether ABAC attribute selections are required to apply this label. If `true`, callers must supply attribute values when applying the label; otherwise the update returns `SensitivityLabelUpdateResult.MissingRequiredAttributes`.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly isAbacAttributesRequired: boolean;
+        /**
+         * Gets whether this label is attribute-based access control (ABAC) enabled. Returns `false` when the host's labeling capabilities don't include `attributeBasedAccessControlEnabled`.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly isAbacEnabled: boolean;
+        /**
+         * Gets a value indicating whether the label is enabled.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly isEnabled: boolean;
+        /**
+         * Gets the name of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly name: string;
+        /**
+         * Gets the priority of the sensitivity label, with 0 as lowest priority.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly order: number;
+        /**
+         * Gets a value indicating the protection type provided by this label.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly protectionType: PowerPoint.SensitivityLabelProtectionType | "NoProtection" | "AdminDefined" | "UserDefined";
+        /**
+         * Gets the unique ID of the tenant which the sensitivity label is belonged.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly siteId: string;
+        /**
+         * Gets the description of the sensitivity label.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly tooltip: string;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: PowerPoint.Interfaces.SensitivityLabelDetailsLoadOptions): PowerPoint.SensitivityLabelDetails;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): PowerPoint.SensitivityLabelDetails;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: {
+            select?: string;
+            expand?: string;
+        }): PowerPoint.SensitivityLabelDetails;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SensitivityLabelDetails` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SensitivityLabelDetailsData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): PowerPoint.Interfaces.SensitivityLabelDetailsData;
+    }
+    /**
+     * Represents the result of updating the sensitivity label on the presentation.
+     *
+     * @remarks
+     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    enum SensitivityLabelUpdateResult {
+        /**
+         * The sensitivity label was successfully updated.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        success = "Success",
+        /**
+         * The update failed due to an unspecified error.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        unspecifiedFailure = "UnspecifiedFailure",
+        /**
+         * The specified sensitivity label could not be found.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelNotFound = "LabelNotFound",
+        /**
+         * The presentation is read-only and cannot be modified.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        documentReadOnly = "DocumentReadOnly",
+        /**
+         * The user does not have sufficient permissions to update the label.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        insufficientPermission = "InsufficientPermission",
+        /**
+         * The label update failed due to unsupported Double Key Encryption (DKE).
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        unsupportedDoubleKeyEncryption = "UnsupportedDoubleKeyEncryption",
+        /**
+         * The label update failed because native labeling is not enabled for the user or installed SKU.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        labelingDisabled = "LabelingDisabled",
+        /**
+         * The label update failed because the user's identity is not valid for applying a label.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        userNotFound = "UserNotFound",
+        /**
+         * The label update failed due to unsupported User Defined Permissions (UDP).
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        unsupportedUdp = "UnsupportedUdp",
+        /**
+         * The label update failed because the specified label is a parent label, which cannot be applied.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        parentLabelNotSupported = "ParentLabelNotSupported",
+        /**
+         * The label update failed because the document doesn't belong to the same tenant as the user.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        crossTenant = "CrossTenant",
+        /**
+         * The label update failed because attribute-based access control (ABAC) is not supported in this context.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        abacNotSupported = "AbacNotSupported",
+        /**
+         * The label update failed because required ABAC attribute selections were not provided.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        missingRequiredAttributes = "MissingRequiredAttributes",
+        /**
+         * The label update failed because removing the current label is not supported.
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        removingLabelNotSupported = "RemovingLabelNotSupported",
+    }
+    /**
+     * Represents a single selectable value of an attribute-based access control (ABAC) attribute that can be applied to a sensitivity label.
+     *
+     * @remarks
+     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabelAbacAttributeValue extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * Gets the display name of the ABAC attribute value. Add-ins are responsible for presenting localized user-facing UI.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly displayName: string;
+        /**
+         * Gets the recommended ordering of this ABAC value within its attribute when displayed to a user.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly displayOrder: number;
+        /**
+         * Gets the unique identifier of the ABAC attribute value. This identifier is used when applying or updating the label's ABAC attribute selections.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly id: string;
+        /**
+         * Gets whether this ABAC attribute value is active. `true` if the value is active; otherwise, `false`.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly isActive: boolean;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: PowerPoint.Interfaces.SensitivityLabelAbacAttributeValueLoadOptions): PowerPoint.SensitivityLabelAbacAttributeValue;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): PowerPoint.SensitivityLabelAbacAttributeValue;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: {
+            select?: string;
+            expand?: string;
+        }): PowerPoint.SensitivityLabelAbacAttributeValue;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SensitivityLabelAbacAttributeValue` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SensitivityLabelAbacAttributeValueData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): PowerPoint.Interfaces.SensitivityLabelAbacAttributeValueData;
+    }
+    /**
+     * Represents an attribute-based access control (ABAC) attribute available for selection on an ABAC-enabled sensitivity label.
+     *
+     * @remarks
+     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabelAbacAttribute extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * Gets the data type of this ABAC attribute.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly dataType: PowerPoint.SensitivityLabelAbacAttributeDataType | "Unknown" | "StringValue" | "BooleanValue" | "NumberValue" | "DateValue";
+        /**
+         * Gets the display name of the ABAC attribute. Add-ins are responsible for presenting localized user-facing UI.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly displayName: string;
+        /**
+         * Gets the recommended ordering of this ABAC attribute when displayed to a user.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly displayOrder: number;
+        /**
+         * Gets whether this ABAC attribute is active. `true` if the attribute is active; otherwise, `false`.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly isActive: boolean;
+        /**
+         * Gets whether more than one value can be selected for this ABAC attribute. `true` if multi-select; otherwise, `false`.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly isMultiValued: boolean;
+        /**
+         * Gets the values that are selectable for this ABAC attribute.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        readonly values: PowerPoint.SensitivityLabelAbacAttributeValue[];
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param options Provides options for which properties of the object to load.
+         */
+        load(options?: PowerPoint.Interfaces.SensitivityLabelAbacAttributeLoadOptions): PowerPoint.SensitivityLabelAbacAttribute;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNames A comma-delimited string or an array of strings that specify the properties to load.
+         */
+        load(propertyNames?: string | string[]): PowerPoint.SensitivityLabelAbacAttribute;
+        /**
+         * Queues up a command to load the specified properties of the object. You must call `context.sync()` before reading the properties.
+         *
+         * @param propertyNamesAndPaths `propertyNamesAndPaths.select` is a comma-delimited string that specifies the properties to load, and `propertyNamesAndPaths.expand` is a comma-delimited string that specifies the navigation properties to load.
+         */
+        load(propertyNamesAndPaths?: {
+            select?: string;
+            expand?: string;
+        }): PowerPoint.SensitivityLabelAbacAttribute;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SensitivityLabelAbacAttribute` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SensitivityLabelAbacAttributeData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): PowerPoint.Interfaces.SensitivityLabelAbacAttributeData;
+    }
+    /**
+     * Represents the sensitivity label on the presentation.
+     *
+     * @remarks
+     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    class SensitivityLabel extends OfficeExtension.ClientObject {
+        /** The request context associated with the object. This connects the add-in's process to the Office host application's process. */
+        context: RequestContext;
+        /**
+         * Gets the current label information that exists on the presentation for the user.
+                    If there's no sensitivity label on the current presentation, an object with an `isNullObject` property set to `true` is returned.
+                    For further information, see {@link https://learn.microsoft.com/office/dev/add-ins/develop/application-specific-api-model#ornullobject-methods-and-properties | *OrNullObject methods and properties}.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         * @returns The current `SensitivityLabelDetails` object.
+         */
+        getCurrentOrNullObject(): PowerPoint.SensitivityLabelDetails;
+        /**
+         * Tries to update to the provided sensitivity label on the presentation for the user.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         *
+         * @param labelId The ID of the label to apply.
+         * @returns The `SensitivityLabelUpdateResult` object.
+         */
+        tryToUpdate(labelId: string): OfficeExtension.ClientResult<PowerPoint.SensitivityLabelUpdateResult>;
+        /**
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SensitivityLabel` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SensitivityLabelData`) that contains shallow copies of any loaded child properties from the original object.
+        */
+        toJSON(): {
+            [key: string]: string;
+        };
     }
     /**
      * Represents the collection of slides in the presentation.
@@ -195947,8 +199738,7 @@ declare namespace PowerPoint {
                     Throws an `InvalidArgument` exception if provided slide IDs or `Slide` objects are not found in this collection.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          *
          * @param values An array of slide IDs or `Slide` objects.
          * @returns A Base64-encoded string.
@@ -196013,9 +199803,9 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.SlideCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.SlideCollectionData;
     }
     /**
@@ -196033,8 +199823,7 @@ declare namespace PowerPoint {
          * Exports all slides in this collection to their own presentation file, returned as Base64-encoded data.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          * @returns A Base64-encoded string.
          */
         exportAsBase64Presentation(): OfficeExtension.ClientResult<string>;
@@ -196096,10 +199885,27 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.SlideScopedCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideScopedCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideScopedCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideScopedCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideScopedCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.SlideScopedCollectionData;
+    }
+    /**
+     * Provides information about the slide selection changed event.
+     *
+     * @remarks
+     * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+     * @beta
+     */
+    interface SlideSelectionChangedEventArgs {
+        /**
+         * Gets the array of IDs of the currently selected slides.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        slideIds: string[];
     }
     /**
      * Represents the collection of Slide Masters in the presentation.
@@ -196170,9 +199976,9 @@ declare namespace PowerPoint {
          */
         load(propertyNamesAndPaths?: OfficeExtension.LoadOption): PowerPoint.SlideMasterCollection;
         /**
-         * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
-         * Whereas the original `PowerPoint.SlideMasterCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideMasterCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
-         */
+        * Overrides the JavaScript `toJSON()` method in order to provide more useful output when an API object is passed to `JSON.stringify()`. (`JSON.stringify`, in turn, calls the `toJSON` method of the object that's passed to it.)
+        * Whereas the original `PowerPoint.SlideMasterCollection` object is an API object, the `toJSON` method returns a plain JavaScript object (typed as `PowerPoint.Interfaces.SlideMasterCollectionData`) that contains an "items" array with shallow copies of any loaded properties from the collection's items.
+        */
         toJSON(): PowerPoint.Interfaces.SlideMasterCollectionData;
     }
     enum ErrorCodes {
@@ -196211,8 +200017,7 @@ declare namespace PowerPoint {
                         Returns `null` if the {@link PowerPoint.TextRange} includes text fragments with different bullet formatting properties.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             style?: PowerPoint.BulletStyle | "Unsupported" | "AlphabetLowercasePeriod" | "AlphabetUppercasePeriod" | "ArabicNumeralParenthesisRight" | "ArabicNumeralPeriod" | "RomanLowercaseParenthesesBoth" | "RomanLowercaseParenthesisRight" | "RomanLowercasePeriod" | "RomanUppercasePeriod" | "AlphabetLowercaseParenthesesBoth" | "AlphabetLowercaseParenthesisRight" | "AlphabetUppercaseParenthesesBoth" | "AlphabetUppercaseParenthesisRight" | "ArabicNumeralParenthesesBoth" | "ArabicNumeralPlain" | "RomanUppercaseParenthesesBoth" | "RomanUppercaseParenthesisRight" | "SimplifiedChinesePlain" | "SimplifiedChinesePeriod" | "CircleNumberDoubleBytePlain" | "CircleNumberWideDoubleByteWhitePlain" | "CircleNumberWideDoubleByteBlackPlain" | "TraditionalChinesePlain" | "TraditionalChinesePeriod" | "ArabicAlphabetDash" | "ArabicAbjadDash" | "HebrewAlphabetDash" | "KanjiKoreanPlain" | "KanjiKoreanPeriod" | "ArabicDoubleBytePlain" | "ArabicDoubleBytePeriod" | "ThaiAlphabetPeriod" | "ThaiAlphabetParenthesisRight" | "ThaiAlphabetParenthesesBoth" | "ThaiNumeralPeriod" | "ThaiNumeralParenthesisRight" | "ThaiNumeralParenthesesBoth" | "HindiAlphabetPeriod" | "HindiNumeralPeriod" | "KanjiSimplifiedChineseDoubleBytePeriod" | "HindiNumeralParenthesisRight" | "HindiAlphabet1Period" | null;
             /**
@@ -196220,8 +200025,7 @@ declare namespace PowerPoint {
                         Returns `null` if the {@link PowerPoint.TextRange} includes text fragments with different bullet formatting properties.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             type?: PowerPoint.BulletType | "Unsupported" | "None" | "Numbered" | "Unnumbered" | null;
             /**
@@ -196245,8 +200049,7 @@ declare namespace PowerPoint {
              * Represents the indent level of the paragraph.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             indentLevel?: number;
         }
@@ -196255,11 +200058,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to use the **All Caps** attribute which makes lowercase letters appear as uppercase letters. The possible values are as follows:
                         
-                         - `true`: All the text has the **All Caps** attribute.
+                        - `true`: All the text has the **All Caps** attribute.
                         
-                         - `false`: None of the text has the **All Caps** attribute.
+                        - `false`: None of the text has the **All Caps** attribute.
                         
-                         - `null`: Returned if some, but not all, of the text has the **All Caps** attribute.
+                        - `null`: Returned if some, but not all, of the text has the **All Caps** attribute.
              *
              * @remarks
              * [Api set: PowerPointApi 1.8]
@@ -196268,11 +200071,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to bold. The possible values are as follows:
                         
-                         - `true`: All the text is bold.
+                        - `true`: All the text is bold.
                         
-                         - `false`: None of the text is bold.
+                        - `false`: None of the text is bold.
                         
-                         - `null`: Returned if some, but not all, of the text is bold.
+                        - `null`: Returned if some, but not all, of the text is bold.
              *
              * @remarks
              * [Api set: PowerPointApi 1.4]
@@ -196288,11 +200091,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to use the **Double strikethrough** attribute. The possible values are as follows:
                         
-                         - `true`: All the text has the **Double strikethrough** attribute.
+                        - `true`: All the text has the **Double strikethrough** attribute.
                         
-                         - `false`: None of the text has the **Double strikethrough** attribute.
+                        - `false`: None of the text has the **Double strikethrough** attribute.
                         
-                         - `null`: Returned if some, but not all, of the text has the **Double strikethrough** attribute.
+                        - `null`: Returned if some, but not all, of the text has the **Double strikethrough** attribute.
              *
              * @remarks
              * [Api set: PowerPointApi 1.8]
@@ -196301,11 +200104,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to italic. The possible values are as follows:
                         
-                         - `true`: All the text is italicized.
+                        - `true`: All the text is italicized.
                         
-                         - `false`: None of the text is italicized.
+                        - `false`: None of the text is italicized.
                         
-                         - `null`: Returned if some, but not all, of the text is italicized.
+                        - `null`: Returned if some, but not all, of the text is italicized.
              *
              * @remarks
              * [Api set: PowerPointApi 1.4]
@@ -196328,11 +200131,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to use the **Small Caps** attribute which makes lowercase letters appear as small uppercase letters. The possible values are as follows:
                         
-                         - `true`: All the text has the **Small Caps** attribute.
+                        - `true`: All the text has the **Small Caps** attribute.
                         
-                         - `false`: None of the text has the **Small Caps** attribute.
+                        - `false`: None of the text has the **Small Caps** attribute.
                         
-                         - `null`: Returned if some, but not all, of the text has the **Small Caps** attribute.
+                        - `null`: Returned if some, but not all, of the text has the **Small Caps** attribute.
              *
              * @remarks
              * [Api set: PowerPointApi 1.8]
@@ -196341,11 +200144,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to use the **Strikethrough** attribute. The possible values are as follows:
                         
-                         - `true`: All the text has the **Strikethrough** attribute.
+                        - `true`: All the text has the **Strikethrough** attribute.
                         
-                         - `false`: None of the text has the **Strikethrough** attribute.
+                        - `false`: None of the text has the **Strikethrough** attribute.
                         
-                         - `null`: Returned if some, but not all, of the text has the **Strikethrough** attribute.
+                        - `null`: Returned if some, but not all, of the text has the **Strikethrough** attribute.
              *
              * @remarks
              * [Api set: PowerPointApi 1.8]
@@ -196354,11 +200157,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to use the **Subscript** attribute. The possible values are as follows:
                         
-                         - `true`: All the text has the **Subscript** attribute.
+                        - `true`: All the text has the **Subscript** attribute.
                         
-                         - `false`: None of the text has the **Subscript** attribute.
+                        - `false`: None of the text has the **Subscript** attribute.
                         
-                         - `null`: Returned if some, but not all, of the text has the **Subscript** attribute.
+                        - `null`: Returned if some, but not all, of the text has the **Subscript** attribute.
              *
              * @remarks
              * [Api set: PowerPointApi 1.8]
@@ -196367,11 +200170,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to use the **Superscript** attribute. The possible values are as follows:
                         
-                         - `true`: All the text has the **Superscript** attribute.
+                        - `true`: All the text has the **Superscript** attribute.
                         
-                         - `false`: None of the text has the **Superscript** attribute.
+                        - `false`: None of the text has the **Superscript** attribute.
                         
-                         - `null`: Returned if some, but not all, of the text has the **Superscript** attribute.
+                        - `null`: Returned if some, but not all, of the text has the **Superscript** attribute.
              *
              * @remarks
              * [Api set: PowerPointApi 1.8]
@@ -196483,6 +200286,10 @@ declare namespace PowerPoint {
         /** An interface for updating data on the `HyperlinkCollection` object, for use in `hyperlinkCollection.set({ ... })`. */
         interface HyperlinkCollectionUpdateData {
             items?: PowerPoint.Interfaces.HyperlinkData[];
+        }
+        /** An interface for updating data on the `ShapeScopedCollection` object, for use in `shapeScopedCollection.set({ ... })`. */
+        interface ShapeScopedCollectionUpdateData {
+            items?: PowerPoint.Interfaces.ShapeData[];
         }
         /** An interface for updating data on the `Border` object, for use in `border.set({ ... })`. */
         interface BorderUpdateData {
@@ -196696,8 +200503,7 @@ declare namespace PowerPoint {
              * Specifies the type of gradient fill.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             type?: PowerPoint.SlideBackgroundGradientFillType | "Unsupported" | "Linear" | "Radial" | "Rectangular" | "Path" | "ShadeFromTitle";
         }
@@ -196707,24 +200513,21 @@ declare namespace PowerPoint {
              * Specifies the background color in HTML color format (e.g., "#FFFFFF" or "white").
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             backgroundColor?: string;
             /**
              * Specifies the foreground color in HTML color format (e.g., "#FFA500" or "orange").
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             foregroundColor?: string;
             /**
              * Specifies the pattern type.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             pattern?: PowerPoint.SlideBackgroundPatternFillType | "Unsupported" | "Percent5" | "Percent10" | "Percent20" | "Percent25" | "Percent30" | "Percent40" | "Percent50" | "Percent60" | "Percent70" | "Percent75" | "Percent80" | "Percent90" | "Horizontal" | "Vertical" | "LightHorizontal" | "LightVertical" | "DarkHorizontal" | "DarkVertical" | "NarrowHorizontal" | "NarrowVertical" | "DashedHorizontal" | "DashedVertical" | "Cross" | "DownwardDiagonal" | "UpwardDiagonal" | "LightDownwardDiagonal" | "LightUpwardDiagonal" | "DarkDownwardDiagonal" | "DarkUpwardDiagonal" | "WideDownwardDiagonal" | "WideUpwardDiagonal" | "DashedDownwardDiagonal" | "DashedUpwardDiagonal" | "DiagonalCross" | "SmallCheckerBoard" | "LargeCheckerBoard" | "SmallGrid" | "LargeGrid" | "DottedGrid" | "SmallConfetti" | "LargeConfetti" | "HorizontalBrick" | "DiagonalBrick" | "SolidDiamond" | "OutlinedDiamond" | "DottedDiamond" | "Plaid" | "Sphere" | "Weave" | "Divot" | "Shingle" | "Wave" | "Trellis" | "ZigZag";
         }
@@ -196734,8 +200537,7 @@ declare namespace PowerPoint {
              * Specifies the transparency percentage of the fill as a value from 0.0 (opaque) through 1.0 (clear).
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             transparency?: number;
         }
@@ -196745,16 +200547,14 @@ declare namespace PowerPoint {
              * Specifies the fill color in HTML color format (e.g., "#FFA500" or "orange").
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             color?: string;
             /**
              * Specifies the transparency percentage of the fill as a value from 0.0 (opaque) through 1.0 (clear).
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             transparency?: number;
         }
@@ -196764,16 +200564,14 @@ declare namespace PowerPoint {
              * Specifies whether the slide layout background fill hides or displays background graphic objects from the slide master.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             areBackgroundGraphicsHidden?: boolean;
             /**
              * Specifies if the slide background follows the slide master background.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             isMasterBackgroundFollowed?: boolean;
         }
@@ -196783,16 +200581,14 @@ declare namespace PowerPoint {
              * Specifies whether the slide layout background fill hides or displays background graphic objects from the slide master.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             areBackgroundGraphicsHidden?: boolean;
             /**
              * Specifies if the slide layout background follows the slide master background.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             isMasterBackgroundFollowed?: boolean;
         }
@@ -196813,10 +200609,6 @@ declare namespace PowerPoint {
         /** An interface for updating data on the `TagCollection` object, for use in `tagCollection.set({ ... })`. */
         interface TagCollectionUpdateData {
             items?: PowerPoint.Interfaces.TagData[];
-        }
-        /** An interface for updating data on the `ShapeScopedCollection` object, for use in `shapeScopedCollection.set({ ... })`. */
-        interface ShapeScopedCollectionUpdateData {
-            items?: PowerPoint.Interfaces.ShapeData[];
         }
         /** An interface for updating data on the `ShapeLineFormat` object, for use in `shapeLineFormat.set({ ... })`. */
         interface ShapeLineFormatUpdateData {
@@ -196872,8 +200664,7 @@ declare namespace PowerPoint {
                         This information is useful for people with vision or cognitive impairments who may not be able to see or understand the shape.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             altTextDescription?: string;
             /**
@@ -196884,8 +200675,7 @@ declare namespace PowerPoint {
                         A title can be read to a person with a disability and is used to determine whether they wish to hear the description of the content.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             altTextTitle?: string;
             /**
@@ -196902,8 +200692,7 @@ declare namespace PowerPoint {
                         People using screen readers will hear these are decorative so they know they aren't missing any important information.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             isDecorative?: boolean;
             /**
@@ -196925,8 +200714,7 @@ declare namespace PowerPoint {
                         A positive value indicates clockwise rotation, and a negative value indicates counterclockwise rotation.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             rotation?: number;
             /**
@@ -196940,8 +200728,7 @@ declare namespace PowerPoint {
              * Specifies if the shape is visible.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             visible?: boolean;
             /**
@@ -197043,18 +200830,20 @@ declare namespace PowerPoint {
              * Specifies the height of the slides in the presentation, in points.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             slideHeight?: number;
             /**
              * Specifies the width of the slides in the presentation, in points.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             slideWidth?: number;
+        }
+        /** An interface for updating data on the `SensitivityLabelDetailsCollection` object, for use in `sensitivityLabelDetailsCollection.set({ ... })`. */
+        interface SensitivityLabelDetailsCollectionUpdateData {
+            items?: PowerPoint.Interfaces.SensitivityLabelDetailsData[];
         }
         /** An interface for updating data on the `SlideCollection` object, for use in `slideCollection.set({ ... })`. */
         interface SlideCollectionUpdateData {
@@ -197067,6 +200856,17 @@ declare namespace PowerPoint {
         /** An interface for updating data on the `SlideMasterCollection` object, for use in `slideMasterCollection.set({ ... })`. */
         interface SlideMasterCollectionUpdateData {
             items?: PowerPoint.Interfaces.SlideMasterData[];
+        }
+        /** An interface describing the data returned by calling `sensitivityLabelsCatalog.toJSON()`. */
+        interface SensitivityLabelsCatalogData {
+            /**
+             * Gets whether the catalog of sensitivity labels is enabled in PowerPoint.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            getLabelingCapability?: PowerPoint.LabelingCapability | "NoLicense" | "LabelingDisabled" | "LabelingPolicyNotFound" | "LabelingEnabled";
         }
         /** An interface describing the data returned by calling `presentation.toJSON()`. */
         interface PresentationData {
@@ -197091,8 +200891,7 @@ declare namespace PowerPoint {
              * Specifies the number of adjustment points.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             count?: number;
         }
@@ -197121,6 +200920,9 @@ declare namespace PowerPoint {
         interface CustomXmlPartCollectionData {
             items?: PowerPoint.Interfaces.CustomXmlPartData[];
         }
+        /** An interface describing the data returned by calling `graphic.toJSON()`. */
+        interface GraphicData {
+        }
         /** An interface describing the data returned by calling `hyperlinkScopedCollection.toJSON()`. */
         interface HyperlinkScopedCollectionData {
             items?: PowerPoint.Interfaces.HyperlinkData[];
@@ -197132,8 +200934,7 @@ declare namespace PowerPoint {
                         Returns `null` if the {@link PowerPoint.TextRange} includes text fragments with different bullet formatting properties.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             style?: PowerPoint.BulletStyle | "Unsupported" | "AlphabetLowercasePeriod" | "AlphabetUppercasePeriod" | "ArabicNumeralParenthesisRight" | "ArabicNumeralPeriod" | "RomanLowercaseParenthesesBoth" | "RomanLowercaseParenthesisRight" | "RomanLowercasePeriod" | "RomanUppercasePeriod" | "AlphabetLowercaseParenthesesBoth" | "AlphabetLowercaseParenthesisRight" | "AlphabetUppercaseParenthesesBoth" | "AlphabetUppercaseParenthesisRight" | "ArabicNumeralParenthesesBoth" | "ArabicNumeralPlain" | "RomanUppercaseParenthesesBoth" | "RomanUppercaseParenthesisRight" | "SimplifiedChinesePlain" | "SimplifiedChinesePeriod" | "CircleNumberDoubleBytePlain" | "CircleNumberWideDoubleByteWhitePlain" | "CircleNumberWideDoubleByteBlackPlain" | "TraditionalChinesePlain" | "TraditionalChinesePeriod" | "ArabicAlphabetDash" | "ArabicAbjadDash" | "HebrewAlphabetDash" | "KanjiKoreanPlain" | "KanjiKoreanPeriod" | "ArabicDoubleBytePlain" | "ArabicDoubleBytePeriod" | "ThaiAlphabetPeriod" | "ThaiAlphabetParenthesisRight" | "ThaiAlphabetParenthesesBoth" | "ThaiNumeralPeriod" | "ThaiNumeralParenthesisRight" | "ThaiNumeralParenthesesBoth" | "HindiAlphabetPeriod" | "HindiNumeralPeriod" | "KanjiSimplifiedChineseDoubleBytePeriod" | "HindiNumeralParenthesisRight" | "HindiAlphabet1Period" | null;
             /**
@@ -197141,8 +200942,7 @@ declare namespace PowerPoint {
                         Returns `null` if the {@link PowerPoint.TextRange} includes text fragments with different bullet formatting properties.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             type?: PowerPoint.BulletType | "Unsupported" | "None" | "Numbered" | "Unnumbered" | null;
             /**
@@ -197166,8 +200966,7 @@ declare namespace PowerPoint {
              * Represents the indent level of the paragraph.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             indentLevel?: number;
         }
@@ -197176,11 +200975,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to use the **All Caps** attribute which makes lowercase letters appear as uppercase letters. The possible values are as follows:
                         
-                         - `true`: All the text has the **All Caps** attribute.
+                        - `true`: All the text has the **All Caps** attribute.
                         
-                         - `false`: None of the text has the **All Caps** attribute.
+                        - `false`: None of the text has the **All Caps** attribute.
                         
-                         - `null`: Returned if some, but not all, of the text has the **All Caps** attribute.
+                        - `null`: Returned if some, but not all, of the text has the **All Caps** attribute.
              *
              * @remarks
              * [Api set: PowerPointApi 1.8]
@@ -197189,11 +200988,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to bold. The possible values are as follows:
                         
-                         - `true`: All the text is bold.
+                        - `true`: All the text is bold.
                         
-                         - `false`: None of the text is bold.
+                        - `false`: None of the text is bold.
                         
-                         - `null`: Returned if some, but not all, of the text is bold.
+                        - `null`: Returned if some, but not all, of the text is bold.
              *
              * @remarks
              * [Api set: PowerPointApi 1.4]
@@ -197209,11 +201008,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to use the **Double strikethrough** attribute. The possible values are as follows:
                         
-                         - `true`: All the text has the **Double strikethrough** attribute.
+                        - `true`: All the text has the **Double strikethrough** attribute.
                         
-                         - `false`: None of the text has the **Double strikethrough** attribute.
+                        - `false`: None of the text has the **Double strikethrough** attribute.
                         
-                         - `null`: Returned if some, but not all, of the text has the **Double strikethrough** attribute.
+                        - `null`: Returned if some, but not all, of the text has the **Double strikethrough** attribute.
              *
              * @remarks
              * [Api set: PowerPointApi 1.8]
@@ -197222,11 +201021,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to italic. The possible values are as follows:
                         
-                         - `true`: All the text is italicized.
+                        - `true`: All the text is italicized.
                         
-                         - `false`: None of the text is italicized.
+                        - `false`: None of the text is italicized.
                         
-                         - `null`: Returned if some, but not all, of the text is italicized.
+                        - `null`: Returned if some, but not all, of the text is italicized.
              *
              * @remarks
              * [Api set: PowerPointApi 1.4]
@@ -197249,11 +201048,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to use the **Small Caps** attribute which makes lowercase letters appear as small uppercase letters. The possible values are as follows:
                         
-                         - `true`: All the text has the **Small Caps** attribute.
+                        - `true`: All the text has the **Small Caps** attribute.
                         
-                         - `false`: None of the text has the **Small Caps** attribute.
+                        - `false`: None of the text has the **Small Caps** attribute.
                         
-                         - `null`: Returned if some, but not all, of the text has the **Small Caps** attribute.
+                        - `null`: Returned if some, but not all, of the text has the **Small Caps** attribute.
              *
              * @remarks
              * [Api set: PowerPointApi 1.8]
@@ -197262,11 +201061,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to use the **Strikethrough** attribute. The possible values are as follows:
                         
-                         - `true`: All the text has the **Strikethrough** attribute.
+                        - `true`: All the text has the **Strikethrough** attribute.
                         
-                         - `false`: None of the text has the **Strikethrough** attribute.
+                        - `false`: None of the text has the **Strikethrough** attribute.
                         
-                         - `null`: Returned if some, but not all, of the text has the **Strikethrough** attribute.
+                        - `null`: Returned if some, but not all, of the text has the **Strikethrough** attribute.
              *
              * @remarks
              * [Api set: PowerPointApi 1.8]
@@ -197275,11 +201074,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to use the **Subscript** attribute. The possible values are as follows:
                         
-                         - `true`: All the text has the **Subscript** attribute.
+                        - `true`: All the text has the **Subscript** attribute.
                         
-                         - `false`: None of the text has the **Subscript** attribute.
+                        - `false`: None of the text has the **Subscript** attribute.
                         
-                         - `null`: Returned if some, but not all, of the text has the **Subscript** attribute.
+                        - `null`: Returned if some, but not all, of the text has the **Subscript** attribute.
              *
              * @remarks
              * [Api set: PowerPointApi 1.8]
@@ -197288,11 +201087,11 @@ declare namespace PowerPoint {
             /**
              * Specifies whether the text in the `TextRange` is set to use the **Superscript** attribute. The possible values are as follows:
                         
-                         - `true`: All the text has the **Superscript** attribute.
+                        - `true`: All the text has the **Superscript** attribute.
                         
-                         - `false`: None of the text has the **Superscript** attribute.
+                        - `false`: None of the text has the **Superscript** attribute.
                         
-                         - `null`: Returned if some, but not all, of the text has the **Superscript** attribute.
+                        - `null`: Returned if some, but not all, of the text has the **Superscript** attribute.
              *
              * @remarks
              * [Api set: PowerPointApi 1.8]
@@ -197411,8 +201210,7 @@ declare namespace PowerPoint {
              * Returns the type of object that the hyperlink is applied to. See {@link PowerPoint.HyperlinkType} for details.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             type?: PowerPoint.HyperlinkType | "TextRange" | "Shape";
         }
@@ -197437,6 +201235,10 @@ declare namespace PowerPoint {
         /** An interface describing the data returned by calling `hyperlinkCollection.toJSON()`. */
         interface HyperlinkCollectionData {
             items?: PowerPoint.Interfaces.HyperlinkData[];
+        }
+        /** An interface describing the data returned by calling `shapeScopedCollection.toJSON()`. */
+        interface ShapeScopedCollectionData {
+            items?: PowerPoint.Interfaces.ShapeData[];
         }
         /** An interface describing the data returned by calling `border.toJSON()`. */
         interface BorderData {
@@ -197735,8 +201537,7 @@ declare namespace PowerPoint {
              * Specifies the type of gradient fill.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             type?: PowerPoint.SlideBackgroundGradientFillType | "Unsupported" | "Linear" | "Radial" | "Rectangular" | "Path" | "ShadeFromTitle";
         }
@@ -197746,24 +201547,21 @@ declare namespace PowerPoint {
              * Specifies the background color in HTML color format (e.g., "#FFFFFF" or "white").
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             backgroundColor?: string;
             /**
              * Specifies the foreground color in HTML color format (e.g., "#FFA500" or "orange").
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             foregroundColor?: string;
             /**
              * Specifies the pattern type.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             pattern?: PowerPoint.SlideBackgroundPatternFillType | "Unsupported" | "Percent5" | "Percent10" | "Percent20" | "Percent25" | "Percent30" | "Percent40" | "Percent50" | "Percent60" | "Percent70" | "Percent75" | "Percent80" | "Percent90" | "Horizontal" | "Vertical" | "LightHorizontal" | "LightVertical" | "DarkHorizontal" | "DarkVertical" | "NarrowHorizontal" | "NarrowVertical" | "DashedHorizontal" | "DashedVertical" | "Cross" | "DownwardDiagonal" | "UpwardDiagonal" | "LightDownwardDiagonal" | "LightUpwardDiagonal" | "DarkDownwardDiagonal" | "DarkUpwardDiagonal" | "WideDownwardDiagonal" | "WideUpwardDiagonal" | "DashedDownwardDiagonal" | "DashedUpwardDiagonal" | "DiagonalCross" | "SmallCheckerBoard" | "LargeCheckerBoard" | "SmallGrid" | "LargeGrid" | "DottedGrid" | "SmallConfetti" | "LargeConfetti" | "HorizontalBrick" | "DiagonalBrick" | "SolidDiamond" | "OutlinedDiamond" | "DottedDiamond" | "Plaid" | "Sphere" | "Weave" | "Divot" | "Shingle" | "Wave" | "Trellis" | "ZigZag";
         }
@@ -197773,8 +201571,7 @@ declare namespace PowerPoint {
              * Specifies the transparency percentage of the fill as a value from 0.0 (opaque) through 1.0 (clear).
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             transparency?: number;
         }
@@ -197784,16 +201581,14 @@ declare namespace PowerPoint {
              * Specifies the fill color in HTML color format (e.g., "#FFA500" or "orange").
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             color?: string;
             /**
              * Specifies the transparency percentage of the fill as a value from 0.0 (opaque) through 1.0 (clear).
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             transparency?: number;
         }
@@ -197803,8 +201598,7 @@ declare namespace PowerPoint {
              * Returns the fill type of the slide background. See {@link PowerPoint.SlideBackgroundFillType} for details.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             type?: PowerPoint.SlideBackgroundFillType | "Unsupported" | "Solid" | "Gradient" | "PictureOrTexture" | "Pattern";
         }
@@ -197814,16 +201608,14 @@ declare namespace PowerPoint {
              * Specifies whether the slide layout background fill hides or displays background graphic objects from the slide master.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             areBackgroundGraphicsHidden?: boolean;
             /**
              * Specifies if the slide background follows the slide master background.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             isMasterBackgroundFollowed?: boolean;
         }
@@ -197833,16 +201625,14 @@ declare namespace PowerPoint {
              * Specifies whether the slide layout background fill hides or displays background graphic objects from the slide master.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             areBackgroundGraphicsHidden?: boolean;
             /**
              * Specifies if the slide layout background follows the slide master background.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             isMasterBackgroundFollowed?: boolean;
         }
@@ -197932,18 +201722,13 @@ declare namespace PowerPoint {
              */
             index?: number;
         }
-        /** An interface describing the data returned by calling `shapeScopedCollection.toJSON()`. */
-        interface ShapeScopedCollectionData {
-            items?: PowerPoint.Interfaces.ShapeData[];
-        }
         /** An interface describing the data returned by calling `shapeGroup.toJSON()`. */
         interface ShapeGroupData {
             /**
              * Gets the creation ID of the shape group. Returns `null` if the shape group has no creation ID.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             creationId?: string | null;
             /**
@@ -198008,8 +201793,7 @@ declare namespace PowerPoint {
                         This information is useful for people with vision or cognitive impairments who may not be able to see or understand the shape.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             altTextDescription?: string;
             /**
@@ -198020,16 +201804,14 @@ declare namespace PowerPoint {
                         A title can be read to a person with a disability and is used to determine whether they wish to hear the description of the content.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             altTextTitle?: string;
             /**
              * Gets the creation ID of the shape. Returns `null` if the shape has no creation ID.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             creationId?: string | null;
             /**
@@ -198053,8 +201835,7 @@ declare namespace PowerPoint {
                         People using screen readers will hear these are decorative so they know they aren't missing any important information.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             isDecorative?: boolean;
             /**
@@ -198089,8 +201870,7 @@ declare namespace PowerPoint {
                         A positive value indicates clockwise rotation, and a negative value indicates counterclockwise rotation.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             rotation?: number;
             /**
@@ -198111,8 +201891,7 @@ declare namespace PowerPoint {
              * Specifies if the shape is visible.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             visible?: boolean;
             /**
@@ -198267,18 +202046,205 @@ declare namespace PowerPoint {
              * Specifies the height of the slides in the presentation, in points.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             slideHeight?: number;
             /**
              * Specifies the width of the slides in the presentation, in points.
              *
              * @remarks
+             * [Api set: PowerPointApi 1.10]
+             */
+            slideWidth?: number;
+        }
+        /** An interface describing the data returned by calling `sensitivityLabelDetailsCollection.toJSON()`. */
+        interface SensitivityLabelDetailsCollectionData {
+            items?: PowerPoint.Interfaces.SensitivityLabelDetailsData[];
+        }
+        /** An interface describing the data returned by calling `sensitivityLabelDetails.toJSON()`. */
+        interface SensitivityLabelDetailsData {
+            /**
+            * Gets the sublabels of the sensitivity label.
+            *
+            * @remarks
+            * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+            * @beta
+            */
+            children?: PowerPoint.Interfaces.SensitivityLabelDetailsData[];
+            /**
+             * Gets the attribute-based access control (ABAC) attribute values currently applied to this sensitivity label. Returns an empty array when no ABAC attributes are applied or this label is not ABAC-enabled.
+             *
+             * @remarks
              * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
              * @beta
              */
-            slideWidth?: number;
+            abacAttributeValues?: PowerPoint.SensitivityLabelAbacAttributeValue[];
+            /**
+             * Gets the color of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            color?: string;
+            /**
+             * Gets the unique ID of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            id?: string;
+            /**
+             * Gets whether ABAC attribute selections are required to apply this label. If `true`, callers must supply attribute values when applying the label; otherwise the update returns `SensitivityLabelUpdateResult.MissingRequiredAttributes`.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isAbacAttributesRequired?: boolean;
+            /**
+             * Gets whether this label is attribute-based access control (ABAC) enabled. Returns `false` when the host's labeling capabilities don't include `attributeBasedAccessControlEnabled`.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isAbacEnabled?: boolean;
+            /**
+             * Gets a value indicating whether the label is enabled.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isEnabled?: boolean;
+            /**
+             * Gets the name of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            name?: string;
+            /**
+             * Gets the priority of the sensitivity label, with 0 as lowest priority.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            order?: number;
+            /**
+             * Gets a value indicating the protection type provided by this label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            protectionType?: PowerPoint.SensitivityLabelProtectionType | "NoProtection" | "AdminDefined" | "UserDefined";
+            /**
+             * Gets the unique ID of the tenant which the sensitivity label is belonged.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            siteId?: string;
+            /**
+             * Gets the description of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            tooltip?: string;
+        }
+        /** An interface describing the data returned by calling `sensitivityLabelAbacAttributeValue.toJSON()`. */
+        interface SensitivityLabelAbacAttributeValueData {
+            /**
+             * Gets the display name of the ABAC attribute value. Add-ins are responsible for presenting localized user-facing UI.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayName?: string;
+            /**
+             * Gets the recommended ordering of this ABAC value within its attribute when displayed to a user.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayOrder?: number;
+            /**
+             * Gets the unique identifier of the ABAC attribute value. This identifier is used when applying or updating the label's ABAC attribute selections.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            id?: string;
+            /**
+             * Gets whether this ABAC attribute value is active. `true` if the value is active; otherwise, `false`.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isActive?: boolean;
+        }
+        /** An interface describing the data returned by calling `sensitivityLabelAbacAttribute.toJSON()`. */
+        interface SensitivityLabelAbacAttributeData {
+            /**
+             * Gets the data type of this ABAC attribute.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            dataType?: PowerPoint.SensitivityLabelAbacAttributeDataType | "Unknown" | "StringValue" | "BooleanValue" | "NumberValue" | "DateValue";
+            /**
+             * Gets the display name of the ABAC attribute. Add-ins are responsible for presenting localized user-facing UI.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayName?: string;
+            /**
+             * Gets the recommended ordering of this ABAC attribute when displayed to a user.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayOrder?: number;
+            /**
+             * Gets whether this ABAC attribute is active. `true` if the attribute is active; otherwise, `false`.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isActive?: boolean;
+            /**
+             * Gets whether more than one value can be selected for this ABAC attribute. `true` if multi-select; otherwise, `false`.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isMultiValued?: boolean;
+            /**
+             * Gets the values that are selectable for this ABAC attribute.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            values?: PowerPoint.SensitivityLabelAbacAttributeValue[];
         }
         /** An interface describing the data returned by calling `slideCollection.toJSON()`. */
         interface SlideCollectionData {
@@ -198291,6 +202257,28 @@ declare namespace PowerPoint {
         /** An interface describing the data returned by calling `slideMasterCollection.toJSON()`. */
         interface SlideMasterCollectionData {
             items?: PowerPoint.Interfaces.SlideMasterData[];
+        }
+        /**
+         * Provides methods to check the status of the catalog of sensitivity labels in PowerPoint
+                    and retrieve all available sensitivity labels if the catalog is enabled.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        interface SensitivityLabelsCatalogLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+             * Gets whether the catalog of sensitivity labels is enabled in PowerPoint.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            getLabelingCapability?: boolean;
         }
         /**
          * The `Presentation` object is the top-level object with one or more slides that contain the contents of the presentation.
@@ -198306,19 +202294,18 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * Returns the page setup information whose properties control slide setup attributes for the presentation.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
+            * Returns the page setup information whose properties control slide setup attributes for the presentation.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.10]
+            */
             pageSetup?: PowerPoint.Interfaces.PageSetupLoadOptions;
             /**
-             * Gets the properties of the presentation.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.7]
-             */
+            * Gets the properties of the presentation.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.7]
+            */
             properties?: PowerPoint.Interfaces.DocumentPropertiesLoadOptions;
             /**
              * Gets the ID of the presentation.
@@ -198339,8 +202326,7 @@ declare namespace PowerPoint {
          * Represents the adjustment values for a shape.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         interface AdjustmentsLoadOptions {
             /**
@@ -198351,8 +202337,7 @@ declare namespace PowerPoint {
              * Specifies the number of adjustment points.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             count?: boolean;
         }
@@ -198437,11 +202422,31 @@ declare namespace PowerPoint {
             namespaceUri?: boolean;
         }
         /**
-         * Represents a scoped collection of hyperlinks.
+         * Represents a graphic object in PowerPoint.
          *
          * @remarks
          * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
          * @beta
+         */
+        interface GraphicLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+            * Returns the `Shape` object associated with the graphic.
+            *
+            * @remarks
+            * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+            * @beta
+            */
+            shape?: PowerPoint.Interfaces.ShapeLoadOptions;
+        }
+        /**
+         * Represents a scoped collection of hyperlinks.
+         *
+         * @remarks
+         * [Api set: PowerPointApi 1.10]
          */
         interface HyperlinkScopedCollectionLoadOptions {
             /**
@@ -198466,8 +202471,7 @@ declare namespace PowerPoint {
              * For EACH ITEM in the collection: Returns the type of object that the hyperlink is applied to. See {@link PowerPoint.HyperlinkType} for details.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             type?: boolean;
         }
@@ -198487,8 +202491,7 @@ declare namespace PowerPoint {
                         Returns `null` if the {@link PowerPoint.TextRange} includes text fragments with different bullet formatting properties.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             style?: boolean;
             /**
@@ -198496,8 +202499,7 @@ declare namespace PowerPoint {
                         Returns `null` if the {@link PowerPoint.TextRange} includes text fragments with different bullet formatting properties.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             type?: boolean;
             /**
@@ -198537,8 +202539,7 @@ declare namespace PowerPoint {
              * Represents the indent level of the paragraph.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             indentLevel?: boolean;
         }
@@ -198839,8 +202840,7 @@ declare namespace PowerPoint {
              * Returns the type of object that the hyperlink is applied to. See {@link PowerPoint.HyperlinkType} for details.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             type?: boolean;
         }
@@ -198900,10 +202900,196 @@ declare namespace PowerPoint {
              * For EACH ITEM in the collection: Returns the type of object that the hyperlink is applied to. See {@link PowerPoint.HyperlinkType} for details.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             type?: boolean;
+        }
+        /**
+         * Represents a collection of shapes.
+         *
+         * @remarks
+         * [Api set: PowerPointApi 1.5]
+         */
+        interface ShapeScopedCollectionLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+            * For EACH ITEM in the collection: Returns an `Adjustments` object that contains adjustment values for all the adjustments in this shape.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.10]
+            */
+            adjustments?: PowerPoint.Interfaces.AdjustmentsLoadOptions;
+            /**
+            * For EACH ITEM in the collection: Returns the fill formatting of this shape.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.5]
+            */
+            fill?: PowerPoint.Interfaces.ShapeFillLoadOptions;
+            /**
+            * For EACH ITEM in the collection: Returns the `ShapeGroup` associated with the shape.
+            If the shape type isn't `group`, then this method returns the `GeneralException` error.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.8]
+            */
+            group?: PowerPoint.Interfaces.ShapeGroupLoadOptions;
+            /**
+            * For EACH ITEM in the collection: Returns the line formatting of this shape.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.5]
+            */
+            lineFormat?: PowerPoint.Interfaces.ShapeLineFormatLoadOptions;
+            /**
+            * For EACH ITEM in the collection: Returns the parent group of this shape.
+            If the shape isn't part of a group, then this method returns the `GeneralException` error.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.8]
+            */
+            parentGroup?: PowerPoint.Interfaces.ShapeLoadOptions;
+            /**
+            * For EACH ITEM in the collection: Returns the properties that apply specifically to this placeholder.
+            If the shape type isn't `placeholder`, then this method returns the `GeneralException` error.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.8]
+            */
+            placeholderFormat?: PowerPoint.Interfaces.PlaceholderFormatLoadOptions;
+            /**
+            * For EACH ITEM in the collection: Returns the {@link PowerPoint.TextFrame} object of this `Shape`. Throws an `InvalidArgument` exception if the shape doesn't support a `TextFrame`.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.5]
+            */
+            textFrame?: PowerPoint.Interfaces.TextFrameLoadOptions;
+            /**
+             * For EACH ITEM in the collection: The alt text description of the Shape.
+                        
+                        Alt text provides alternative, text-based representations of the information contained in the Shape.
+                        This information is useful for people with vision or cognitive impairments who may not be able to see or understand the shape.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.10]
+             */
+            altTextDescription?: boolean;
+            /**
+             * For EACH ITEM in the collection: The alt text title of the Shape.
+                        
+                        Alt text provides alternative, text-based representations of the information contained in the Shape.
+                        This information is useful for people with vision or cognitive impairments who may not be able to see or understand the shape.
+                        A title can be read to a person with a disability and is used to determine whether they wish to hear the description of the content.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.10]
+             */
+            altTextTitle?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the creation ID of the shape. Returns `null` if the shape has no creation ID.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.10]
+             */
+            creationId?: boolean;
+            /**
+             * For EACH ITEM in the collection: Specifies the height, in points, of the shape. Throws an `InvalidArgument` exception when set with a negative value.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.4]
+             */
+            height?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the unique ID of the shape.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.3]
+             */
+            id?: boolean;
+            /**
+             * For EACH ITEM in the collection: Represents whether the shape is decorative or not.
+                        
+                        Decorative objects add visual interest but aren't informative (e.g. stylistic borders).
+                        People using screen readers will hear these are decorative so they know they aren't missing any important information.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.10]
+             */
+            isDecorative?: boolean;
+            /**
+             * For EACH ITEM in the collection: The distance, in points, from the left side of the shape to the left side of the slide.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.4]
+             */
+            left?: boolean;
+            /**
+             * For EACH ITEM in the collection: Returns the level of the specified shape.
+                        
+                        - A level of 0 means the shape isn't part of a group.
+                        
+                        - A level of 1 means the shape is part of a top-level group.
+                        
+                        - A level greater than 1 indicates the shape is a nested group.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.8]
+             */
+            level?: boolean;
+            /**
+             * For EACH ITEM in the collection: Specifies the name of this shape.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.4]
+             */
+            name?: boolean;
+            /**
+             * For EACH ITEM in the collection: Specifies the rotation, in degrees, of the shape around the z-axis.
+                        A positive value indicates clockwise rotation, and a negative value indicates counterclockwise rotation.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.10]
+             */
+            rotation?: boolean;
+            /**
+             * For EACH ITEM in the collection: The distance, in points, from the top edge of the shape to the top edge of the slide.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.4]
+             */
+            top?: boolean;
+            /**
+             * For EACH ITEM in the collection: Returns the type of this shape. See {@link PowerPoint.ShapeType} for details.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.4]
+             */
+            type?: boolean;
+            /**
+             * For EACH ITEM in the collection: Specifies if the shape is visible.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.10]
+             */
+            visible?: boolean;
+            /**
+             * For EACH ITEM in the collection: Specifies the width, in points, of the shape. Throws an `InvalidArgument` exception when set with a negative value.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.4]
+             */
+            width?: boolean;
+            /**
+             * For EACH ITEM in the collection: Returns the z-order position of the shape, with 0 representing the bottom of the order stack. Every shape on a slide has a unique z-order, but
+                        each slide also has a unique z-order stack, so two shapes on separate slides could have the same z-order number.
+             *
+             * @remarks
+             * [Api set: PowerPointApi 1.8]
+             */
+            zOrderPosition?: boolean;
         }
         /**
          * Represents the properties for a table cell border.
@@ -198957,46 +203143,46 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * Gets the bottom border.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * Gets the bottom border.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             bottom?: PowerPoint.Interfaces.BorderLoadOptions;
             /**
-             * Gets the diagonal border (top-left to bottom-right).
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * Gets the diagonal border (top-left to bottom-right).
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             diagonalDown?: PowerPoint.Interfaces.BorderLoadOptions;
             /**
-             * Gets the diagonal border (bottom-left to top-right).
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * Gets the diagonal border (bottom-left to top-right).
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             diagonalUp?: PowerPoint.Interfaces.BorderLoadOptions;
             /**
-             * Gets the left border.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * Gets the left border.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             left?: PowerPoint.Interfaces.BorderLoadOptions;
             /**
-             * Gets the right border.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * Gets the right border.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             right?: PowerPoint.Interfaces.BorderLoadOptions;
             /**
-             * Gets the top border.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * Gets the top border.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             top?: PowerPoint.Interfaces.BorderLoadOptions;
         }
         /**
@@ -199084,32 +203270,32 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * Gets the collection of borders for the table cell.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * Gets the collection of borders for the table cell.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             borders?: PowerPoint.Interfaces.BordersLoadOptions;
             /**
-             * Gets the fill color of the table cell.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * Gets the fill color of the table cell.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             fill?: PowerPoint.Interfaces.ShapeFillLoadOptions;
             /**
-             * Gets the font of the table cell.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * Gets the font of the table cell.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             font?: PowerPoint.Interfaces.ShapeFontLoadOptions;
             /**
-             * Gets the set of margins in the table cell.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * Gets the set of margins in the table cell.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             margins?: PowerPoint.Interfaces.MarginsLoadOptions;
             /**
              * Gets the number of table columns this cell spans across.
@@ -199190,32 +203376,32 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * For EACH ITEM in the collection: Gets the collection of borders for the table cell.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * For EACH ITEM in the collection: Gets the collection of borders for the table cell.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             borders?: PowerPoint.Interfaces.BordersLoadOptions;
             /**
-             * For EACH ITEM in the collection: Gets the fill color of the table cell.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * For EACH ITEM in the collection: Gets the fill color of the table cell.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             fill?: PowerPoint.Interfaces.ShapeFillLoadOptions;
             /**
-             * For EACH ITEM in the collection: Gets the font of the table cell.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * For EACH ITEM in the collection: Gets the font of the table cell.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             font?: PowerPoint.Interfaces.ShapeFontLoadOptions;
             /**
-             * For EACH ITEM in the collection: Gets the set of margins in the table cell.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * For EACH ITEM in the collection: Gets the set of margins in the table cell.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             margins?: PowerPoint.Interfaces.MarginsLoadOptions;
             /**
              * For EACH ITEM in the collection: Gets the number of table columns this cell spans across.
@@ -199475,11 +203661,11 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * Gets the table style settings.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.9]
-             */
+            * Gets the table style settings.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.9]
+            */
             styleSettings?: PowerPoint.Interfaces.TableStyleSettingsLoadOptions;
             /**
              * Gets the number of columns in the table.
@@ -199515,57 +203701,56 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * For EACH ITEM in the collection: Returns an `Adjustments` object that contains adjustment values for all the adjustments in this shape.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
+            * For EACH ITEM in the collection: Returns an `Adjustments` object that contains adjustment values for all the adjustments in this shape.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.10]
+            */
             adjustments?: PowerPoint.Interfaces.AdjustmentsLoadOptions;
             /**
-             * For EACH ITEM in the collection: Returns the fill formatting of this shape.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.4]
-             */
+            * For EACH ITEM in the collection: Returns the fill formatting of this shape.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.4]
+            */
             fill?: PowerPoint.Interfaces.ShapeFillLoadOptions;
             /**
-             * For EACH ITEM in the collection: Returns the `ShapeGroup` associated with the shape.
+            * For EACH ITEM in the collection: Returns the `ShapeGroup` associated with the shape.
             If the shape type isn't `group`, then this method returns the `GeneralException` error.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.8]
-             */
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.8]
+            */
             group?: PowerPoint.Interfaces.ShapeGroupLoadOptions;
             /**
-             * For EACH ITEM in the collection: Returns the line formatting of this shape.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.4]
-             */
+            * For EACH ITEM in the collection: Returns the line formatting of this shape.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.4]
+            */
             lineFormat?: PowerPoint.Interfaces.ShapeLineFormatLoadOptions;
             /**
-             * For EACH ITEM in the collection: Returns the parent group of this shape.
+            * For EACH ITEM in the collection: Returns the parent group of this shape.
             If the shape isn't part of a group, then this method returns the `GeneralException` error.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.8]
-             */
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.8]
+            */
             parentGroup?: PowerPoint.Interfaces.ShapeLoadOptions;
             /**
-             * For EACH ITEM in the collection: Returns the properties that apply specifically to this placeholder.
+            * For EACH ITEM in the collection: Returns the properties that apply specifically to this placeholder.
             If the shape type isn't `placeholder`, then this method returns the `GeneralException` error.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.8]
-             */
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.8]
+            */
             placeholderFormat?: PowerPoint.Interfaces.PlaceholderFormatLoadOptions;
             /**
             * For EACH ITEM in the collection: Returns the {@link PowerPoint.TextFrame} object of this `Shape`. Throws an `InvalidArgument` exception if the shape doesn't support a `TextFrame`.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.4]
-             */
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.4]
+            */
             textFrame?: PowerPoint.Interfaces.TextFrameLoadOptions;
             /**
              * For EACH ITEM in the collection: The alt text description of the Shape.
@@ -199574,8 +203759,7 @@ declare namespace PowerPoint {
                         This information is useful for people with vision or cognitive impairments who may not be able to see or understand the shape.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             altTextDescription?: boolean;
             /**
@@ -199586,16 +203770,14 @@ declare namespace PowerPoint {
                         A title can be read to a person with a disability and is used to determine whether they wish to hear the description of the content.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             altTextTitle?: boolean;
             /**
              * For EACH ITEM in the collection: Gets the creation ID of the shape. Returns `null` if the shape has no creation ID.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             creationId?: boolean;
             /**
@@ -199619,8 +203801,7 @@ declare namespace PowerPoint {
                         People using screen readers will hear these are decorative so they know they aren't missing any important information.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             isDecorative?: boolean;
             /**
@@ -199655,8 +203836,7 @@ declare namespace PowerPoint {
                         A positive value indicates clockwise rotation, and a negative value indicates counterclockwise rotation.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             rotation?: boolean;
             /**
@@ -199677,8 +203857,7 @@ declare namespace PowerPoint {
              * For EACH ITEM in the collection: Specifies if the shape is visible.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             visible?: boolean;
             /**
@@ -199701,8 +203880,7 @@ declare namespace PowerPoint {
          * Represents {@link PowerPoint.SlideBackground} gradient fill properties.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         interface SlideBackgroundGradientFillLoadOptions {
             /**
@@ -199713,8 +203891,7 @@ declare namespace PowerPoint {
              * Specifies the type of gradient fill.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             type?: boolean;
         }
@@ -199722,8 +203899,7 @@ declare namespace PowerPoint {
          * Represents {@link PowerPoint.SlideBackground} pattern fill properties.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         interface SlideBackgroundPatternFillLoadOptions {
             /**
@@ -199734,24 +203910,21 @@ declare namespace PowerPoint {
              * Specifies the background color in HTML color format (e.g., "#FFFFFF" or "white").
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             backgroundColor?: boolean;
             /**
              * Specifies the foreground color in HTML color format (e.g., "#FFA500" or "orange").
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             foregroundColor?: boolean;
             /**
              * Specifies the pattern type.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             pattern?: boolean;
         }
@@ -199759,8 +203932,7 @@ declare namespace PowerPoint {
          * Represents {@link PowerPoint.SlideBackground} picture or texture fill properties.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         interface SlideBackgroundPictureOrTextureFillLoadOptions {
             /**
@@ -199771,8 +203943,7 @@ declare namespace PowerPoint {
              * Specifies the transparency percentage of the fill as a value from 0.0 (opaque) through 1.0 (clear).
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             transparency?: boolean;
         }
@@ -199780,8 +203951,7 @@ declare namespace PowerPoint {
          * Represents {@link PowerPoint.SlideBackground} solid fill properties.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         interface SlideBackgroundSolidFillLoadOptions {
             /**
@@ -199792,16 +203962,14 @@ declare namespace PowerPoint {
              * Specifies the fill color in HTML color format (e.g., "#FFA500" or "orange").
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             color?: boolean;
             /**
              * Specifies the transparency percentage of the fill as a value from 0.0 (opaque) through 1.0 (clear).
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             transparency?: boolean;
         }
@@ -199809,8 +203977,7 @@ declare namespace PowerPoint {
          * Represents the fill formatting of a slide background object.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         interface SlideBackgroundFillLoadOptions {
             /**
@@ -199821,8 +203988,7 @@ declare namespace PowerPoint {
              * Returns the fill type of the slide background. See {@link PowerPoint.SlideBackgroundFillType} for details.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             type?: boolean;
         }
@@ -199830,8 +203996,7 @@ declare namespace PowerPoint {
          * Represents a background of a slide.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         interface SlideBackgroundLoadOptions {
             /**
@@ -199839,27 +204004,24 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * Returns the fill formatting of the background.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
+            * Returns the fill formatting of the background.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.10]
+            */
             fill?: PowerPoint.Interfaces.SlideBackgroundFillLoadOptions;
             /**
              * Specifies whether the slide layout background fill hides or displays background graphic objects from the slide master.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             areBackgroundGraphicsHidden?: boolean;
             /**
              * Specifies if the slide background follows the slide master background.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             isMasterBackgroundFollowed?: boolean;
         }
@@ -199867,8 +204029,7 @@ declare namespace PowerPoint {
          * Represents the background of a slide layout.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         interface SlideLayoutBackgroundLoadOptions {
             /**
@@ -199876,27 +204037,24 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * Returns the fill formatting of the background.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
+            * Returns the fill formatting of the background.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.10]
+            */
             fill?: PowerPoint.Interfaces.SlideBackgroundFillLoadOptions;
             /**
              * Specifies whether the slide layout background fill hides or displays background graphic objects from the slide master.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             areBackgroundGraphicsHidden?: boolean;
             /**
              * Specifies if the slide layout background follows the slide master background.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             isMasterBackgroundFollowed?: boolean;
         }
@@ -199912,12 +204070,11 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * Gets the background of the slide layout.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
+            * Gets the background of the slide layout.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.10]
+            */
             background?: PowerPoint.Interfaces.SlideLayoutBackgroundLoadOptions;
             /**
              * Gets the unique ID of the slide layout.
@@ -199953,12 +204110,11 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * For EACH ITEM in the collection: Gets the background of the slide layout.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
+            * For EACH ITEM in the collection: Gets the background of the slide layout.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.10]
+            */
             background?: PowerPoint.Interfaces.SlideLayoutBackgroundLoadOptions;
             /**
              * For EACH ITEM in the collection: Gets the unique ID of the slide layout.
@@ -199986,8 +204142,7 @@ declare namespace PowerPoint {
          * Represents the background of a slide master.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         interface SlideMasterBackgroundLoadOptions {
             /**
@@ -199995,12 +204150,11 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * Returns the fill formatting of the background.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
+            * Returns the fill formatting of the background.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.10]
+            */
             fill?: PowerPoint.Interfaces.SlideBackgroundFillLoadOptions;
         }
         /**
@@ -200015,12 +204169,11 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * Gets the background of the Slide Master.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
+            * Gets the background of the Slide Master.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.10]
+            */
             background?: PowerPoint.Interfaces.SlideMasterBackgroundLoadOptions;
             /**
              * Gets the unique ID of the Slide Master.
@@ -200101,12 +204254,11 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * Gets the background of the slide.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
+            * Gets the background of the slide.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.10]
+            */
             background?: PowerPoint.Interfaces.SlideBackgroundLoadOptions;
             /**
             * Gets the layout of the slide.
@@ -200138,200 +204290,6 @@ declare namespace PowerPoint {
             index?: boolean;
         }
         /**
-         * Represents a collection of shapes.
-         *
-         * @remarks
-         * [Api set: PowerPointApi 1.5]
-         */
-        interface ShapeScopedCollectionLoadOptions {
-            /**
-              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
-             */
-            $all?: boolean;
-            /**
-             * For EACH ITEM in the collection: Returns an `Adjustments` object that contains adjustment values for all the adjustments in this shape.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
-            adjustments?: PowerPoint.Interfaces.AdjustmentsLoadOptions;
-            /**
-             * For EACH ITEM in the collection: Returns the fill formatting of this shape.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.5]
-             */
-            fill?: PowerPoint.Interfaces.ShapeFillLoadOptions;
-            /**
-             * For EACH ITEM in the collection: Returns the `ShapeGroup` associated with the shape.
-             If the shape type isn't `group`, then this method returns the `GeneralException` error.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.8]
-             */
-            group?: PowerPoint.Interfaces.ShapeGroupLoadOptions;
-            /**
-             * For EACH ITEM in the collection: Returns the line formatting of this shape.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.5]
-             */
-            lineFormat?: PowerPoint.Interfaces.ShapeLineFormatLoadOptions;
-            /**
-             * For EACH ITEM in the collection: Returns the parent group of this shape.
-            If the shape isn't part of a group, then this method returns the `GeneralException` error.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.8]
-             */
-            parentGroup?: PowerPoint.Interfaces.ShapeLoadOptions;
-            /**
-             * For EACH ITEM in the collection: Returns the properties that apply specifically to this placeholder.
-             If the shape type isn't `placeholder`, then this method returns the `GeneralException` error.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.8]
-             */
-            placeholderFormat?: PowerPoint.Interfaces.PlaceholderFormatLoadOptions;
-            /**
-             * For EACH ITEM in the collection: Returns the {@link PowerPoint.TextFrame} object of this `Shape`. Throws an `InvalidArgument` exception if the shape doesn't support a `TextFrame`.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.5]
-             */
-            textFrame?: PowerPoint.Interfaces.TextFrameLoadOptions;
-            /**
-             * For EACH ITEM in the collection: The alt text description of the Shape.
-                        
-                        Alt text provides alternative, text-based representations of the information contained in the Shape.
-                        This information is useful for people with vision or cognitive impairments who may not be able to see or understand the shape.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
-            altTextDescription?: boolean;
-            /**
-             * For EACH ITEM in the collection: The alt text title of the Shape.
-                        
-                        Alt text provides alternative, text-based representations of the information contained in the Shape.
-                        This information is useful for people with vision or cognitive impairments who may not be able to see or understand the shape.
-                        A title can be read to a person with a disability and is used to determine whether they wish to hear the description of the content.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
-            altTextTitle?: boolean;
-            /**
-             * For EACH ITEM in the collection: Gets the creation ID of the shape. Returns `null` if the shape has no creation ID.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
-            creationId?: boolean;
-            /**
-             * For EACH ITEM in the collection: Specifies the height, in points, of the shape. Throws an `InvalidArgument` exception when set with a negative value.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.4]
-             */
-            height?: boolean;
-            /**
-             * For EACH ITEM in the collection: Gets the unique ID of the shape.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.3]
-             */
-            id?: boolean;
-            /**
-             * For EACH ITEM in the collection: Represents whether the shape is decorative or not.
-                        
-                        Decorative objects add visual interest but aren't informative (e.g. stylistic borders).
-                        People using screen readers will hear these are decorative so they know they aren't missing any important information.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
-            isDecorative?: boolean;
-            /**
-             * For EACH ITEM in the collection: The distance, in points, from the left side of the shape to the left side of the slide.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.4]
-             */
-            left?: boolean;
-            /**
-             * For EACH ITEM in the collection: Returns the level of the specified shape.
-                        
-                        - A level of 0 means the shape isn't part of a group.
-                        
-                        - A level of 1 means the shape is part of a top-level group.
-                        
-                        - A level greater than 1 indicates the shape is a nested group.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.8]
-             */
-            level?: boolean;
-            /**
-             * For EACH ITEM in the collection: Specifies the name of this shape.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.4]
-             */
-            name?: boolean;
-            /**
-             * For EACH ITEM in the collection: Specifies the rotation, in degrees, of the shape around the z-axis.
-                        A positive value indicates clockwise rotation, and a negative value indicates counterclockwise rotation.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
-            rotation?: boolean;
-            /**
-             * For EACH ITEM in the collection: The distance, in points, from the top edge of the shape to the top edge of the slide.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.4]
-             */
-            top?: boolean;
-            /**
-             * For EACH ITEM in the collection: Returns the type of this shape. See {@link PowerPoint.ShapeType} for details.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.4]
-             */
-            type?: boolean;
-            /**
-             * For EACH ITEM in the collection: Specifies if the shape is visible.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
-            visible?: boolean;
-            /**
-             * For EACH ITEM in the collection: Specifies the width, in points, of the shape. Throws an `InvalidArgument` exception when set with a negative value.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.4]
-             */
-            width?: boolean;
-            /**
-             * For EACH ITEM in the collection: Returns the z-order position of the shape, with 0 representing the bottom of the order stack. Every shape on a slide has a unique z-order, but
-                        each slide also has a unique z-order stack, so two shapes on separate slides could have the same z-order number.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.8]
-             */
-            zOrderPosition?: boolean;
-        }
-        /**
          * Represents a shape group inside a presentation. To get the corresponding Shape object, use `ShapeGroup.shape`.
          *
          * @remarks
@@ -200353,8 +204311,7 @@ declare namespace PowerPoint {
              * Gets the creation ID of the shape group. Returns `null` if the shape group has no creation ID.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             creationId?: boolean;
             /**
@@ -200434,54 +204391,53 @@ declare namespace PowerPoint {
             * Returns an `Adjustments` object that contains adjustment values for all the adjustments in this shape.
             *
             * @remarks
-            * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-            * @beta
+            * [Api set: PowerPointApi 1.10]
             */
             adjustments?: PowerPoint.Interfaces.AdjustmentsLoadOptions;
             /**
-             * Returns the fill formatting of this shape.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.4]
-             */
+            * Returns the fill formatting of this shape.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.4]
+            */
             fill?: PowerPoint.Interfaces.ShapeFillLoadOptions;
             /**
-             * Returns the `ShapeGroup` associated with the shape.
+            * Returns the `ShapeGroup` associated with the shape.
             If the shape type isn't `group`, then this method returns the `GeneralException` error.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.8]
-             */
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.8]
+            */
             group?: PowerPoint.Interfaces.ShapeGroupLoadOptions;
             /**
-             * Returns the line formatting of this shape.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.4]
-             */
+            * Returns the line formatting of this shape.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.4]
+            */
             lineFormat?: PowerPoint.Interfaces.ShapeLineFormatLoadOptions;
             /**
-             * Returns the parent group of this shape.
+            * Returns the parent group of this shape.
             If the shape isn't part of a group, then this method returns the `GeneralException` error.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.8]
-             */
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.8]
+            */
             parentGroup?: PowerPoint.Interfaces.ShapeLoadOptions;
             /**
-             * Returns the properties that apply specifically to this placeholder.
+            * Returns the properties that apply specifically to this placeholder.
             If the shape type isn't `placeholder`, then this method returns the `GeneralException` error.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.8]
-             */
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.8]
+            */
             placeholderFormat?: PowerPoint.Interfaces.PlaceholderFormatLoadOptions;
             /**
-             * Returns the {@link PowerPoint.TextFrame} object of this `Shape`. Throws an `InvalidArgument` exception if the shape doesn't support a `TextFrame`.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.4]
-             */
+            * Returns the {@link PowerPoint.TextFrame} object of this `Shape`. Throws an `InvalidArgument` exception if the shape doesn't support a `TextFrame`.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.4]
+            */
             textFrame?: PowerPoint.Interfaces.TextFrameLoadOptions;
             /**
              * The alt text description of the Shape.
@@ -200490,8 +204446,7 @@ declare namespace PowerPoint {
                         This information is useful for people with vision or cognitive impairments who may not be able to see or understand the shape.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             altTextDescription?: boolean;
             /**
@@ -200502,16 +204457,14 @@ declare namespace PowerPoint {
                         A title can be read to a person with a disability and is used to determine whether they wish to hear the description of the content.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             altTextTitle?: boolean;
             /**
              * Gets the creation ID of the shape. Returns `null` if the shape has no creation ID.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             creationId?: boolean;
             /**
@@ -200535,8 +204488,7 @@ declare namespace PowerPoint {
                         People using screen readers will hear these are decorative so they know they aren't missing any important information.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             isDecorative?: boolean;
             /**
@@ -200571,8 +204523,7 @@ declare namespace PowerPoint {
                         A positive value indicates clockwise rotation, and a negative value indicates counterclockwise rotation.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             rotation?: boolean;
             /**
@@ -200593,8 +204544,7 @@ declare namespace PowerPoint {
              * Specifies if the shape is visible.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             visible?: boolean;
             /**
@@ -200826,8 +204776,7 @@ declare namespace PowerPoint {
          * Represents the page setup information for the presentation.
          *
          * @remarks
-         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-         * @beta
+         * [Api set: PowerPointApi 1.10]
          */
         interface PageSetupLoadOptions {
             /**
@@ -200838,18 +204787,324 @@ declare namespace PowerPoint {
              * Specifies the height of the slides in the presentation, in points.
              *
              * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
+             * [Api set: PowerPointApi 1.10]
              */
             slideHeight?: boolean;
             /**
              * Specifies the width of the slides in the presentation, in points.
              *
              * @remarks
+             * [Api set: PowerPointApi 1.10]
+             */
+            slideWidth?: boolean;
+        }
+        /**
+         * Represents the collection of {@link PowerPoint.SensitivityLabelDetails} objects.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        interface SensitivityLabelDetailsCollectionLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the attribute-based access control (ABAC) attribute values currently applied to this sensitivity label. Returns an empty array when no ABAC attributes are applied or this label is not ABAC-enabled.
+             *
+             * @remarks
              * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
              * @beta
              */
-            slideWidth?: boolean;
+            abacAttributeValues?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the color of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            color?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the unique ID of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            id?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets whether ABAC attribute selections are required to apply this label. If `true`, callers must supply attribute values when applying the label; otherwise the update returns `SensitivityLabelUpdateResult.MissingRequiredAttributes`.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isAbacAttributesRequired?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets whether this label is attribute-based access control (ABAC) enabled. Returns `false` when the host's labeling capabilities don't include `attributeBasedAccessControlEnabled`.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isAbacEnabled?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets a value indicating whether the label is enabled.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isEnabled?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the name of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            name?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the priority of the sensitivity label, with 0 as lowest priority.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            order?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets a value indicating the protection type provided by this label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            protectionType?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the unique ID of the tenant which the sensitivity label is belonged.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            siteId?: boolean;
+            /**
+             * For EACH ITEM in the collection: Gets the description of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            tooltip?: boolean;
+        }
+        /**
+         * Represents the properties of available sensitivity labels in PowerPoint.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        interface SensitivityLabelDetailsLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+             * Gets the attribute-based access control (ABAC) attribute values currently applied to this sensitivity label. Returns an empty array when no ABAC attributes are applied or this label is not ABAC-enabled.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            abacAttributeValues?: boolean;
+            /**
+             * Gets the color of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            color?: boolean;
+            /**
+             * Gets the unique ID of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            id?: boolean;
+            /**
+             * Gets whether ABAC attribute selections are required to apply this label. If `true`, callers must supply attribute values when applying the label; otherwise the update returns `SensitivityLabelUpdateResult.MissingRequiredAttributes`.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isAbacAttributesRequired?: boolean;
+            /**
+             * Gets whether this label is attribute-based access control (ABAC) enabled. Returns `false` when the host's labeling capabilities don't include `attributeBasedAccessControlEnabled`.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isAbacEnabled?: boolean;
+            /**
+             * Gets a value indicating whether the label is enabled.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isEnabled?: boolean;
+            /**
+             * Gets the name of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            name?: boolean;
+            /**
+             * Gets the priority of the sensitivity label, with 0 as lowest priority.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            order?: boolean;
+            /**
+             * Gets a value indicating the protection type provided by this label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            protectionType?: boolean;
+            /**
+             * Gets the unique ID of the tenant which the sensitivity label is belonged.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            siteId?: boolean;
+            /**
+             * Gets the description of the sensitivity label.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            tooltip?: boolean;
+        }
+        /**
+         * Represents a single selectable value of an attribute-based access control (ABAC) attribute that can be applied to a sensitivity label.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        interface SensitivityLabelAbacAttributeValueLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+             * Gets the display name of the ABAC attribute value. Add-ins are responsible for presenting localized user-facing UI.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayName?: boolean;
+            /**
+             * Gets the recommended ordering of this ABAC value within its attribute when displayed to a user.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayOrder?: boolean;
+            /**
+             * Gets the unique identifier of the ABAC attribute value. This identifier is used when applying or updating the label's ABAC attribute selections.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            id?: boolean;
+            /**
+             * Gets whether this ABAC attribute value is active. `true` if the value is active; otherwise, `false`.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isActive?: boolean;
+        }
+        /**
+         * Represents an attribute-based access control (ABAC) attribute available for selection on an ABAC-enabled sensitivity label.
+         *
+         * @remarks
+         * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+         * @beta
+         */
+        interface SensitivityLabelAbacAttributeLoadOptions {
+            /**
+              Specifying `$all` for the load options loads all the scalar properties (such as `Range.address`) but not the navigational properties (such as `Range.format.fill.color`).
+             */
+            $all?: boolean;
+            /**
+             * Gets the data type of this ABAC attribute.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            dataType?: boolean;
+            /**
+             * Gets the display name of the ABAC attribute. Add-ins are responsible for presenting localized user-facing UI.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayName?: boolean;
+            /**
+             * Gets the recommended ordering of this ABAC attribute when displayed to a user.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            displayOrder?: boolean;
+            /**
+             * Gets whether this ABAC attribute is active. `true` if the attribute is active; otherwise, `false`.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isActive?: boolean;
+            /**
+             * Gets whether more than one value can be selected for this ABAC attribute. `true` if multi-select; otherwise, `false`.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            isMultiValued?: boolean;
+            /**
+             * Gets the values that are selectable for this ABAC attribute.
+             *
+             * @remarks
+             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
+             * @beta
+             */
+            values?: boolean;
         }
         /**
          * Represents the collection of slides in the presentation.
@@ -200863,26 +205118,25 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * For EACH ITEM in the collection: Gets the background of the slide.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
+            * For EACH ITEM in the collection: Gets the background of the slide.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.10]
+            */
             background?: PowerPoint.Interfaces.SlideBackgroundLoadOptions;
             /**
-             * For EACH ITEM in the collection: Gets the layout of the slide.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.3]
-             */
+            * For EACH ITEM in the collection: Gets the layout of the slide.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.3]
+            */
             layout?: PowerPoint.Interfaces.SlideLayoutLoadOptions;
             /**
-             * For EACH ITEM in the collection: Gets the `SlideMaster` object that represents the slide's default content.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.3]
-             */
+            * For EACH ITEM in the collection: Gets the `SlideMaster` object that represents the slide's default content.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.3]
+            */
             slideMaster?: PowerPoint.Interfaces.SlideMasterLoadOptions;
             /**
              * For EACH ITEM in the collection: Gets the unique ID of the slide.
@@ -200911,26 +205165,25 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * For EACH ITEM in the collection: Gets the background of the slide.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
+            * For EACH ITEM in the collection: Gets the background of the slide.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.10]
+            */
             background?: PowerPoint.Interfaces.SlideBackgroundLoadOptions;
             /**
-             * For EACH ITEM in the collection: Gets the layout of the slide.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.5]
-             */
+            * For EACH ITEM in the collection: Gets the layout of the slide.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.5]
+            */
             layout?: PowerPoint.Interfaces.SlideLayoutLoadOptions;
             /**
-             * For EACH ITEM in the collection: Gets the `SlideMaster` object that represents the slide's default content.
-             *
-             * @remarks
-             * [Api set: PowerPointApi 1.5]
-             */
+            * For EACH ITEM in the collection: Gets the `SlideMaster` object that represents the slide's default content.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.5]
+            */
             slideMaster?: PowerPoint.Interfaces.SlideMasterLoadOptions;
             /**
              * For EACH ITEM in the collection: Gets the unique ID of the slide.
@@ -200959,12 +205212,11 @@ declare namespace PowerPoint {
              */
             $all?: boolean;
             /**
-             * For EACH ITEM in the collection: Gets the background of the Slide Master.
-             *
-             * @remarks
-             * [Api set: PowerPointApi BETA (PREVIEW ONLY)]
-             * @beta
-             */
+            * For EACH ITEM in the collection: Gets the background of the Slide Master.
+            *
+            * @remarks
+            * [Api set: PowerPointApi 1.10]
+            */
             background?: PowerPoint.Interfaces.SlideMasterBackgroundLoadOptions;
             /**
              * For EACH ITEM in the collection: Gets the unique ID of the Slide Master.
@@ -200991,6 +205243,7 @@ declare namespace PowerPoint {
         constructor(url?: string);
         readonly presentation: Presentation;
         readonly application: Application;
+        readonly sensitivityLabelsCatalog: any;
     }
     /**
      * Executes a batch script that performs actions on the PowerPoint object model, using a new RequestContext. When the promise is resolved, any tracked objects that were automatically allocated during execution will be released.

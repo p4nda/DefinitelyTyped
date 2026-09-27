@@ -1,4 +1,4 @@
-// For Library Version: 1.143.0
+// For Library Version: 1.152.0
 
 declare module "sap/uxap/library" {
   /**
@@ -135,6 +135,31 @@ declare module "sap/uxap/library" {
      * Square shape for the images in the `ObjectPageHeader`.
      */
     Square = "Square",
+  }
+  /**
+   * Defines the media breakpoints for ObjectPageLayout.
+   *
+   * This enum is part of the 'sap/uxap/library' module export and must be accessed by the property 'ObjectPageLayoutMediaRange'.
+   *
+   * @since 1.147
+   */
+  export enum ObjectPageLayoutMediaRange {
+    /**
+     * Desktop breakpoint (1025px to 1439px).
+     */
+    Desktop = "Desktop",
+    /**
+     * Extra large desktop breakpoint (1440px and above).
+     */
+    DesktopExtraLarge = "DesktopExtraLarge",
+    /**
+     * Phone breakpoint (up to 600px).
+     */
+    Phone = "Phone",
+    /**
+     * Tablet breakpoint (601px to 1024px).
+     */
+    Tablet = "Tablet",
   }
   /**
    * Used by the `ObjectPagSubSection` control to define which layout to apply.
@@ -1988,8 +2013,7 @@ declare module "sap/uxap/ObjectPageAccessibleLandmarkInfo" {
   /**
    * Describes the settings that can be provided to the ObjectPageAccessibleLandmarkInfo constructor.
    */
-  export interface $ObjectPageAccessibleLandmarkInfoSettings
-    extends $ElementSettings {
+  export interface $ObjectPageAccessibleLandmarkInfoSettings extends $ElementSettings {
     /**
      * Landmark role of the root container of the corresponding `sap.uxap.ObjectPageLayout` control.
      *
@@ -2200,8 +2224,7 @@ declare module "sap/uxap/ObjectPageDynamicHeaderContent" {
   /**
    * Describes the settings that can be provided to the ObjectPageDynamicHeaderContent constructor.
    */
-  export interface $ObjectPageDynamicHeaderContentSettings
-    extends $DynamicPageHeaderSettings {}
+  export interface $ObjectPageDynamicHeaderContentSettings extends $DynamicPageHeaderSettings {}
 }
 
 declare module "sap/uxap/ObjectPageDynamicHeaderTitle" {
@@ -2312,8 +2335,7 @@ declare module "sap/uxap/ObjectPageDynamicHeaderTitle" {
   /**
    * Describes the settings that can be provided to the ObjectPageDynamicHeaderTitle constructor.
    */
-  export interface $ObjectPageDynamicHeaderTitleSettings
-    extends $DynamicPageTitleSettings {}
+  export interface $ObjectPageDynamicHeaderTitleSettings extends $DynamicPageTitleSettings {}
 }
 
 declare module "sap/uxap/ObjectPageHeader" {
@@ -3936,8 +3958,7 @@ declare module "sap/uxap/ObjectPageHeaderActionButton" {
   /**
    * Describes the settings that can be provided to the ObjectPageHeaderActionButton constructor.
    */
-  export interface $ObjectPageHeaderActionButtonSettings
-    extends $ButtonSettings {
+  export interface $ObjectPageHeaderActionButtonSettings extends $ButtonSettings {
     /**
      * Hide the button text when rendered into the headerTitle part of the ObjectPageLayout. This is useful
      * if you want to display icons only in the headerTitle part but still want to display text + icon in the
@@ -4461,8 +4482,7 @@ declare module "sap/uxap/ObjectPageHeaderLayoutData" {
   /**
    * Describes the settings that can be provided to the ObjectPageHeaderLayoutData constructor.
    */
-  export interface $ObjectPageHeaderLayoutDataSettings
-    extends $LayoutDataSettings {
+  export interface $ObjectPageHeaderLayoutDataSettings extends $LayoutDataSettings {
     /**
      * If this property is set the control will be visible (or not) in a small sized layout.
      */
@@ -4504,7 +4524,11 @@ declare module "sap/uxap/ObjectPageLayout" {
 
   import { BackgroundDesign, IBar } from "sap/m/library";
 
-  import { IHeaderTitle, ObjectPageSubSectionLayout } from "sap/uxap/library";
+  import {
+    IHeaderTitle,
+    ObjectPageSubSectionLayout,
+    ObjectPageLayoutMediaRange,
+  } from "sap/uxap/library";
 
   import { CSSSize, TitleLevel, ID } from "sap/ui/core/library";
 
@@ -4715,6 +4739,59 @@ declare module "sap/uxap/ObjectPageLayout" {
        * The function to be called when the event occurs
        */
       fnFunction: (p1: ObjectPageLayout$BeforeNavigateEvent) => void,
+      /**
+       * Context object to call the event handler with. Defaults to this `sap.uxap.ObjectPageLayout` itself
+       */
+      oListener?: object
+    ): this;
+    /**
+     * Attaches event handler `fnFunction` to the {@link #event:breakpointChange breakpointChange} event of
+     * this `sap.uxap.ObjectPageLayout`.
+     *
+     * When called, the context of the event handler (its `this`) will be bound to `oListener` if specified,
+     * otherwise it will be bound to this `sap.uxap.ObjectPageLayout` itself.
+     *
+     * Fired when the media range of the control changes, allowing the application to adjust the UI accordingly
+     * (e.g., change Avatar sizes responsively).
+     *
+     * @since 1.147
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    attachBreakpointChange(
+      /**
+       * An application-specific payload object that will be passed to the event handler along with the event
+       * object when firing the event
+       */
+      oData: object,
+      /**
+       * The function to be called when the event occurs
+       */
+      fnFunction: (p1: ObjectPageLayout$BreakpointChangeEvent) => void,
+      /**
+       * Context object to call the event handler with. Defaults to this `sap.uxap.ObjectPageLayout` itself
+       */
+      oListener?: object
+    ): this;
+    /**
+     * Attaches event handler `fnFunction` to the {@link #event:breakpointChange breakpointChange} event of
+     * this `sap.uxap.ObjectPageLayout`.
+     *
+     * When called, the context of the event handler (its `this`) will be bound to `oListener` if specified,
+     * otherwise it will be bound to this `sap.uxap.ObjectPageLayout` itself.
+     *
+     * Fired when the media range of the control changes, allowing the application to adjust the UI accordingly
+     * (e.g., change Avatar sizes responsively).
+     *
+     * @since 1.147
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    attachBreakpointChange(
+      /**
+       * The function to be called when the event occurs
+       */
+      fnFunction: (p1: ObjectPageLayout$BreakpointChangeEvent) => void,
       /**
        * Context object to call the event handler with. Defaults to this `sap.uxap.ObjectPageLayout` itself
        */
@@ -5084,6 +5161,26 @@ declare module "sap/uxap/ObjectPageLayout" {
       oListener?: object
     ): this;
     /**
+     * Detaches event handler `fnFunction` from the {@link #event:breakpointChange breakpointChange} event of
+     * this `sap.uxap.ObjectPageLayout`.
+     *
+     * The passed function and listener object must match the ones used for event registration.
+     *
+     * @since 1.147
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    detachBreakpointChange(
+      /**
+       * The function to be called, when the event occurs
+       */
+      fnFunction: (p1: ObjectPageLayout$BreakpointChangeEvent) => void,
+      /**
+       * Context object on which the given function had to be called
+       */
+      oListener?: object
+    ): this;
+    /**
      * Detaches event handler `fnFunction` from the {@link #event:editHeaderButtonPress editHeaderButtonPress }
      * event of this `sap.uxap.ObjectPageLayout`.
      *
@@ -5221,6 +5318,20 @@ declare module "sap/uxap/ObjectPageLayout" {
        */
       mParameters?: ObjectPageLayout$BeforeNavigateEventParameters
     ): boolean;
+    /**
+     * Fires event {@link #event:breakpointChange breakpointChange} to attached listeners.
+     *
+     * @since 1.147
+     * @ui5-protected Do not call from applications (only from related classes in the framework)
+     *
+     * @returns Reference to `this` in order to allow method chaining
+     */
+    fireBreakpointChange(
+      /**
+       * Parameters to pass along with the event
+       */
+      mParameters?: ObjectPageLayout$BreakpointChangeEventParameters
+    ): this;
     /**
      * Fires event {@link #event:editHeaderButtonPress editHeaderButtonPress} to attached listeners.
      *
@@ -6665,6 +6776,14 @@ declare module "sap/uxap/ObjectPageLayout" {
     subSectionVisibilityChange?: (
       oEvent: ObjectPageLayout$SubSectionVisibilityChangeEvent
     ) => void;
+
+    /**
+     * Fired when the media range of the control changes, allowing the application to adjust the UI accordingly
+     * (e.g., change Avatar sizes responsively).
+     *
+     * @since 1.147
+     */
+    breakpointChange?: (oEvent: ObjectPageLayout$BreakpointChangeEvent) => void;
   }
 
   /**
@@ -6687,6 +6806,31 @@ declare module "sap/uxap/ObjectPageLayout" {
    */
   export type ObjectPageLayout$BeforeNavigateEvent = Event<
     ObjectPageLayout$BeforeNavigateEventParameters,
+    ObjectPageLayout
+  >;
+
+  /**
+   * Parameters of the ObjectPageLayout#breakpointChange event.
+   */
+  export interface ObjectPageLayout$BreakpointChangeEventParameters {
+    /**
+     * The name of the current media range ("Phone", "Tablet", "Desktop", or "DesktopExtraLarge").
+     */
+    currentRange?:
+      | ObjectPageLayoutMediaRange
+      | keyof typeof ObjectPageLayoutMediaRange;
+
+    /**
+     * The current width of the control in pixels.
+     */
+    currentWidth?: int;
+  }
+
+  /**
+   * Event object of the ObjectPageLayout#breakpointChange event.
+   */
+  export type ObjectPageLayout$BreakpointChangeEvent = Event<
+    ObjectPageLayout$BreakpointChangeEventParameters,
     ObjectPageLayout
   >;
 
@@ -7145,8 +7289,7 @@ declare module "sap/uxap/ObjectPageSection" {
      *
      * The list of Subsections.
      *
-     * Note: If multiple subsections are used, it is highly recommended to set a title for the section for accessibility
-     * reasons.
+     * **Note:** If you use multiple subsections, set a `title` for each subsection to avoid accessibility violations.
      */
     getSubSections(): ObjectPageSubSection[];
     /**
@@ -7328,8 +7471,7 @@ declare module "sap/uxap/ObjectPageSection" {
   /**
    * Describes the settings that can be provided to the ObjectPageSection constructor.
    */
-  export interface $ObjectPageSectionSettings
-    extends $ObjectPageSectionBaseSettings {
+  export interface $ObjectPageSectionSettings extends $ObjectPageSectionBaseSettings {
     /**
      * Determines whether to display the Section title or not.
      */
@@ -7359,8 +7501,7 @@ declare module "sap/uxap/ObjectPageSection" {
     /**
      * The list of Subsections.
      *
-     * Note: If multiple subsections are used, it is highly recommended to set a title for the section for accessibility
-     * reasons.
+     * **Note:** If you use multiple subsections, set a `title` for each subsection to avoid accessibility violations.
      */
     subSections?:
       | ObjectPageSubSection[]
@@ -7514,8 +7655,12 @@ declare module "sap/uxap/ObjectPageSectionBase" {
      * Defines the title of the respective section/subsection.
      *
      * **Note:** If a subsection is the only one (or the only one visible) within a section, its title is displayed
-     * instead of the section title. This behavior is true even if the `showTitle` propeprty of {@link sap.uxap.ObjectPageSubSection }
+     * instead of the section title. This behavior is true even if the `showTitle` property of {@link sap.uxap.ObjectPageSubSection }
      * is set to `false`.
+     *
+     * **Note:** To avoid accessibility issues, always set a `title` on {@link sap.uxap.ObjectPageSubSection},
+     * especially when a section contains multiple subsections. If no `title` is set on a subsection, the anchor
+     * bar button popover will appear empty, which will lead to accessibility violations.
      *
      *
      * @returns Value of property `title`
@@ -7604,8 +7749,12 @@ declare module "sap/uxap/ObjectPageSectionBase" {
      * Defines the title of the respective section/subsection.
      *
      * **Note:** If a subsection is the only one (or the only one visible) within a section, its title is displayed
-     * instead of the section title. This behavior is true even if the `showTitle` propeprty of {@link sap.uxap.ObjectPageSubSection }
+     * instead of the section title. This behavior is true even if the `showTitle` property of {@link sap.uxap.ObjectPageSubSection }
      * is set to `false`.
+     *
+     * **Note:** To avoid accessibility issues, always set a `title` on {@link sap.uxap.ObjectPageSubSection},
+     * especially when a section contains multiple subsections. If no `title` is set on a subsection, the anchor
+     * bar button popover will appear empty, which will lead to accessibility violations.
      *
      * When called with a value of `null` or `undefined`, the default value of the property will be restored.
      *
@@ -7676,8 +7825,12 @@ declare module "sap/uxap/ObjectPageSectionBase" {
      * Defines the title of the respective section/subsection.
      *
      * **Note:** If a subsection is the only one (or the only one visible) within a section, its title is displayed
-     * instead of the section title. This behavior is true even if the `showTitle` propeprty of {@link sap.uxap.ObjectPageSubSection }
+     * instead of the section title. This behavior is true even if the `showTitle` property of {@link sap.uxap.ObjectPageSubSection }
      * is set to `false`.
+     *
+     * **Note:** To avoid accessibility issues, always set a `title` on {@link sap.uxap.ObjectPageSubSection},
+     * especially when a section contains multiple subsections. If no `title` is set on a subsection, the anchor
+     * bar button popover will appear empty, which will lead to accessibility violations.
      */
     title?: string | PropertyBindingInfo;
 
@@ -8202,8 +8355,7 @@ declare module "sap/uxap/ObjectPageSubSection" {
   /**
    * Describes the settings that can be provided to the ObjectPageSubSection constructor.
    */
-  export interface $ObjectPageSubSectionSettings
-    extends $ObjectPageSectionBaseSettings {
+  export interface $ObjectPageSubSectionSettings extends $ObjectPageSectionBaseSettings {
     /**
      * Determines whether to display the `SubSection` title or not.
      *

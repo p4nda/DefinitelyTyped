@@ -120,6 +120,31 @@ function message_common_fields_test() {
     };
 }
 
+// Array variant of common fields
+
+function message_common_fields_array_test() {
+    const message: Mail.Options = {
+        from: ["sender@server.com", { address: "sender2@server.com", name: "Sender2" }],
+        to: ["receiver@sender.com", { address: "receiver2@sender.com", name: "Receiver2" }],
+        cc: ["ccdreceiver@sender.com"],
+        bcc: ["bccdreceiver@sender.com"],
+    };
+}
+
+function message_common_fields_optional_address_object_test() {
+    const message: Mail.Options = {
+        from: { address: "sender@server.com" },
+        to: [{ name: "Receiver", address: "receiver@sender.com" }, { address: "receiver2@sender.com" }],
+        cc: { name: "Carbon Copy", address: "cc@sender.com" },
+        bcc: { address: "bcc@sender.com" },
+    };
+
+    const missingAddress: Mail.Options = {
+        // @ts-expect-error - Nodemailer ignores address-less objects, so the type requires address.
+        to: { name: "Receiver" },
+    };
+}
+
 // More advanced fields
 
 function message_more_advanced_fields_test() {
@@ -187,6 +212,11 @@ function message_attachments_test() {
                 // use URL as an attachment
                 filename: "license.txt",
                 path: "https://raw.github.com/nodemailer/nodemailer/master/LICENSE",
+            },
+            {
+                // use href as an attachment URL
+                filename: "license.txt",
+                href: "https://raw.github.com/nodemailer/nodemailer/master/LICENSE",
             },
             {
                 // encoded string as an attachment
@@ -1467,7 +1497,7 @@ function dkim_specific_header_key_test() {
 // SMTP Connection
 
 function smtp_connection_test() {
-    const connection = new SMTPConnection();
+    const connection = new SMTPConnection({ secure: true, secured: true });
     connection.connect(err => {
         if (err) throw err;
         connection.login({ user: "user", pass: "pass" }, err => {

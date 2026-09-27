@@ -27,6 +27,8 @@ declare namespace OSS {
         refreshSTSTokenInterval?: number;
         /** used by auto set stsToken、accessKeyId、accessKeySecret when sts info expires. return value must be object contains stsToken、accessKeyId、accessKeySecret */
         refreshSTSToken?: () => Promise<{ accessKeyId: string; accessKeySecret: string; stsToken: string }>;
+        /** Use V4 signature. Default is false. */
+        authorizationV4?: boolean | undefined;
     }
 
     /**
@@ -315,6 +317,15 @@ declare namespace OSS {
         res: NormalSuccessResponse;
     }
 
+    interface ListV2ObjectResult {
+        objects: ObjectMeta[];
+        prefixes: string[];
+        isTruncated: boolean;
+        nextContinuationToken: string;
+        keyCount: number;
+        res: NormalSuccessResponse;
+    }
+
     interface PutObjectOptions {
         /** the operation timeout */
         timeout?: number | undefined;
@@ -579,6 +590,15 @@ declare namespace OSS {
         uploads: Upload[];
     }
 
+    interface PutSymlinkOptions {
+        /** the storage type include (Standard,IA,Archive) */
+        storageClass?: string | undefined;
+        /** user meta, will send with x-oss-meta- prefix string */
+        meta?: UserMeta | undefined;
+        /** extra headers */
+        headers?: object | undefined;
+    }
+
     interface PutChannelConf {
         Description?: string | undefined;
         Status?: string | undefined;
@@ -669,7 +689,7 @@ declare namespace OSS {
         /**
          * @since 6.12.0
          */
-        listV2(query: ListV2ObjectsQuery | null, options?: RequestOptions): Promise<ListObjectResult>;
+        listV2(query: ListV2ObjectsQuery | null, options?: RequestOptions): Promise<ListV2ObjectResult>;
 
         put(name: string, file: any, options?: PutObjectOptions): Promise<PutObjectResult>;
 
@@ -698,11 +718,11 @@ declare namespace OSS {
         signatureUrlV4(
             method: HTTPMethods,
             expires: number,
-            request?: {
+            request: {
                 headers?: object | undefined;
                 queries?: object | undefined;
-            },
-            objectName?: string,
+            } | undefined,
+            objectName: string,
             additionalHeaders?: string[],
         ): Promise<string>;
 
@@ -1006,7 +1026,7 @@ declare class OSS {
     /**
      * List Objects in the bucket.(V2)
      */
-    listV2(query: OSS.ListV2ObjectsQuery | null, options?: OSS.RequestOptions): Promise<OSS.ListObjectResult>;
+    listV2(query: OSS.ListV2ObjectsQuery | null, options?: OSS.RequestOptions): Promise<OSS.ListV2ObjectResult>;
 
     /**
      * Add an object to the bucket.
@@ -1082,6 +1102,20 @@ declare class OSS {
      * Create a signature url for download or upload object. When you put object with signatureUrl ,you need to pass Content-Type.Please look at the example.
      */
     signatureUrl(name: string, options?: OSS.SignatureUrlOptions): string;
+
+    /**
+     * Generate a signed URL for V4 of an OSS resource and share the URL to allow authorized third-party users to access the resource.
+     */
+    signatureUrlV4(
+        method: OSS.HTTPMethods,
+        expires: number,
+        request: {
+            headers?: object | undefined;
+            queries?: object | undefined;
+        } | undefined,
+        objectName: string,
+        additionalHeaders?: string[],
+    ): Promise<string>;
 
     /**
      * Basically the same as signatureUrl, if refreshSTSToken is configured asyncSignatureUrl will refresh stsToken
@@ -1185,6 +1219,17 @@ declare class OSS {
     ): Promise<OSS.NormalSuccessResponse>;
 
     /**
+     * Cancel the current multipart upload operation.
+     * If abort is provided, it will also call abortMultipartUpload.
+     */
+    cancel(abort?: { name: string; uploadId: string; options?: OSS.RequestOptions }): void;
+
+    /**
+     * Check if the upload has been cancelled.
+     */
+    isCancel(): boolean;
+
+    /**
      * get postObject params.
      */
     calculatePostSignature(
@@ -1193,6 +1238,23 @@ declare class OSS {
          */
         policy: object | string,
     ): OSS.PostObjectParams;
+
+    /**
+     * put symlink
+     */
+    putSymlink(
+        name: string,
+        targetName: string,
+        options?: OSS.PutSymlinkOptions,
+    ): Promise<{ res: OSS.NormalSuccessResponse }>;
+
+    /**
+     * get symlink
+     */
+    getSymlink(
+        name: string,
+        options?: { versionId?: string | undefined; timeout?: number | undefined; headers?: object | undefined },
+    ): Promise<{ targetName: string; res: OSS.NormalSuccessResponse }>;
 
     /************************************************ RTMP Operations *************************************************************/
     /**

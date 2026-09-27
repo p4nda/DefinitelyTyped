@@ -86,6 +86,10 @@ Memory.alloc(1, { near: ptr(1234), maxDistance: 42 });
 Memory.alloc(1, { near: ptr(1234) });
 // @ts-expect-error
 Memory.alloc(1, { maxDistance: 42 });
+// $ExpectType NativePointer
+Memory.alloc(Process.pageSize, { protection: "rwx" });
+// $ExpectType NativePointer
+Memory.alloc(Process.pageSize, { protection: "rx", near: ptr(1234), maxDistance: 42 });
 
 // $ExpectType string
 Memory.queryProtection(Process.mainModule.base);
@@ -169,11 +173,60 @@ Memory.scan(ptr("0x1234"), Process.pageSize, new MatchPattern("13 37"), {
     },
 });
 
+// $ExpectType MemoryPointerMatch[]
+Memory.findPointers({ base: ptr("0x1234"), size: Process.pageSize }, [ptr("0xdeadbeef")]);
+// $ExpectType MemoryPointerMatch[]
+const pointerMatches = Memory.findPointers(
+    [{ base: ptr("0x1234"), size: Process.pageSize }],
+    [ptr("0xdeadbeef")],
+    { mask: ptr("0x00007ffffffffff8") },
+);
+// $ExpectType NativePointer
+pointerMatches[0].address;
+// $ExpectType NativePointer
+pointerMatches[0].value;
+
 // $ExpectType Module
 Process.mainModule;
 
 // $ExpectType string | null
 Process.mainModule.version;
+
+// $ExpectType MemoryRange
+Process.getFunctionRange(Process.mainModule.base);
+
+// $ExpectType MemoryRange | null
+Process.findFunctionRange(Process.mainModule.base);
+
+const cfg = new ControlFlowGraph(Process.mainModule.base);
+// $ExpectType NativePointer
+cfg.entrypoint;
+// $ExpectType BasicBlock
+const entryBlock = cfg.entryBlock;
+// $ExpectType BasicBlock[]
+cfg.blocks;
+// $ExpectType BasicBlock | null
+cfg.findBlockContaining(Process.mainModule.base);
+// $ExpectType boolean
+cfg.dominates(Process.mainModule.base, Process.mainModule.base);
+// $ExpectType DominatingSite[]
+const sites = cfg.enumerateDominatingSites(Process.mainModule.base);
+// $ExpectType NativePointer
+sites[0].address;
+// $ExpectType number
+sites[0].capacity;
+// $ExpectType NativePointer
+entryBlock.start;
+// $ExpectType NativePointer
+entryBlock.end;
+// $ExpectType BasicBlock[]
+entryBlock.successors;
+// $ExpectType BasicBlock[]
+entryBlock.predecessors;
+// $ExpectType BasicBlock | null
+entryBlock.immediateDominator;
+// $ExpectType Instruction[]
+entryBlock.instructions;
 
 const art = Process.getModuleByName("libart.so");
 // $ExpectType NativePointer
@@ -238,10 +291,16 @@ const checksum = new Checksum("sha512");
 // $ExpectType Checksum
 checksum.update("abc");
 checksum.update(new Uint8Array([1, 2, 3]).buffer).update([4, 5, 6]);
+// $ExpectType Checksum
+checksum.copy();
 // $ExpectType string
 checksum.getString();
+// $ExpectType string
+checksum.peekString();
 // $ExpectType ArrayBuffer
 checksum.getDigest();
+// $ExpectType ArrayBuffer
+checksum.peekDigest();
 // @ts-expect-error
 new Checksum("unknown-type");
 
@@ -265,13 +324,89 @@ Interceptor.attach(puts, {
     },
 });
 
+Interceptor.attach(puts, {
+    onEnter() {
+        const ia32 = this.context as Ia32CpuContext;
+        // $ExpectType ArrayBuffer
+        ia32.xmm0;
+        const ia32Xmm7: ArrayBuffer = ia32.xmm7;
+        void ia32Xmm7;
+
+        const x64 = this.context as X64CpuContext;
+        // $ExpectType ArrayBuffer
+        x64.xmm0;
+        const x64Xmm15: ArrayBuffer = x64.xmm15;
+        void x64Xmm15;
+    },
+});
+
+Interceptor.attach({
+    target: puts,
+    scratchRegister: "x15",
+    scenario: "online",
+    relocation: "checked",
+}, {
+    onEnter(args) {
+        // $ExpectType InvocationArguments
+        args;
+    },
+});
+
+Interceptor.attach({
+    target: puts,
+    writeRedirect(details) {
+        // $ExpectType DefaultInstructionWriter
+        details.writer;
+        // $ExpectType NativePointer
+        details.target;
+        // $ExpectType number
+        details.capacity;
+
+        // Same register type as carried by InstrumentationTarget.
+        const scratch: InstrumentationTarget["scratchRegister"] = details.scratchRegister;
+        void scratch;
+
+        const writer = details.writer as Arm64Writer;
+        writer.putBImm(details.target);
+    },
+    redirectSpaceHint: 16,
+}, {
+    onEnter(args) {
+        // $ExpectType InvocationArguments
+        args;
+    },
+});
+
+// $ExpectType InstrumentationOptions
+Interceptor.defaults;
+
+Interceptor.defaults = {
+    scratchRegister: "x15",
+    writeRedirect(details) {
+        details.writer.flush();
+    },
+    redirectSpaceHint: 256,
+};
+
 Interceptor.flush();
 
 // $ExpectType void
 Interceptor.replace(ptr("0x1234"), new NativeCallback(() => {}, "void", []));
 
+// $ExpectType void
+Interceptor.replace(
+    { target: ptr("0x1234"), scratchRegister: "x15", relocation: "unchecked" },
+    new NativeCallback(() => {}, "void", []),
+);
+
 // $ExpectType NativePointer
 Interceptor.replaceFast(ptr("0x1234"), new NativeCallback(() => {}, "void", []));
+
+// $ExpectType NativePointer
+Interceptor.replaceFast(
+    { target: ptr("0x1234"), scenario: "offline", relocation: "forced" },
+    new NativeCallback(() => {}, "void", []),
+);
 
 const ccode = `
 #include <gum/gumstalker.h>
@@ -341,6 +476,12 @@ Stalker.invalidate(Process.getCurrentThreadId(), basicBlockStartAddress);
 // $ExpectType boolean
 Cloak.hasCurrentThread();
 
+// $ExpectType ThreadDetails
+Process.getThreadById(Process.getCurrentThreadId());
+
+// $ExpectType ThreadDetails | null
+Process.findThreadById(Process.getCurrentThreadId());
+
 Process.enumerateThreads().forEach(t => {
     t.setHardwareBreakpoint(0, puts);
 });
@@ -393,9 +534,49 @@ const moduleObserver = Process.attachModuleObserver({
 });
 moduleObserver.detach();
 
+const db = SqliteDatabase.openInline("AAAA");
+const stmt = db.prepare("SELECT * from tab;");
+// $ExpectType string[]
+stmt.columnNames;
+// $ExpectType SqliteColumnType[]
+stmt.columnTypes;
+// $ExpectType (string | null)[]
+stmt.declaredTypes;
+// $ExpectType number
+stmt.paramsCount;
+
 // $ExpectType Profiler
 const profiler = new Profiler();
 const sampler = new BusyCycleSampler();
 for (const e of Process.getModuleByName("libc.so").enumerateExports().filter(e => e.type === "function")) {
     profiler.instrument(e.address, sampler);
 }
+
+for (const e of Process.getModuleByName("libc.so").enumerateExports()) {
+    // $ExpectType number | undefined
+    e.size;
+}
+
+const x86Writer = new X86Writer(Memory.alloc(Process.pageSize));
+x86Writer.putVmovdqu64RegOffsetPtrZmm("rax", 0, 0);
+x86Writer.putVmovdqu64ZmmRegOffsetPtr(0, "rax", 0);
+x86Writer.putVextracti64x4RegOffsetPtrZmm("rax", 0, 0, 1);
+x86Writer.putVinserti64x4ZmmRegOffsetPtr(0, "rax", 0, 1);
+x86Writer.putKmovqRegOffsetPtrKreg("rax", 0, 0);
+x86Writer.putKmovqKregRegOffsetPtr(0, "rax", 0);
+// $ExpectType void
+x86Writer.putEndbr();
+x86Writer.flush();
+
+const arm64Writer = new Arm64Writer(Memory.alloc(Process.pageSize));
+arm64Writer.putMovkRegImm("x0", 0x1234, 16);
+arm64Writer.putPaciaRegReg("x0", "x1");
+// $ExpectType void
+arm64Writer.putSvcImm(0x80);
+arm64Writer.flush();
+
+const arm64Relocator = new Arm64Relocator(ptr("0x1234"), arm64Writer);
+// $ExpectType boolean
+arm64Relocator.readUntilResumable("online");
+// $ExpectType Arm64Register | null
+arm64Relocator.pickExitReg(ptr("0x1234"));

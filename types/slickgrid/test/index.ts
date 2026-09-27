@@ -32,7 +32,7 @@ for (var i = 0; i < 500; i++) {
         percentComplete: Math.round(Math.random() * 100),
         start: "01/01/2009",
         finish: "01/05/2009",
-        effortDriven: (i % 5 == 0),
+        effortDriven: i % 5 == 0,
     };
 }
 
@@ -72,7 +72,7 @@ grid.setSelectedRows([0, 1, 2]);
 
 class SingleCellSelectionModel extends Slick.SelectionModel<MyData, Slick.Range[]> {
     private readonly self: SingleCellSelectionModel;
-    private _grid: Slick.Grid<MyData>;
+    private _grid!: Slick.Grid<MyData>;
 
     constructor() {
         super();

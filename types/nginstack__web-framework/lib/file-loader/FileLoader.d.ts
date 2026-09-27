@@ -50,6 +50,7 @@ interface FileInfoUpload {
     size: number;
     lastModified: number;
     contentType: string;
+    imageCompressionProfile?: string;
 }
 interface FileInfo {
     name: string;

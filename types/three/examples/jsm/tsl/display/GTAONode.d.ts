@@ -1,18 +1,23 @@
-import { Camera, Node, TempNode, TextureNode, UniformNode, Vector2 } from "three/webgpu";
+import { Camera, Node, TempNode, TextureNode, UniformNode } from "three/webgpu";
 
-declare class GTAONode extends TempNode {
+declare class GTAONode extends TempNode<"float"> {
     depthNode: Node;
     normalNode: Node;
 
     resolutionScale: number;
 
-    radius: UniformNode<number>;
-    resolution: UniformNode<Vector2>;
-    thickness: UniformNode<number>;
-    distanceExponent: UniformNode<number>;
-    distanceFallOff: UniformNode<number>;
-    scale: UniformNode<number>;
-    samples: UniformNode<number>;
+    radius: UniformNode<"float", number>;
+    thickness: UniformNode<"float", number>;
+    /**
+     * @deprecated since r186. The new distance model "Quadratic Ray Stepping" does not need it anymore.
+     */
+    distanceExponent: UniformNode<"float", number>;
+    /**
+     * @deprecated since r186. The new distance model "Quadratic Ray Stepping" does not need it anymore.
+     */
+    distanceFallOff: UniformNode<"float", number>;
+    scale: UniformNode<"float", number>;
+    samples: UniformNode<"float", number>;
 
     useTemporalFiltering: boolean;
 

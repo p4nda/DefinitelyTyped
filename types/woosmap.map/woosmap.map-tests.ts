@@ -21,6 +21,8 @@ const mapOptions = expectType({
         },
     ],
     enableMarkerAccessibleNavigation: true,
+    mapTypeId: woosmap.map.MapTypeId.ROADMAP,
+    visualRefresh: true,
 }) as woosmap.map.MapOptions;
 const map = new woosmap.map.Map(document.getElementById("mapContainer") as HTMLElement, mapOptions);
 
@@ -47,6 +49,18 @@ map.remove();
 
 // $ExpectType MVCArray<MapType>
 map.overlayMapTypes;
+
+/**
+ * MapTypeId
+ */
+// $ExpectType MapTypeId.ROADMAP
+woosmap.map.MapTypeId.ROADMAP;
+// $ExpectType MapTypeId.HYBRID
+woosmap.map.MapTypeId.HYBRID;
+// $ExpectType string
+map.getMapTypeId();
+// $ExpectType void
+map.setMapTypeId(woosmap.map.MapTypeId.HYBRID);
 
 /**
  * Marker
@@ -533,6 +547,7 @@ const localitiesAutocompleteRequest = expectType({
     customDescription: "name,admin_1,admin_0",
     radius: 500000,
     location: { lat: 51.5007, lng: -0.1246 },
+    excluded_types: ["village", "hamlet"],
 }) as woosmap.map.localities.LocalitiesAutocompleteRequest;
 
 let localitiesService;
@@ -563,21 +578,32 @@ promiseLocalitiesGeocode.then((result) => {
     // $ExpectType LocalitiesGeocodeResponse
     result;
 });
-const localitiesSearchRequest = expectType({
+
+// admin_level_x types
+const adminLevelXTypes: woosmap.map.localities.LocalitiesTypes[] = ["admin_level_1", "admin_level_2", "admin_level_3"];
+const localitiesGeocodeAdminLevelRequest = expectType({
+    address: "Haute-Garonne",
+    components: { country: ["FR"] },
+    types: adminLevelXTypes,
+}) as woosmap.map.localities.LocalitiesGeocodeRequest;
+const promiseLocalitiesGeocodeAdminLevel = localitiesService.geocode(localitiesGeocodeAdminLevelRequest);
+promiseLocalitiesGeocodeAdminLevel.then((result) => {
+    // $ExpectType LocalitiesGeocodeResponse
+    result;
+});
+
+const localitiesNearbyRequest = expectType({
     input: "royal al",
-    types: ["point_of_interest", "address"],
-    language: "EN",
+    types: ["point_of_interest", "tourism", "hospitality"],
     components: { country: ["GB", "FR"] },
     radius: 5000000,
     location: { lat: 51.5007, lng: -0.1246 },
-    categories: ["tourism", "hospitality"],
-    excluded_categories: "hospitality.hostel",
-    excluded_types: ["admin_level", "village"],
-}) as woosmap.map.localities.LocalitiesSearchRequest;
+    excluded_types: ["education", "government"],
+}) as woosmap.map.localities.LocalitiesNearbyRequest;
 
-const promiseLocalitiesSearch = localitiesService.search(localitiesSearchRequest);
-promiseLocalitiesSearch.then((result) => {
-    // $ExpectType LocalitiesSearchResponse
+const promiseLocalitiesNearby = localitiesService.nearby(localitiesNearbyRequest);
+promiseLocalitiesNearby.then((result) => {
+    // $ExpectType LocalitiesNearbyResponse
     result;
 });
 

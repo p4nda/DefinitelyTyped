@@ -1,4 +1,4 @@
-// For Library Version: 1.143.0
+// For Library Version: 1.152.0
 
 declare module "sap/ui/rta/api/startAdaptation" {
   import Control from "sap/ui/core/Control";
@@ -189,7 +189,7 @@ declare module "sap/ui/rta/plugin/annotations/AnnotationChangeDialog" {
       text: string;
     }>;
     /**
-     * Name of the property that should be filtered for initially
+     * Annotation path of the property to preselect
      */
     preSelectedProperty?: string;
   };
@@ -215,11 +215,11 @@ declare namespace sap {
 
     "sap/ui/rta/service/Outline": undefined;
 
+    "sap/ui/rta/service/OverlayInfo": undefined;
+
     "sap/ui/rta/service/Property": undefined;
 
     "sap/ui/rta/service/Selection": undefined;
-
-    "sap/ui/rta/service/SupportTools": undefined;
 
     "sap/ui/rta/util/ReloadManager": undefined;
   }

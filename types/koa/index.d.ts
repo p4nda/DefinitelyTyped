@@ -465,7 +465,7 @@ declare class Application<
      * @param {number} [options.subdomainOffset] Subdomain offset
      * @param {string} [options.proxyIpHeader] Proxy IP header, defaults to X-Forwarded-For
      * @param {number} [options.maxIpsCount] Max IPs read from proxy IP header, default to 0 (means infinity)
-     * @param {boolean} [options.asyncLocalStorage] Enable AsyncLocalStorage
+     * @param {boolean|AsyncLocalStorage} [options.asyncLocalStorage]  Pass `true` or an instance of `AsyncLocalStorage` to enable async local storage
      */
     constructor(options?: {
         env?: string | undefined;
@@ -474,7 +474,7 @@ declare class Application<
         subdomainOffset?: number | undefined;
         proxyIpHeader?: string | undefined;
         maxIpsCount?: number | undefined;
-        asyncLocalStorage?: boolean | undefined;
+        asyncLocalStorage?: boolean | AsyncLocalStorage<ContextT> | undefined;
     });
 
     /**
@@ -543,6 +543,9 @@ declare class Application<
 }
 
 declare namespace Application {
+    interface DefaultContextDelegatedRequest extends ContextDelegatedRequest {}
+    interface DefaultContextDelegatedResponse extends ContextDelegatedResponse {}
+
     type DefaultStateExtends = any;
     /**
      * This interface can be augmented by users to add types to Koa's default state
@@ -564,7 +567,7 @@ declare namespace Application {
         ParameterizedContext<StateT, ContextT, ResponseBodyT>
     >;
 
-    interface BaseRequest extends ContextDelegatedRequest {
+    interface BaseRequest extends DefaultContextDelegatedRequest {
         /**
          * Get the charset when present or undefined.
          */
@@ -592,7 +595,7 @@ declare namespace Application {
         toJSON(): any;
     }
 
-    interface BaseResponse extends ContextDelegatedResponse {
+    interface BaseResponse extends DefaultContextDelegatedResponse {
         /**
          * Return the request socket.
          *
@@ -654,7 +657,7 @@ declare namespace Application {
         toJSON(): any;
     }
 
-    interface BaseContext extends ContextDelegatedRequest, ContextDelegatedResponse {
+    interface BaseContext extends DefaultContextDelegatedRequest, DefaultContextDelegatedResponse {
         /**
          * util.inspect() implementation, which
          * just returns the JSON output.

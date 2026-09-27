@@ -92,6 +92,23 @@ console.log(backend.extraDbs);
 backend.addProjection("notes_minimal", "notes", { title: true, creator: true, lastUpdateTime: true });
 const readonlyProjection = backend.projections["notes_minimal"];
 console.log(readonlyProjection.target, readonlyProjection.fields);
+backend.submit({} as Agent, "notes_minimal", "doc1", { create: { data: {}, type: "json uri type" } }, {
+    customField: true,
+    anotherOption: { nested: "value" },
+}, (error, ops, request) => {
+    if (error) {
+        console.error(error.message);
+    }
+    console.log(ops, request && request.collection);
+});
+backend.fetch({} as Agent, "notes_minimal", "doc1", {
+    snapshotOptions: { foo: "bar" },
+}, (error, snapshot) => {
+    if (error) {
+        console.error(error.message);
+    }
+    console.log(snapshot && snapshot.data);
+});
 // backend.projections is used by sharedb internally, so they shouldn't be messed with.
 // Test that marking as readonly in API prevents external modification.
 // @ts-expect-error
@@ -135,9 +152,9 @@ for (const action of submitRelatedActions) {
             request.snapshot,
             request.ops,
             request.channels,
-            request.op.op,
-            request.op.create,
-            request.op.del,
+            (request.op as ShareDB.EditOp).op,
+            (request.op as ShareDB.CreateOp).create,
+            (request.op as ShareDB.DeleteOp).del,
             request.extra.source,
         );
         callback();
@@ -333,6 +350,13 @@ console.log(ShareDBClient.types.map["rich-text"].uri);
 const op1 = [{ insert: "Hello" }];
 const op2 = [{ retain: 5 }, { insert: " world!" }];
 const op3 = ShareDBClient.types.map["rich-text"].compose(op1, op2);
+
+// An EditOp's `op` belongs to the document's OT type; sharedb core is agnostic
+// to its shape. Most types (json0, ot-text, rich-text) use arrays, but a type
+// may serialize its op to an object instead — so `op` is `any`, not `any[]`.
+const arrayEditOp: ShareDB.EditOp = { op: [{ p: ["numClicks"], na: 1 }] };
+const objectEditOp: ShareDB.EditOp = { op: { ops: [{ retain: 5 }, { insert: " world!" }] } };
+console.log(arrayEditOp.op, objectEditOp.op);
 
 ShareDB.logger.setMethods({
     warn: (...args: any[]) => console.log(...args),

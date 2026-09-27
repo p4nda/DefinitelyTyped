@@ -9,8 +9,8 @@ declare function mount(element: Element, component: null): void; // tslint:disab
 /** Returns a shallow-cloned object with lifecycle attributes and any given custom attributes omitted. */
 declare function censor<
     O extends Record<string, any>,
-    E extends readonly string[],
->(object: O, extra: E): Omit<Mithril._NoLifecycle<O>, E[number]>;
+    E extends readonly string[] = readonly [],
+>(object: O, extra?: E): Omit<Mithril._NoLifecycle<O>, E[number]>;
 
 /** Makes an XHR request and returns a promise. */
 declare function request<T>(options: Mithril.RequestOptions<T> & { url: string }): Promise<T>;
@@ -44,17 +44,17 @@ declare namespace Mithril {
 
     interface Hyperscript {
         /** Creates a virtual element (Vnode). */
+        (selector: string, attributes: Attributes, ...children: Children[]): Vnode<any, any>;
+        /** Creates a virtual element (Vnode). */
+        (selector: string, ...children: Children[]): Vnode<any, any>;
+        /** Creates a virtual element (Vnode). */
+        <Attrs, State>(component: ComponentTypes<Attrs, State>, ...args: Children[]): Vnode<Attrs, State>;
+        /** Creates a virtual element (Vnode). */
         <Attrs, State>(
             component: ComponentTypes<Attrs, State>,
             attributes: Attrs & CommonAttributes<Attrs, State>,
             ...args: Children[]
         ): Vnode<Attrs, State>;
-        /** Creates a virtual element (Vnode). */
-        (selector: string, attributes: Attributes, ...children: Children[]): Vnode<any, any>;
-        /** Creates a virtual element (Vnode). */
-        <Attrs, State>(component: ComponentTypes<Attrs, State>, ...args: Children[]): Vnode<Attrs, State>;
-        /** Creates a virtual element (Vnode). */
-        (selector: string, ...children: Children[]): Vnode<any, any>;
         /** Creates a fragment virtual element (Vnode). */
         fragment(
             attrs: CommonAttributes<any, any> & { [key: string]: any },

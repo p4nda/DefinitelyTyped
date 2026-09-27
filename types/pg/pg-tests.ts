@@ -2,6 +2,7 @@ import { connect } from "net";
 import * as pg from "pg";
 import {
     Client,
+    ClientBase,
     Connection,
     CustomTypesConfig,
     DatabaseError,
@@ -25,6 +26,11 @@ const binary: boolean | undefined = defaults.binary;
 const parseInt8: boolean | undefined = defaults.parseInt8;
 const parseInputDatesAsUTC: boolean | undefined = defaults.parseInputDatesAsUTC;
 
+declare const clientBase: ClientBase;
+
+// $ExpectType TransactionStatus
+clientBase.getTransactionStatus();
+
 const client = new Client({
     host: "my.database-server.com",
     port: 5334,
@@ -32,9 +38,20 @@ const client = new Client({
     password: "secretpassword!!",
     application_name: "DefinitelyTyped",
     keepAlive: true,
+    enableChannelBinding: true,
+    ssl: true,
+    sslnegotiation: "direct",
+    pipeline: true,
 });
+// $ExpectType boolean
+client.pipeline;
+// @ts-expect-error – pipeline is readonly
+client.pipeline = false;
 client.setTypeParser(20, val => Number(val));
 client.getTypeParser(20);
+
+// $ExpectType TransactionStatus
+client.getTransactionStatus();
 
 const user: string | undefined = client.user;
 const database: string | undefined = client.database;
@@ -47,19 +64,19 @@ const escapeIdentifier: (str: string) => string = pg.escapeIdentifier;
 const escapeLiteral: (str: string) => string = pg.escapeLiteral;
 
 client.on("notice", (notice: NoticeMessage) => console.warn(`${notice.severity}: ${notice.message}`));
-client.connect(err => {
+client.connect((err, c) => {
     if (err) {
         console.error("Could not connect to postgres", err);
         return;
     }
-    client.query("SELECT NOW() AS 'theTime'", (err, result) => {
+    c.query("SELECT NOW() AS 'theTime'", (err, result) => {
         if (err) {
             console.error("Error running query", err);
             return;
         }
         console.log(result.rowCount);
         console.log(result.rows[0]["theTime"]);
-        client.end();
+        c.end();
         return null;
     });
     return null;
@@ -68,7 +85,7 @@ client.on("end", () => console.log("Client was disconnected."));
 
 client
     .connect()
-    .then(() => console.log("connected"))
+    .then((c) => console.log("connected"))
     .catch(e => console.error("connection error", e.stack));
 
 client.query("SELECT NOW()", (err, res) => {
@@ -235,6 +252,8 @@ const poolParameterlessCtor = new Pool();
 
 const poolOne = new Pool({
     connectionString: "postgresql://dbuser:secretpassword@database.server.com:3211/mydb",
+    sslnegotiation: "postgres",
+    pipeline: true,
 });
 
 class MyClient extends Client {
@@ -252,6 +271,7 @@ const pool = new Pool({
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
     keepAlive: false,
+    enableChannelBinding: true,
     lock_timeout: 5000,
     log: (...args) => {
         console.log.apply(console, args);
@@ -303,6 +323,15 @@ pool.connect().then(client => {
         );
 });
 
+pool.connect().then(client => {
+    // PoolClient must contain the complete Client API.
+    const pgClient: Client = client;
+    void pgClient;
+
+    // Pool-specific clients must also be releasable.
+    client.release();
+});
+
 pool.on("error", (err, client) => {
     // $ExpectType PoolClient
     client;
@@ -312,6 +341,8 @@ pool.on("connect", (client) => {
     // $ExpectType PoolClient
     client;
 });
+// @ts-expect-error - test wrong number of arguments
+pool.on("connect", (error, client) => {});
 pool.on("acquire", (client) => {
     // $ExpectType PoolClient
     client;
@@ -323,10 +354,27 @@ pool.on("release", (err, client) => {
         console.error("connection released to pool: ", err.message);
     }
 });
+pool.on("release", (error) => {
+    // $ExpectType Error
+    error;
+});
 pool.on("remove", (client) => {
     // $ExpectType PoolClient
     client;
 });
+
+const listeners: {
+    [K in "error" | "release" | "connect" | "remove" | "acquire"]?: K extends "error" | "release"
+        ? (err: Error, client: pg.PoolClient) => void
+        : (client: pg.PoolClient) => void;
+} = {};
+
+for (const eventName in listeners) {
+    const listener = listeners[eventName as keyof typeof listeners];
+    if (listener) {
+        pool.on(eventName as keyof typeof listeners, listener);
+    }
+}
 
 (async () => {
     const client = await pool.connect();
@@ -413,3 +461,28 @@ const bindConfig = {
 
 const con = new Connection();
 con.bind(bindConfig, true);
+
+const poolWithOnConnect = new Pool({
+    onConnect: (client) => {
+        client.query("SELECT 1").then(result => {
+            console.log(result.rows[0].number);
+        });
+        console.log("onConnect callback is working!");
+    },
+});
+
+poolWithOnConnect.connect().then(client => {
+    console.log("client connected");
+});
+
+const poolWithVerify = new Pool({
+    verify: (client, done) => {
+        client.query("SELECT 1", (err) => {
+            done(err ?? undefined);
+        });
+    },
+});
+
+poolWithVerify.connect().then(client => {
+    console.log("client connected");
+});

@@ -352,13 +352,20 @@ export interface Filter {
     field: string;
     type: FilterType;
     value: any;
+    params?: FilterParams | undefined;
 }
 
 export interface FilterParams {
     separator?: string | undefined;
     matchAll?: boolean | undefined;
 }
+
+/**
+ * Standard filter function type for field-based filters.
+ * This represents the signature for adding/removing standard filters.
+ */
 export type FilterFunction = (field: string, type: FilterType, value: any, filterParams?: FilterParams) => void;
+
 export interface OptionsFiltering {
     /** Array of filters to be applied on load. */
     initialFilter?: Filter[] | undefined;
@@ -835,6 +842,23 @@ export interface OptionsGeneral {
 
     /** With a variable table height you can set the minimum height of the table either defined in the min-height CSS property for the element or set it using the minHeight option in the table constructor, this can be set to any valid CSS value. */
     minHeight?: string | number | undefined;
+
+    /**
+     * External library dependencies that can be used in custom formatters, sorters, and filters.
+     * This allows you to pass libraries like Luxon DateTime, moment.js, etc. to Tabulator.
+     *
+     * @example
+     * ```typescript
+     * import { DateTime } from 'luxon';
+     *
+     * new Tabulator('#table', {
+     *   dependencies: {
+     *     DateTime: DateTime,
+     *   }
+     * });
+     * ```
+     */
+    dependencies?: Record<string, any> | undefined;
     renderVertical?: RenderMode;
     renderHorizontal?: RenderMode;
     rowHeight?: number;
@@ -843,7 +867,7 @@ export interface OptionsGeneral {
     renderVerticalBuffer?: boolean | number | undefined;
 
     /** placeholder element to display on empty table. */
-    placeholder?: string | HTMLElement | ((this: Tabulator | TabulatorFull) => string) | undefined;
+    placeholder?: string | HTMLElement | ((this: Tabulator | TabulatorFull) => string | HTMLElement) | undefined;
     placeholderHeaderFilter?: string | HTMLElement | ((this: Tabulator | TabulatorFull) => string) | undefined;
 
     /** Footer  element to display for the table. */
@@ -952,6 +976,13 @@ export interface SpreadsheetComponent {
 
 export type RenderMode = "virtual" | "basic" | Renderer;
 
+/**
+ * You can define a function that is called when the popup is rendered that should return either an HTML string or the contents of the element.
+ * This function is passed the mouse/touch event as its first argument and the component of the element that triggered the popup as the second argument.
+ * The `onRendered` callback function passed into the third argument allows you to register a callback that will be triggered when the popup has been added to the dom but before its position is confirmed. This can be useful when you are trying to use a 3rd party library that needs the element to be visible before it can be instantiated. To use this function you need to pass a callback that runs any of your required code as the only argument.
+ */
+export type PopupFunction<T> = (e: MouseEvent, component: T, onRendered: () => EmptyCallback) => string | HTMLElement;
+
 export interface OptionsMenu {
     rowContextMenu?: RowContextMenuSignature | undefined;
     rowClickMenu?: RowContextMenuSignature | undefined;
@@ -959,14 +990,20 @@ export interface OptionsMenu {
     groupClickMenu?: GroupContextMenuSignature | undefined;
     groupDblClickMenu?: GroupContextMenuSignature | undefined;
     groupContextMenu?: Array<MenuObject<GroupComponent>> | undefined;
+    /** By default Tabulator will append the menu element to the body element of the DOM as this allows the menu to appear correctly in the vast majority of situations. There are some circumstances where you may want the menu to be appended to a different element, such as the body of a modal, so that the menu is contained with that element. In these circumstances you can use the popupContainer option to specify the element that the menu should be appended to. */
     popupContainer?: boolean | string | HTMLElement;
-    groupClickPopup?: string;
-    groupContextPopup?: string;
-    groupDblPopup?: string;
-    groupDblClickPopup?: string;
-    rowClickPopup?: string;
-    rowContextPopup?: string;
-    rowDblClickPopup?: string;
+    /** You can add a click popup to any group header by passing the popup contents to the `groupClickPopup` option in the table constructor object. */
+    groupClickPopup?: string | HTMLElement | PopupFunction<GroupComponent>;
+    /** You can add a right click popup to any group header by passing the popup contents to the `groupContextPopup` option in the table constructor object. */
+    groupContextPopup?: string | HTMLElement | PopupFunction<GroupComponent>;
+    /** You can add a double click popup to any group header by passing the popup contents to the groupDblClickPopup option in the table constructor object. */
+    groupDblClickPopup?: string | HTMLElement | PopupFunction<GroupComponent>;
+    /** You can add a click popup to any row by passing the popup contents to the `rowClickPopup` option in the table constructor object. */
+    rowClickPopup?: string | HTMLElement | PopupFunction<RowComponent>;
+    /** You can add a right click popup to any row by passing the popup contents to the `rowContextPopup` option in the table constructor object. */
+    rowContextPopup?: string | HTMLElement | PopupFunction<RowComponent>;
+    /** You can add a double click popup to any row by passing the popup contents to the `rowDblClickPopup` option in the table constructor object. */
+    rowDblClickPopup?: string | HTMLElement | PopupFunction<RowComponent>;
 }
 
 export type RowContextMenuSignature =
@@ -1113,6 +1150,36 @@ export interface AdditionalExportOptions {
     formatCells?: boolean | undefined;
 }
 
+export interface ExportRow {
+    /** The type of row. */
+    type: "header" | "group" | "calc" | "row";
+    /**
+     * An array of `ExportColumn` objects representing the columns on the row.
+     *
+     * In the case of tables with column groups this array can also include `null` values representing spaces where columns would have been if not for a neighbouring column taking up multiple columns or rows, such as a column group header. These `null` values are included to help deal with rowspan and colspan alignment and in most cases can be ignored. An example of where they can come in useful can be found in the built-in xlsx downloader.
+     */
+    columns: (ExportColumn | null)[];
+    /** The Component Object for the row or group that the `ExportRow` represents. */
+    component: RowComponent;
+    /** If the row is either a group or a data tree child, this value contains an integer representing which level the row is on, the greater the number the more indented the row should be. */
+    indent: number;
+}
+
+export interface ExportColumn {
+    /** The Component Object for the column that the `ExportColumn` represent. */
+    component: ColumnComponent;
+    /** This usually has a value of 1, in the case of grouped column headers, this shows how many levels of child columns the group has. */
+    depth: number;
+    /** The height of the cell in rows, generally this has a value of 1, but when dealing with grouped column headers this describes how rows hight the cell should be to allow for neighboring grouped column headers. */
+    height: number;
+    /** The value of the cell or title of the column header. */
+    value: any;
+    /** The width in columns, generally this has a value of 1, but when dealing with grouped column headers this describes how many columns wide the column group should be, in the case of group headers this shows as the number of columns in the table to ensure the group header is full width. */
+    width: number;
+    /** The column identifier. */
+    field: string;
+}
+
 export interface OptionsLocale {
     /** You can set the current local in one of two ways. If you want to set it when the table is created, simply include the locale option in your Tabulator constructor. You can either pass in a string matching one of the language options you have defined, or pass in the boolean true which will cause Tabulator to auto-detect the browsers language settings from the navigator.language object. */
     locale?: boolean | string | undefined;
@@ -1253,7 +1320,14 @@ export interface ColumnDefinition extends ColumnLayout, CellCallbacks {
      *
      * Validators can be applied by using the validator property in a columns definition object (see Define Columns for more details).
      */
-    validator?: StandardValidatorType | StandardValidatorType[] | Validator | Validator[] | string | undefined;
+    validator?:
+        | StandardValidatorType
+        | StandardValidatorType[]
+        | Validator
+        | Validator[]
+        | string
+        | undefined
+        | ((cell: CellComponent, value: any) => boolean);
 
     /**
      * Mutators are used to alter data as it is parsed into  For example if you wanted to convert a numeric column into a boolean based on its value, before the data is used to build the table.
@@ -1440,8 +1514,6 @@ export interface ColumnDefinition extends ColumnLayout, CellCallbacks {
 
     /** You can add a right click context menu to any column by passing an array of menu items to the headerContextMenu option in that columns definition. */
     headerContextMenu?: Array<MenuObject<ColumnComponent> | MenuSeparator> | undefined;
-    headerDblClickPopup?: string;
-    dblClickPopup?: string;
 
     /** You can add a right click context menu to any columns cells by passing an array of menu items to the contextMenu option in that columns definition. */
     contextMenu?: Array<MenuObject<CellComponent> | MenuSeparator> | undefined;
@@ -1450,9 +1522,22 @@ export interface ColumnDefinition extends ColumnLayout, CellCallbacks {
     dblClickMenu?: Array<MenuObject<CellComponent> | MenuSeparator> | undefined;
 
     /** Popups work in a similar way to menus, but instead of only displaying lists of menu items they allow you to fill them with any custom content you like, text, input elements, forms, anything you fancy. */
-    cellPopup?:
-        | string
-        | ((e: MouseEvent, component: RowComponent | CellComponent | ColumnComponent, onRendered: () => any) => any);
+    clickPopup?: string | HTMLElement | PopupFunction<CellComponent>;
+    /** You can add a double click popup to any cell by passing the popup contents to the `dblClickPopup` option in that columns definition. */
+    dblClickPopup?: string | HTMLElement | PopupFunction<CellComponent>;
+    /** You can add a right click popup to any cell by passing the popup contents to the `contextPopup` option in that columns definition. */
+    contextPopup?: string | HTMLElement | PopupFunction<CellComponent>;
+
+    /** You can add a popup to any column by passing the popup contents to the headerPopup option in that columns definition. Adding a header popup will cause a ⋮ button to appear to the left of the column header title. clicking on this button will open the popup. */
+    headerPopup?: string | HTMLElement | PopupFunction<ColumnComponent>;
+    /** When you insert a header popup, Tabulator will add a button to the header element with an ⋮ icon. You can change the contents of this button using `headerPopupIcon` column definition option. */
+    headerPopupIcon?: string | HTMLElement | ((column: ColumnComponent) => string | HTMLElement);
+    /** You can add a left click popup to any column by passing the popup contents to the `headerClickPopup` option in that columns definition. */
+    headerClickPopup?: string | HTMLElement | PopupFunction<ColumnComponent>;
+    /** You can add a double left click popup to any column by passing the popup contents to the `headerDblClickPopup` option in that columns definition. */
+    headerDblClickPopup?: string | HTMLElement | PopupFunction<ColumnComponent>;
+    /** You can add a right click popup to any column by passing the popup contents to the `headerContextPopup` option in that columns definition. */
+    headerContextPopup?: string | HTMLElement | PopupFunction<ColumnComponent>;
 
     /** When copying to the clipboard you may want to apply a different formatter from the one usually used to format the cell, you can do this using the formatterClipboard column definition option. You can use the formatterClipboardParams to pass in any additional params to the formatter. */
     formatterClipboard?: Formatter | false | undefined;
@@ -1657,7 +1742,7 @@ export type Editor =
         onRendered: EmptyCallback,
         success: ValueBooleanCallback,
         cancel: ValueVoidCallback,
-        editorParams: {},
+        editorParams: Record<string, unknown>,
     ) => HTMLElement | false);
 
 export type EditorParams =
@@ -1669,7 +1754,7 @@ export type EditorParams =
     | DateParams
     | TimeParams
     | DateTimeEditorParams
-    | ((cell: CellComponent) => {});
+    | ((cell: CellComponent) => Record<string, unknown>);
 
 export type ScrollToRowPosition = "top" | "center" | "bottom" | "nearest";
 export type PopupPosition = ColumnDefinitionAlign | "top" | "bottom";
@@ -2778,7 +2863,11 @@ declare class Tabulator {
     download: (
         downloadType:
             | DownloadType
-            | ((columns: ColumnDefinition[], data: any, options: any, setFileContents: any) => any),
+            | ((
+                rows: ExportRow[],
+                options: any,
+                setFileContents: (fileContents: any, mimeType: string) => void,
+            ) => any),
         fileName: string,
         params?: DownloadOptions,
         filter?: RowRangeLookup,
@@ -3067,14 +3156,25 @@ declare class Tabulator {
         filterParams?: FilterParams,
     ) => void;
 
-    /** If you want to add another filter to the existing filters then you can call the addFilter function: */
-    addFilter: FilterFunction;
+    /**
+     * Add a filter to the existing filters on the table.
+     *
+     * This function will add the specified filter to any existing filters on the table.
+     *
+     * If you want to perform a more complicated filter then you can pass a callback function, you can also pass an optional second argument, an object with parameters to be passed to the filter function.
+     */
+    addFilter: (
+        p1: string | Filter[] | any[] | ((data: any, filterParams: any) => boolean),
+        p2?: FilterType | {},
+        value?: any,
+        filterParams?: FilterParams,
+    ) => void;
 
     /** You can retrieve an array of the current programmatic filters using the getFilters function, this will not include any of the header filters: */
     getFilters: (includeHeaderFilters?: boolean) => Filter[];
 
     /** You can programmatically set the header filter value of a column by calling the setHeaderFilterValue function, This function takes any of the standard column component look up options as its first parameter, with the value for the header filter as the second option. */
-    setHeaderFilterValue: (column: ColumnLookup, value: string) => void;
+    setHeaderFilterValue: (column: ColumnLookup, value: string | string[]) => void;
 
     /** You can programmatically set the focus on a header filter element by calling the setHeaderFilterFocus function, This function takes any of the standard column component look up options as its first parameter. */
     setHeaderFilterFocus: (column: ColumnLookup) => void;
@@ -3085,8 +3185,16 @@ declare class Tabulator {
     /** You get the current header filter value of a column. */
     getHeaderFilterValue: (column: ColumnLookup) => string;
 
-    /** If you want to remove one filter from the current list of filters you can use the removeFilter function: */
-    removeFilter: FilterFunction;
+    /**
+     * Remove a filter from the table.
+     *
+     * If you want to remove one filter from the current list of filters you can use the removeFilter function, passing the field you wish to filter, the comparison type and the value to filter for.
+     */
+    removeFilter: (
+        p1: string | Filter[] | any[] | ((data: any, filterParams: any) => boolean),
+        p2?: FilterType | {},
+        value?: any,
+    ) => void;
 
     /** To remove all filters from the table, use the clearFilter function. */
     clearFilter: (includeHeaderFilters: boolean) => void;

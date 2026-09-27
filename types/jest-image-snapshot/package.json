@@ -7,11 +7,12 @@
     ],
     "dependencies": {
         "@types/jest": "*",
-        "@types/pixelmatch": "*",
+        "@types/pixelmatch": "<7",
         "ssim.js": "^3.1.1"
     },
     "devDependencies": {
-        "@types/jest-image-snapshot": "workspace:."
+        "@types/jest-image-snapshot": "workspace:.",
+        "sharp": "*"
     },
     "owners": [
         {
